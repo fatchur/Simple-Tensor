@@ -71,31 +71,51 @@ new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', s
 **filter_shape** : The shape of filter, _[filter width, filter height, input depth, output depth]_   
 **name** : The name for this operation  
 **activation** : The kind of the activation function used (Leru, LRelu, Selu, or Elu)  
+**padding** : The type of padding (valid or same)  
 **strides** : The strides, _[batch stride, width stride, height stride, depth stride]  
 
 ###### Returns:
-**output** : The output tensor, the shape should be: _[batch, withd, height, depth]_  
+**output** : The output tensor, the shape should be: _[batch, width, height, depth]_  
 **weights**: Filter weights of this tensor operation  
 **biases** : Biases of this tensor moperation  
 
-- case 1 example: you have a tensor with the shape of [?, 100, 100, 3], and want to apply a convolution with the same shape output.
+- _case 1 example_: you have a tensor with the shape of [?, 100, 100, 3], and want to apply a convolution with the same shape output.
 - by default, the padding method is SAME
 
 ```python
 conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3, 3, 3, 3], name='conv1', activation='LRELU')
 ```
 
-- case2: you have a tensor with the shape of [?, 100, 100, 3], and want to apply convolution with the output shape:[?, 50, 50, 8] or _half of previous shape_.
+- _case 2 example_: you have a tensor with the shape of [?, 100, 100, 3], and want to apply convolution with the output shape:[?, 50, 50, 8] or _half of the previous shape_. 
 
 ```python
 conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3, 3, 3, 8], name='conv1', activation='LRELU', padding='SAME', strides=[1, 2, 2, 1])
 ```
 
-##### :shipit: Deconvolution
-- case1: you have a tensor with shape [?, 100, 100, 3], and want to apply convolution with ouput shape [?, 200, 200, 8].
-- by default, the padding method: SAME
+##### :shipit: Deconvolution or Convolution 2D Transpose
+###### Function:
 ```python
-deconv_result, weights, biases = new_deconv_layer(input_tensor, [7, 7, 8, 3], [100, 100, 8], 'g_deconv3', 'LRELU', [1,2,2,1], 'SAME')
+new_deconv_layer(input, parameter_list, output_shape, name, activation = 'RELU', strides = [1,1,1,1], padding = 'SAME')
+```
+
+###### Parameters:
+**input** : The input tensor, the shape shoud be : _[batch, width, height, depth]_
+**filter_shape** : The list of parameter, _[filter width, filter height, input depth, output depth]_   
+**output_shape** : 
+**name** : The name for this operation  
+**activation** : The kind of the activation function used (Leru, LRelu, Selu, or Elu)  
+**padding** : The type of padding (valid or same)  
+**strides** : The strides, _[batch stride, width stride, height stride, depth stride]  
+
+###### Returns:
+**output** : The output tensor, the shape should be: _[batch, width, height, depth]_  
+**weights**: Filter weights of this tensor operation  
+**biases** : Biases of this tensor moperation  
+
+- _case 1 example_: you have a tensor with the shape of [?, 100, 100, 3], and want to apply deconvolution with the ouput shape of [?, 200, 200, 8].
+
+```python
+deconv_result, weights_of_deconv1, biases_of_deconv1 = new_deconv_layer(input_tensor, [7, 7, 8, 3], [100, 100, 8], name="deconv", activation="LRELU", strides=[1,2,2,1], padding="SAME")
 ```
 
 ##### :shipit: Batch Normalization
