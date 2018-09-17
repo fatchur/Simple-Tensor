@@ -20,12 +20,14 @@ pip install -r requirements.txt
 
 #### HOW TO USE
 ##### Improt The Package
+```python
 from simple_tensor.tensor_operations import *
+```
 
 
 
 
-##### Fully connected operation
+##### :shipit: Fully connected operation
 ###### Function:
 ```python
 new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
