@@ -22,6 +22,9 @@ pip install -r requirements.txt
 ##### Improt The Package
 from simple_tensor.tensor_operations import *
 
+
+
+
 ##### Fully connected operation
 ###### Function:
 ```python
@@ -35,11 +38,20 @@ new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
 **name** : The name of the node for this operation  
 **activation** : the kind of the activation function used (Leru, LRelu, Selu, or Elu)  
 
+##### Returns:
+**output** : The output tensor
+**weights**: Filter weights of this tensor operation
+**biases** : Biases of this tensor moperation
 
-- case 1 example: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
+
+- _case 1 example_: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
+
 ```python
 fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 1000, 5000, 'd_fc1', activation="RELU")
 ```
+
+
+
 
 ##### Two-D Convolution
 - case 1 example: you have a tensor with shape [?, 100, 100, 3], and want to apply a convolution with the same output.
