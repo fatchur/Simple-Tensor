@@ -24,13 +24,16 @@ from simple_tensor.tensor_operations import *
 
 ##### Fully connected operation
 ###### Function:
+```python
 new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
+```
+
 ###### Parameters:
-input : The flatten input tensor
-num_inputs : The number of input neuron
-num_outputs : The number of output neuron
-name : The name of the node for this operation
-activation : the kind of the activation function used (Leru, LRelu, Selu, or Elu)
+**input** : The flatten input tensor  
+**num_inputs** : The number of input neuron  
+**num_outputs** : The number of output neuron  
+**name** : The name of the node for this operation  
+**activation** : the kind of the activation function used (Leru, LRelu, Selu, or Elu)  
 
 
 - case 1 example: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
