@@ -19,7 +19,7 @@ pip install -r requirements.txt
 ```
 
 #### HOW TO USE
-##### Improt The Package
+##### :shipit: Improt The Package
 ```python
 from simple_tensor.tensor_operations import *
 ```
@@ -55,7 +55,7 @@ fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 1000, 5000, "fc1", 
 
 
 
-##### Two-D Convolution
+##### :shipit: Two-D Convolution
 ###### Function:
 ```python
 new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', strides=[1, 1, 1, 1])  
@@ -86,14 +86,14 @@ conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3
 conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3, 3, 3, 8], name='conv1', activation='LRELU', padding='SAME', strides=[1, 2, 2, 1])
 ```
 
-##### Deconvolution
+##### :shipit: Deconvolution
 - case1: you have a tensor with shape [?, 100, 100, 3], and want to apply convolution with ouput shape [?, 200, 200, 8].
 - by default, the padding method: SAME
 ```python
 deconv_result, weights, biases = new_deconv_layer(input_tensor, [7, 7, 8, 3], [100, 100, 8], 'g_deconv3', 'LRELU', [1,2,2,1], 'SAME')
 ```
 
-##### Batch Normalization
+##### :shipit: Batch Normalization
 - case1: you have a tensor with total feature: 64 and want to apply batch normalization.
 ```python
 bn_result, beta1, scale1 = batch_norm(input_tensor, 64, 'g_bn1')
