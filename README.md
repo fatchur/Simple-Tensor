@@ -99,7 +99,7 @@ new_deconv_layer(input, parameter_list, output_shape, name, activation = 'RELU',
 ```
 
 ###### Parameters:
-**input** : The input tensor, the shape shoud be : _[batch, width, height, depth]_
+**input** : The input tensor, the shape shoud be : _[batch, width, height, depth]_  
 **filter_shape** : The list of parameter, _[filter width, filter height, input depth, output depth]_   
 **output_shape** : 
 **name** : The name for this operation  
