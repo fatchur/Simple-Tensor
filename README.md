@@ -19,6 +19,11 @@ pip install -r requirements.txt
 ```
 
 #### HOW TO USE
+##### :shipit: Installing The Package
+```python
+python setup.py install
+```
+
 ##### :shipit: Improt The Package
 ```python
 from simple_tensor.tensor_operations import *
