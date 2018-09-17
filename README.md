@@ -32,16 +32,16 @@ new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
 ```
 
 ###### Parameters:
-**input** : The flatten input tensor  
+**input** : The flatten input tensor, the shape should be: _[batch, number of neuron]_    
 **num_inputs** : The number of input neuron  
 **num_outputs** : The number of output neuron  
 **name** : The name of the node for this operation  
 **activation** : the kind of the activation function used (Leru, LRelu, Selu, or Elu)  
 
 ###### Returns:
-**output** : The output tensor, the shape should be: _[batch, number of neuron]_
-**weights**: Filter weights of this tensor operation
-**biases** : Biases of this tensor moperation
+**output** : The output tensor, the shape should be: _[batch, number of neuron]_  
+**weights**: Filter weights of this tensor operation  
+**biases** : Biases of this tensor moperation  
 
 
 - _case 1 example_: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
@@ -65,6 +65,11 @@ new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', s
 **name** : The name for this operation  
 **activation** : The kind of the activation function used (Leru, LRelu, Selu, or Elu)  
 **strides** : The strides, _[batch stride, width stride, height stride, depth stride]  
+
+###### Returns:
+**output** : The output tensor, the shape should be: _[batch, withd, height, depth]_  
+**weights**: Filter weights of this tensor operation  
+**biases** : Biases of this tensor moperation  
 
 - case 1 example: you have a tensor with the shape of [?, 100, 100, 3], and want to apply a convolution with the same shape output.
 - by default, the padding method is SAME
