@@ -9,7 +9,7 @@ def new_weights(shape, name):
 	Return:
 		a variable of trainable tensor
 	"""
-	return tf.Variable(tf.truncated_normal(shape, stddev=0.05), name='weight_'+name)
+	return tf.Variable(tf.truncated_normal(shape, stddev=0.05, dtype=tf.float64), dtype=tf.float64, name='weight_'+name)
 
 
 def new_biases(length, name):
@@ -21,7 +21,7 @@ def new_biases(length, name):
 	Return:
 		a variable of trainable tensor
 	"""
-	return tf.Variable(tf.constant(0.05, shape=[length]), name='bias_'+name)
+	return tf.Variable(tf.constant(0.05, shape=[length], dtype=tf.float64), dtype=tf.float64, name='bias_'+name)
 
 
 def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU"): 
