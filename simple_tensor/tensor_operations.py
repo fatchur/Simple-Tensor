@@ -116,7 +116,7 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU
 	return deconv, weights, biases
 
 
-def batch_norm(x, n_out, name):
+def batch_norm(x, n_out, name, is_convolution =True):
 	"""
 	Batch normalization on convolutional maps.
 	Args:
@@ -129,7 +129,10 @@ def batch_norm(x, n_out, name):
 
 	beta = tf.Variable(tf.constant(0.0, shape=[n_out]), name='beta_' + name)
 	gamma = tf.Variable(tf.constant(1.0, shape=[n_out]), name='gamma_' + name)
-	batch_mean, batch_var = tf.nn.moments(x, [0,1,2], name='moments')
+	if is_convolution:
+		batch_mean, batch_var = tf.nn.moments(x, [0,1,2], name='moments')
+	else:
+		batch_mean, batch_var = tf.nn.moments(x, [1], name='moments')
 
 	normed = tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, 1e-3)
 	return normed, beta, gamma
