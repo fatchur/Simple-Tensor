@@ -5,8 +5,8 @@ def new_weights(shape, name):
 	Creating new trainable tensor (filter) as weight
 	Args:
 		shape:		a list of integer as the shape of this weight.
-					example (convolution case), [filter height, filter width, input channels, output channels]
-					example (fully connected case), [num input, num output]
+				- example (convolution case), [filter height, filter width, input channels, output channels]
+				- example (fully connected case), [num input, num output]
 		name:		a string, basic name of this filter/weight
 	Return:
 		a trainable weight/filter tensor with float 32 data type
@@ -19,7 +19,7 @@ def new_biases(length, name):
 	Creating new trainable tensor as bias
 	Args:
 		length:		an integer, the num of output features 
-					- Note, number output neurons = number of bias values
+				- Note, number output neurons = number of bias values
 		name:		a string, basic name of this bias
 	Return:
 		a trainable bias tensor with float 32 data type
@@ -31,12 +31,12 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU"):
 	"""
 	A simplification method of tensorflow fully connected operation
 	Args:
-		input:			an input tensor
-		num_inputs:		an integer, the number of input neurons
+		input:		an input tensor
+		num_inputs:	an integer, the number of input neurons
 		num_outputs:	an integer, the number of output neurons
-		name:			a string, basic name for all filters/weights and biases for this operation
-		activation:		an uppercase string, the activation used
-						- if you don't need an activation function, fill it with 'non'
+		name:		a string, basic name for all filters/weights and biases for this operation
+		activation:	an uppercase string, the activation used
+				- if you don't need an activation function, fill it with 'non'
 	Return:
 		a tensor as the result of activated matrix multiplication, its weights, and biases
 	"""
@@ -62,17 +62,23 @@ def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME
 	"""
 	A simplification method of tensorflow convolution operation
 	Args:
-		input:			an input tensor
+		input:		an input tensor
 		filter shape:	a list of integer, the shape of trainable filter for this operation.
-						- the format, [filter height, filter width, num of input channels, num of output channels]
-						- example you want to set the filter height=3, width=3, the layer/channel/depth of the input tensor= 64, the layer/channel/depth of the output tensor = 128
-						- so the shape of your filter is , [3, 3, 64, 128]
-		name:			a string, basic name for all filters/weights and biases for this operation
-		activation:		an uppercase string, the activation function used. 
-						If you don't need, you can fill it with 'none'
-		padding:		an uppercase string, the padding method (SAME or VALID)
-		strides:		a list of integer as the shape of the stride.
-						- the  format: [batch stride, height stride, width stride, depth stride]. example: [1, 1, 1, 1]
+				- the format, [filter height, filter width, num of input channels, num of output channels]
+				- example, 
+				- you want to set, 
+				- the filter height=3, 
+				- filter width=3, 
+				- the layer/channel/depth of the input tensor= 64, 
+				- the layer/channel/depth of the output tensor = 128
+				- so the shape of your filter is , [3, 3, 64, 128]
+		name:		a string, basic name for all filters/weights and biases for this operation
+		activation:	an uppercase string, the activation function used. 
+				- If no activation, use 'none'
+		padding:	an uppercase string, the padding method (SAME or VALID)
+		strides:	a list of integer as the shape of the stride.
+				- the  format: [batch stride, height stride, width stride, depth stride]
+				- example: [1, 1, 1, 1]
 	Return:
 		a tensor as the result of convolution operation, its weights, and biases
 	"""
@@ -105,20 +111,20 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU
 	"""
 	A simplification method of tensorflow deconvolution operation
 	Args:
-		input:			an input tensor
+		input:		an input tensor
 		filter shape:	a list of integer, the shape of trainable filter for this operaation.
-						- the format, [filter height, filter width, num of input channels, num of output channels]
+				- the format, [filter height, filter width, num of input channels, num of output channels]
 		output_shape:	a list of integer, the shape of output tensor.
-						- the format:[batch size, width, height, num of output layer/depth]
-						- MAKE SURE YOU HAVE CALCULATED THE OUTPUT TENSOR SHAPE BEFORE or some errors will eat your brain
-						- TRICKS ...,
-						- a. for easy and common case, set your input tensor has an even height and width
-						- b. the usually even number used is, 4, 8, 16, 32, 64, 128, 256, 512, ...
-		name:			a string, basic name for all filters/weights and biases for this operation
-		activation:		an uppercase string, the activation used
-						- if no activation, use 'none'
-		padding:		an uppercase string, the padding method
-		strides:		the shape of strides, ex: [1, 1, 1, 1]
+				- the format:[batch size, width, height, num of output layer/depth]
+				- MAKE SURE YOU HAVE CALCULATED THE OUTPUT TENSOR SHAPE BEFORE or some errors will eat your brain
+				- TRICKS ...,
+				- a. for easy and common case, set your input tensor has an even height and width
+				- b. the usually even number used is, 4, 8, 16, 32, 64, 128, 256, 512, ...
+		name:		a string, basic name for all filters/weights and biases for this operation
+		activation:	an uppercase string, the activation used
+				- if no activation, use 'none'
+		padding:	an uppercase string, the padding method
+		strides:	the shape of strides, ex: [1, 1, 1, 1]
 	Return:
 		a result of deconvolution operation, its weights, and biases
 	"""
@@ -152,7 +158,7 @@ def batch_norm(x, n_out, name, is_convolution =True):
 	"""
 	Batch normalization on convolutional maps.
 	Args:
-		x:			Tensor, 4D BHWD input maps
+		x:		Tensor, 4D BHWD input maps
 		n_out:		integer, depth of input maps
 		name:		basic name of tensor filters 
 	Return:
