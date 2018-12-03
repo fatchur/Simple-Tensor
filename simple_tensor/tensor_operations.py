@@ -4,10 +4,12 @@ def new_weights(shape, name):
 	"""
 	Creating new trainable tensor (filter) as weight
 	Args:
-		shape:		a list of tensor shape, ex1(convolution case): [filter height, filter width, input channels, output channels], ex2(fully connected case): [num input, num output]
-		name:		basic name of this filter
+		shape:		a list of integer as the shape of this weight.
+					example (convolution case), [filter height, filter width, input channels, output channels]
+					example (fully connected case), [num input, num output]
+		name:		a string, basic name of this filter/weight
 	Return:
-		a variable of trainable tensor
+		a trainable weight/filter tensor with float 32 data type
 	"""
 	return tf.Variable(tf.truncated_normal(shape, stddev=0.05, dtype=tf.float32), dtype=tf.float32, name='weight_'+name)
 
@@ -16,10 +18,11 @@ def new_biases(length, name):
 	"""
 	Creating new trainable tensor as bias
 	Args:
-		length:		num of output features
-		name:		basic name of this bias
+		length:		an integer, the num of output features 
+					- Note, number output neurons = number of bias values
+		name:		a string, basic name of this bias
 	Return:
-		a variable of trainable tensor
+		a trainable bias tensor with float 32 data type
 	"""
 	return tf.Variable(tf.constant(0.05, shape=[length], dtype=tf.float32), dtype=tf.float32, name='bias_'+name)
 
@@ -29,12 +32,13 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU"):
 	A simplification method of tensorflow fully connected operation
 	Args:
 		input:			an input tensor
-		num_inputs:		number of input neurons
-		num_outputs:	number of output neurons
-		name:			basic name for all filters/weights and biases for this operation
-		activation:		the activation used
+		num_inputs:		an integer, the number of input neurons
+		num_outputs:	an integer, the number of output neurons
+		name:			a string, basic name for all filters/weights and biases for this operation
+		activation:		an uppercase string, the activation used
+						- if you don't need an activation function, fill it with 'non'
 	Return:
-		a result of matmul operation, its weights, and biases
+		a tensor as the result of activated matrix multiplication, its weights, and biases
 	"""
 	weights = new_weights(shape=[num_inputs, num_outputs], name=name)
 	biases = new_biases(length=num_outputs, name=name)
@@ -48,6 +52,10 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU"):
 		layer = tf.nn.selu(layer)
 	elif activation == "ELU":
 		layer = tf.nn.elu(layer)
+	elif activation == "SIGMOID":
+		layer = tf.nn.sigmoid(layer)
+	elif activation == "SOFTMAX":
+		layer == tf.nn.softmax(layer)
 	return layer, weights, biases
 
 def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME', strides=[1, 1, 1, 1]):  
@@ -55,13 +63,18 @@ def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME
 	A simplification method of tensorflow convolution operation
 	Args:
 		input:			an input tensor
-		filter shape:	the shape of trainable filter for this operaation, ex: [filter height, filter width, num of input channels, num of output channels]
-		name:			basic name for all filters/weights and biases for this operation
-		activation:		the activation used
-		padding:		the padding method
-		strides:		the shape of strides, ex: [1, 1, 1, 1]
+		filter shape:	a list of integer, the shape of trainable filter for this operation.
+						- the format, [filter height, filter width, num of input channels, num of output channels]
+						- example you want to set the filter height=3, width=3, the layer/channel/depth of the input tensor= 64, the layer/channel/depth of the output tensor = 128
+						- so the shape of your filter is , [3, 3, 64, 128]
+		name:			a string, basic name for all filters/weights and biases for this operation
+		activation:		an uppercase string, the activation function used. 
+						If you don't need, you can fill it with 'none'
+		padding:		an uppercase string, the padding method (SAME or VALID)
+		strides:		a list of integer as the shape of the stride.
+						- the  format: [batch stride, height stride, width stride, depth stride]. example: [1, 1, 1, 1]
 	Return:
-		a result of convolution operation, its weights, and biases
+		a tensor as the result of convolution operation, its weights, and biases
 	"""
 
 	shape = filter_shape
@@ -82,6 +95,10 @@ def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME
 		layer = tf.nn.selu(layer)
 	elif activation == "ELU":
 		layer = tf.nn.elu(layer)
+	elif activation == "SIGMOID":
+		layer = tf.nn.sigmoid(layer)
+	elif activation == "SOFTMAX":
+		layer == tf.nn.softmax(layer)
 	return layer, weights, biases
 
 def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU', strides = [1,1,1,1], padding = 'SAME'):
@@ -89,20 +106,31 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU
 	A simplification method of tensorflow deconvolution operation
 	Args:
 		input:			an input tensor
-		filter shape:	the shape of trainable filter for this operaation, ex: [filter height, filter width, num of output channels, num of input channels]
-		output_shape:	the list of output tensor shape, ex:[width, height, num of output features]
-		name:			basic name for all filters/weights and biases for this operation
-		activation:		the activation used
-		padding:		the padding method
+		filter shape:	a list of integer, the shape of trainable filter for this operaation.
+						- the format, [filter height, filter width, num of input channels, num of output channels]
+		output_shape:	a list of integer, the shape of output tensor.
+						- the format:[batch size, width, height, num of output layer/depth]
+						- MAKE SURE YOU HAVE CALCULATED THE OUTPUT TENSOR SHAPE BEFORE or some errors will eat your brain
+						- TRICKS ...,
+						- a. for easy and common case, set your input tensor has an even height and width
+						- b. the usually even number used is, 4, 8, 16, 32, 64, 128, 256, 512, ...
+		name:			a string, basic name for all filters/weights and biases for this operation
+		activation:		an uppercase string, the activation used
+						- if no activation, use 'none'
+		padding:		an uppercase string, the padding method
 		strides:		the shape of strides, ex: [1, 1, 1, 1]
 	Return:
 		a result of deconvolution operation, its weights, and biases
 	"""
-	weights = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.05), name='weight_' + name)
-	biases = new_biases(length=filter_shape[2], name=name)
-	batch_size = tf.shape(input)[0]
-	deconv_shape = tf.stack([batch_size, output_shape[0], output_shape[1], output_shape[2]])
-	deconv = tf.nn.conv2d_transpose(input, weights, deconv_shape, strides, padding, name=name)
+	weights = tf.Variable(tf.truncated_normal([filter_shape[0], filter_shape[1], filter_shape[3], filter_shape[2]], stddev=0.05), name='weight_' + name)
+	biases = new_biases(length=filter_shape[3], name=name)
+	deconv_shape = tf.stack(output_shape)
+	deconv = tf.nn.conv2d_transpose(input=input, 
+									filter = weights, 
+									output_shape = deconv_shape,
+									strides = strides,
+									padding = padding, 
+									name=name)
 	deconv += biases
 
 	if activation == 'RELU':
@@ -113,6 +141,10 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU
 		deconv = tf.nn.selu(deconv)
 	elif activation == "ELU":
 		deconv = tf.nn.elu(deconv)
+	elif activation == "SIGMOID":
+		layer = tf.nn.sigmoid(layer)
+	elif activation == "SOFTMAX":
+		layer == tf.nn.softmax(layer)
 	return deconv, weights, biases
 
 
