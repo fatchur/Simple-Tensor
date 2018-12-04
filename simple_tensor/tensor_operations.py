@@ -148,9 +148,9 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU
 	elif activation == "ELU":
 		deconv = tf.nn.elu(deconv)
 	elif activation == "SIGMOID":
-		layer = tf.nn.sigmoid(layer)
+		deconv = tf.nn.sigmoid(deconv)
 	elif activation == "SOFTMAX":
-		layer == tf.nn.softmax(layer)
+		deconv == tf.nn.softmax(deconv)
 	return deconv, weights, biases
 
 
