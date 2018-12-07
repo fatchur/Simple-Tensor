@@ -63,7 +63,7 @@ new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', s
 ```
 
 ###### Parameters:
-**input** : The input tensor, the shape shoud be : [batch, width, height, depth]
+**input** : The input tensor, the shape shoud be : [batch, width, height, depth] <br/>
 **filter_shape** : The shape of filter, [filter width, filter height, input depth, output depth]
 **name** : The name for this operation  
 **activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
