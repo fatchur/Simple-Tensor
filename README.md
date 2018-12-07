@@ -6,6 +6,7 @@
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 |16th Sept 2018 | Initial Repo was created, Unready to be used  |      v0.0.1           |
+|Dec 2018 | Update on deconvolution filter shape format |      -           |
 
 #### ABOUT PROJECT
 This is a project for making tensorflow tensor operation easier
@@ -24,12 +25,10 @@ pip install -r requirements.txt
 python setup.py install
 ```
 
-##### :shipit: Improt The Package
+##### :shipit: Import The Package
 ```python
 from simple_tensor.tensor_operations import *
 ```
-
-
 
 
 ##### :shipit: Fully connected operation
@@ -70,8 +69,8 @@ new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', s
 **input** : The input tensor, the shape shoud be : _[batch, width, height, depth]_
 **filter_shape** : The shape of filter, _[filter width, filter height, input depth, output depth]_   
 **name** : The name for this operation  
-**activation** : The kind of the activation function used (Leru, LRelu, Selu, or Elu)  
-**padding** : The type of padding (valid or same)  
+**activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or Elu)  
+**padding** : The type of padding (VALID or SAME)  
 **strides** : The strides, _[batch stride, width stride, height stride, depth stride]  
 
 ###### Returns:
@@ -107,11 +106,11 @@ new_deconv_layer(input, parameter_list, output_shape, name, activation = 'RELU',
 
 ###### Parameters:
 **input** : The input tensor, the shape shoud be : _[batch, width, height, depth]_  
-**filter_shape** : The list of parameter, _[filter width, filter height, input depth, output depth]_   
-**output_shape** : 
+**filter_shape** : a list of integer , _[filter width, filter height, input depth, output depth]_   
+**output_shape** : a list of integer, the shape of output tensor. _[batch size, output width, output height, num of output layer/depth]_
 **name** : The name for this operation  
-**activation** : The kind of the activation function used (Leru, LRelu, Selu, or Elu)  
-**padding** : The type of padding (valid or same)  
+**activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or Elu)  
+**padding** : The type of padding (VALID or SAME)  
 **strides** : The strides, _[batch stride, width stride, height stride, depth stride]  
 
 ###### Returns:
