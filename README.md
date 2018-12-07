@@ -51,7 +51,7 @@ new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
 **biases** : Biases of this tensor moperation  
 
 
-- _case 1 example_: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
+> case 1 example_: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
 
 ```python
 fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 1000, 5000, "fc1", activation="RELU")
