@@ -51,10 +51,10 @@ new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
 **biases** : Biases of this tensor moperation  
 
 
-> case 1: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
+> **case 1**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
 
 ```python
-fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 1000, 5000, "fc1", activation="RELU")
+fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 10000, 5000, "fc1", activation="RELU")
 ```
 
 
@@ -79,15 +79,19 @@ new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', s
 **weights**: Filter weights of this tensor operation  
 **biases** : Biases of this tensor moperation  
 
-> case 1: you have a tensor with the shape of [?, 100, 100, 3], and want to apply a convolution with the same shape output.
-> your filter designedt to be 3 in width and height, so the filter shape is [3, 3, 3=>input depth, 3=>output depth.
-> by default, the padding method is SAME
+> **case 1**: you have a tensor with the shape of [?, 100, 100, 3], and want to apply a convolution with the same shape output.
+> - Because the output width and height is same with input, so the stride is [1, 1, 1, 1]
+> - suppose your filter designed to be 3 in width and height, so the filter shape is [3, 3, 3=>input depth, 3=>output depth].
+> - by default, the padding method is SAME
 
 ```python
 conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3, 3, 3, 3], name='conv1', activation='LRELU')
 ```
 
-- _case 2 example_: you have a tensor with the shape of [?, 100, 100, 3], and want to apply convolution with the output shape:[?, 50, 50, 8] or _half of the previous shape_. 
+> **case 2**: you have a tensor with the shape of [?, 100, 100, 3], and want to apply convolution with the output shape:[?, 50, 50, 8] or half of the intial width and height. 
+> - Because the output width and height is half of input size, so the stride is [1, 2, 2, 1]
+> - suppose your filter designed to be 3 in width and height, so the filter shape is [3, 3, 3=>input depth, 8=>output depth].
+> - by default, the padding method is SAME
 
 ```python
 conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3, 3, 3, 8], name='conv1', activation='LRELU', padding='SAME', strides=[1, 2, 2, 1])
