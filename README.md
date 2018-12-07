@@ -63,12 +63,12 @@ new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', s
 ```
 
 ###### Parameters:
-**input** : The input tensor, the shape shoud be : _[batch, width, height, depth]_
-**filter_shape** : The shape of filter, _[filter width, filter height, input depth, output depth]_   
+**input** : The input tensor, the shape shoud be : [batch, width, height, depth]
+**filter_shape** : The shape of filter, [filter width, filter height, input depth, output depth]
 **name** : The name for this operation  
 **activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
 **padding** : The type of padding (VALID or SAME)  
-**strides** : The strides, _[batch stride, width stride, height stride, depth stride]  
+**strides** : The strides, [batch stride, width stride, height stride, depth stride]  
 
 ###### Returns:
 **output** : The output tensor, the shape should be: _[batch, width, height, depth]_  
