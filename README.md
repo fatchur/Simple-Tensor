@@ -45,8 +45,8 @@ new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
 **activation** : &nbsp; The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
 
 ###### Returns:
-**output** : The output tensor, the shape should be: [batch, number of neuron]
-**weights**: Filter weights of this tensor operation  
+**output** : The output tensor, the shape should be: [batch, number of neuron] <br/>
+**weights**: Filter weights of this tensor operation  <br/>
 **biases** : Biases of this tensor moperation  
 
 
@@ -102,8 +102,8 @@ new_deconv_layer(input, parameter_list, output_shape, name, activation = 'RELU',
 ```
 
 ###### Parameters:
-**input** : The input tensor, the shape shoud be : [batch, width, height, depth]
-**filter_shape** : a list of integer , _[filter width, filter height, input depth, output depth]_   
+**input** : The input tensor, the shape shoud be : [batch, width, height, depth] <br />
+**filter_shape** : a list of integer , [filter width, filter height, input depth, output depth] <br/>
 **output_shape** : a list of integer, the shape of output tensor. [batch size, output width, output height, num of output layer/depth]
 **name** : The name for this operation  
 **activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
