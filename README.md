@@ -38,14 +38,14 @@ new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
 ```
 
 ###### Parameters:
-**input** : &nbsp; The flatten input tensor, the shape should be: _[batch, number of neuron]_    
+**input** : &nbsp; &nbsp; The flatten input tensor, the shape should be: [batch, number of neuron]   
 **num_inputs** : &nbsp; The number of input neuron  
 **num_outputs** : &nbsp; The number of output neuron  
 **name** : &nbsp;  The name of the node for this operation  
 **activation** : &nbsp; The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
 
 ###### Returns:
-**output** : The output tensor, the shape should be: _[batch, number of neuron]_  
+**output** : The output tensor, the shape should be: [batch, number of neuron]
 **weights**: Filter weights of this tensor operation  
 **biases** : Biases of this tensor moperation  
 
@@ -64,7 +64,7 @@ new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', s
 
 ###### Parameters:
 **input** : The input tensor, the shape shoud be : [batch, width, height, depth] <br/>
-**filter_shape** : The shape of filter, [filter width, filter height, input depth, output depth]
+**filter_shape** : The shape of filter, [filter width, filter height, input depth, output depth]<br/>
 **name** : The name for this operation  
 **activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
 **padding** : The type of padding (VALID or SAME)  
@@ -102,16 +102,16 @@ new_deconv_layer(input, parameter_list, output_shape, name, activation = 'RELU',
 ```
 
 ###### Parameters:
-**input** : The input tensor, the shape shoud be : _[batch, width, height, depth]_  
+**input** : The input tensor, the shape shoud be : [batch, width, height, depth]
 **filter_shape** : a list of integer , _[filter width, filter height, input depth, output depth]_   
-**output_shape** : a list of integer, the shape of output tensor. _[batch size, output width, output height, num of output layer/depth]_
+**output_shape** : a list of integer, the shape of output tensor. [batch size, output width, output height, num of output layer/depth]
 **name** : The name for this operation  
 **activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
 **padding** : The type of padding (VALID or SAME)  
 **strides** : The strides, _[batch stride, width stride, height stride, depth stride]  
 
 ###### Returns:
-**output** : The output tensor, the shape should be: _[batch, width, height, depth]_  
+**output** : The output tensor, the shape should be: [batch, width, height, depth]
 **weights**: Filter weights of this tensor operation  
 **biases** : Biases of this tensor moperation  
 
