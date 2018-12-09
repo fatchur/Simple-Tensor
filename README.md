@@ -14,9 +14,19 @@ This is a project for making tensorflow tensor operation easier
 #### DEPENDENCIES
 1. Tensorflow 
 
-For installing dependencies, you can do it with:
+For installing tensorflow, with GPU:
 ```python
-pip install -r requirements.txt
+# python3 
+pip3 install tensorflow-gpu
+# python2
+pip2 install tensorflow-gpu
+```
+Without GPU:
+```python
+# python3 
+pip3 install tensorflow
+# python2
+pip2 install tensorflow
 ```
 
 #### HOW TO USE
