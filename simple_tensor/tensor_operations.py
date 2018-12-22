@@ -47,7 +47,8 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU", data_t
 	if activation=="RELU":
 		layer = tf.nn.relu(layer)
 	elif activation=="LRELU":
-		layer = tf.nn.leaky_relu(layer)
+		alpha=tf.constant(0.5, dtype=data_type)
+		layer = tf.nn.leaky_relu(layer, alpha=alpha, name=name + '_LRELU')
 	elif activation == "SELU":
 		layer = tf.nn.selu(layer)
 	elif activation == "ELU":
