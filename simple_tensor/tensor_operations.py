@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def new_weights(shape, name):
+def new_weights(shape, name, data_type=tf.float32):
 	"""
 	Creating new trainable tensor (filter) as weight
 	Args:
@@ -11,10 +11,10 @@ def new_weights(shape, name):
 	Return:
 		a trainable weight/filter tensor with float 32 data type
 	"""
-	return tf.Variable(tf.truncated_normal(shape, stddev=0.05, dtype=tf.float32), dtype=tf.float32, name='weight_'+name)
+	return tf.Variable(tf.truncated_normal(shape, stddev=0.05, dtype=data_type), dtype=data_type, name='weight_'+name)
 
 
-def new_biases(length, name):
+def new_biases(length, name, data_type=tf.float32):
 	"""
 	Creating new trainable tensor as bias
 	Args:
@@ -24,10 +24,10 @@ def new_biases(length, name):
 	Return:
 		a trainable bias tensor with float 32 data type
 	"""
-	return tf.Variable(tf.constant(0.05, shape=[length], dtype=tf.float32), dtype=tf.float32, name='bias_'+name)
+	return tf.Variable(tf.constant(0.05, shape=[length], dtype=data_type), dtype=data_type, name='bias_'+name)
 
 
-def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU"): 
+def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU", data_type=tf.float32): 
 	"""
 	A simplification method of tensorflow fully connected operation
 	Args:
@@ -40,8 +40,8 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU"):
 	Return:
 		a tensor as the result of activated matrix multiplication, its weights, and biases
 	"""
-	weights = new_weights(shape=[num_inputs, num_outputs], name=name)
-	biases = new_biases(length=num_outputs, name=name)
+	weights = new_weights(shape=[num_inputs, num_outputs], name=name, data_type=data_type)
+	biases = new_biases(length=num_outputs, name=name, data_type=data_type)
 	layer = tf.matmul(input, weights) + biases
 
 	if activation=="RELU":
