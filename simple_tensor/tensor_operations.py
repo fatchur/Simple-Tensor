@@ -59,6 +59,31 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU", data_t
 		layer == tf.nn.softmax(layer)
 	return layer, weights, biases
 
+
+def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RELU', padding='SAME', strides=1, data_type=tf.float32):
+	shape = filter_shape
+	weights = new_weights(shape=shape, name=name, data_type=data_type)
+	biases = new_biases(length=filter_shape[2], name=name, data_type=data_type)
+	layer = tf.nn.conv1d(input, filters = weights, stride = strides, padding = padding, name='convolution1d_' + name)
+	layer += biases
+
+	if activation == "RELU":
+		layer = tf.nn.relu(layer)
+	elif activation == "LRELU":
+		layer = tf.nn.leaky_relu(layer)
+	elif activation == "SELU":
+		layer = tf.nn.selu(layer)
+	elif activation == "ELU":
+		layer = tf.nn.elu(layer)
+	elif activation == "SIGMOID":
+		layer = tf.nn.sigmoid(layer)
+	elif activation == "SOFTMAX":
+		layer == tf.nn.softmax(layer)
+
+	layer = tf.nn.dropout(layer, dropout_val)
+	return layer, weights, biases
+
+
 def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME', strides=[1, 1, 1, 1]):  
 	"""
 	A simplification method of tensorflow convolution operation
