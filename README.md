@@ -7,6 +7,7 @@
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 |16th Sept 2018 | Initial Repo was created, Unready to be used  |      v0.0.1           |
 |Dec 2018 | Update on deconvolution filter shape format |      -           |
+|3rd Jan 2019 | Add conv1d operations |      v0.0.2           |
 
 #### ABOUT PROJECT
 This is a project for making tensorflow tensor operation easier
