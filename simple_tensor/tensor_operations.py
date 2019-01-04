@@ -84,7 +84,7 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RE
 	return layer, weights, biases
 
 
-def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME', strides=[1, 1, 1, 1]):  
+def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'RELU', padding='SAME', strides=[1, 1, 1, 1]):  
 	"""
 	A simplification method of tensorflow convolution operation
 	Args:
@@ -99,6 +99,7 @@ def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME
 				- the layer/channel/depth of the output tensor = 128
 				- so the shape of your filter is , [3, 3, 64, 128]
 		name:		a string, basic name for all filters/weights and biases for this operation
+		dropout_val	a float, dropout presentage, by default 0.85 (dropped out 15%)
 		activation:	an uppercase string, the activation function used. 
 				- If no activation, use 'none'
 		padding:	an uppercase string, the padding method (SAME or VALID)
@@ -131,6 +132,7 @@ def new_conv_layer(input, filter_shape, name, activation = 'RELU', padding='SAME
 		layer = tf.nn.sigmoid(layer)
 	elif activation == "SOFTMAX":
 		layer == tf.nn.softmax(layer)
+	layer = tf.nn.dropout(layer, dropout_val)
 	return layer, weights, biases
 
 def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU', strides = [1,1,1,1], padding = 'SAME'):
@@ -141,16 +143,17 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU
 		filter shape:	a list of integer, the shape of trainable filter for this operaation.
 				- the format, [filter height, filter width, num of input channels, num of output channels]
 		output_shape:	a list of integer, the shape of output tensor.
-				- the format:[batch size, width, height, num of output layer/depth]
+				- the format:[batch size, height, width, num of output layer/depth]
 				- MAKE SURE YOU HAVE CALCULATED THE OUTPUT TENSOR SHAPE BEFORE or some errors will eat your brain
 				- TRICKS ...,
 				- a. for easy and common case, set your input tensor has an even height and width
 				- b. the usually even number used is, 4, 8, 16, 32, 64, 128, 256, 512, ...
 		name:		a string, basic name for all filters/weights and biases for this operation
+		dropout_val	a float, dropout presentage, by default 0.85 (dropped out 15%)
 		activation:	an uppercase string, the activation used
 				- if no activation, use 'none'
-		padding:	an uppercase string, the padding method
-		strides:	the shape of strides, ex: [1, 1, 1, 1]
+		padding:	an uppercase string, the padding method (SAME or VALID)
+		strides:	a list of integer, the shape of strides with form [batch stride, height stride, width stride, channel stride], example: [1, 1, 1, 1]
 	Return:
 		a result of deconvolution operation, its weights, and biases
 	"""
@@ -185,8 +188,11 @@ def batch_norm(x, n_out, name, is_convolution =True):
 	Batch normalization on convolutional maps.
 	Args:
 		x:		Tensor, 4D BHWD input maps
-		n_out:		integer, depth of input maps
+		n_out:		integer, 
+					- for convolution, depth  of input channel
+					- for fully connected, number of input neuron
 		name:		basic name of tensor filters 
+		is_convolution	Boolean
 	Return:
 		normed:		batch-normalized maps
 	"""
