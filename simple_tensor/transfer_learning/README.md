@@ -27,10 +27,9 @@ This is a project for tensorflow transfer learning simplification
 ##### :shipit: Inception V4 Usage Example
 ###### Function:
 ```python
-from simple_tensor.transfer_learning import *
-
-# create input placeholder
-input_tensor = tf.placeholder(tf.float32, (None, 107, 299, 3))
+import tensorflow as tf
+from simple_tensor.transfer_learning.inception_utils import *
+from simple_tensor.transfer_learning.inception_v4 import *
 
 # get all params
 inception_v4_arg_scope = inception_utils.inception_arg_scope
@@ -48,5 +47,8 @@ with slim.arg_scope(arg_scope):
 
 
 # Next of your code
+from simple_tensor.tensor_operations import *
+# ....
+# ....
 # ....
 ```
