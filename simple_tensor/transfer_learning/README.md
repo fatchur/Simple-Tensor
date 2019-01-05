@@ -29,12 +29,24 @@ This is a project for tensorflow transfer learning simplification
 ```python
 from simple_tensor.transfer_learning import *
 
+# create input placeholder
+input_tensor = tf.placeholder(tf.float32, (None, 107, 299, 3))
+
+# get all params
 inception_v4_arg_scope = inception_utils.inception_arg_scope
 arg_scope = inception_v4_arg_scope()
 
+# create input placeholder
+input_tensor = tf.placeholder(tf.float32, (None, 107, 299, 3))
+
 # build inception v4 base graph
-# also get all variable name
 with slim.arg_scope(arg_scope):
+  # get output (logits)
   logits, end_points = inception_v4(input_tensor, num_classes=3, is_training=True)
+  # get inception variable name
   var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+
+
+# Next of your code
+# ....
 ```
