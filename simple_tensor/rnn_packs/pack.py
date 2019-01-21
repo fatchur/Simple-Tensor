@@ -330,9 +330,15 @@ class SimpleSquenceLSTM(LSTM):
 		# gate for target
 		self.output = tf.placeholder(self.tf_data_type, shape=(None, num_lstm_cell, self.output_feature_num), name='output_placeholder')
 	
-	def build_net(self, deep_lstm=False, scoope=''):
+	def build_net(self, inside_nn_type="fc", scoope=''):
 		"""
 		A function for buliding sequence of LSTM
+		Args:
+		inside_nn_type	:		A string as a choice, 
+								"wide", the neural net inside the lstm cell will be a fully connected type
+								"deep", the neural net inside the lstm cell will be a convolutional neural network
+								"hybrid", combintion between wide and deep
+		scoope			:		A scoope string
 		Return:
 			the output tensor and variable list of this LSTM cell
 		"""
@@ -341,13 +347,8 @@ class SimpleSquenceLSTM(LSTM):
 		outs = []
 		cell_vars = []
 		memmories = {}
-		for i in range(self.num_lstm_cell):
-			'''
-			if i == 0:
-				last_output = tf.convert_to_tensor(np.zeros((self.batch_size, self.output_feature_num)).astype(self.np_data_type))
-				last_memmory = tf.convert_to_tensor(np.zeros((self.batch_size, self.memory_feature_num)).astype(self.np_data_type))
-			'''
 
+		for i in range(self.num_lstm_cell):
 			cell_input = self.input_feature_placeholder[:, i, :]
 			out, memory, cell_var = self.build_lstm_cell(last_output, last_memmory, cell_input, num_hidden_neuron = self.num_hidden_neuron, cell_code= scoope + str(i), deep_lstm=deep_lstm)
 			last_output = out
