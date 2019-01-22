@@ -27,7 +27,7 @@ def new_biases(length, name, data_type=tf.float32):
 	return tf.Variable(tf.constant(0.05, shape=[length], dtype=data_type), dtype=data_type, name='bias_'+name)
 
 
-def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU", data_type=tf.float32): 
+def new_fc_layer(input, num_inputs, num_outputs, name, activation="LRELU", data_type=tf.float32): 
 	"""
 	A simplification method of tensorflow fully connected operation
 	Args:
@@ -60,7 +60,7 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU", data_t
 	return layer, weights, biases
 
 
-def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RELU', padding='SAME', strides=1, data_type=tf.float32):
+def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LRELU', padding='SAME', strides=1, data_type=tf.float32):
 	shape = filter_shape
 	weights = new_weights(shape=shape, name=name, data_type=data_type)
 	biases = new_biases(length=filter_shape[2], name=name, data_type=data_type)
@@ -84,7 +84,7 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RE
 	return layer, weights, biases
 
 
-def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'RELU', padding='SAME', strides=[1, 1, 1, 1]):  
+def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1]):  
 	"""
 	A simplification method of tensorflow convolution operation
 	Args:
@@ -135,7 +135,7 @@ def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'RE
 	layer = tf.nn.dropout(layer, dropout_val)
 	return layer, weights, biases
 
-def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'RELU', strides = [1,1,1,1], padding = 'SAME'):
+def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LRELU', strides = [1,1,1,1], padding = 'SAME'):
 	"""
 	A simplification method of tensorflow deconvolution operation
 	Args:
