@@ -135,6 +135,7 @@ def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LR
 	layer = tf.nn.dropout(layer, dropout_val)
 	return layer, weights, biases
 
+
 def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LRELU', strides = [1,1,1,1], padding = 'SAME'):
 	"""
 	A simplification method of tensorflow deconvolution operation

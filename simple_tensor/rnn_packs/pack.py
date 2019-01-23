@@ -124,18 +124,19 @@ class LSTM(object):
 		conv3a, conv3a_w, conv3a_b = new_conv1d_layer(input=concat1, filter_shape=[3, concat1.get_shape().as_list()[-1], 32], name='conv1d3a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		conv3b, conv3b_w, conv3b_b = new_conv1d_layer(input=concat1, filter_shape=[5, concat1.get_shape().as_list()[-1], 32], name='conv1d3b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 2
-		conv4a, conv4a_w, conv4a_b = new_conv1d_layer(input=conv3a, filter_shape=[5, conv3a.get_shape().as_list()[-1], 128], name='conv1d4' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
-		conv4b, conv4b_w, conv4b_b = new_conv1d_layer(input=conv3b, filter_shape=[3, conv3b.get_shape().as_list()[-1], 128], name='conv1d5' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv4a, conv4a_w, conv4a_b = new_conv1d_layer(input=conv3a, filter_shape=[3, conv3a.get_shape().as_list()[-1], 32], name='conv1d4' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv4b, conv4b_w, conv4b_b = new_conv1d_layer(input=conv3b, filter_shape=[5, conv3b.get_shape().as_list()[-1], 32], name='conv1d5' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# concatenate 
-		concat2 = tf.concat([conv3a, conv3b], -1)
+		concat2 = tf.concat([conv4a, conv4b], -1)
 		# flatten
 		flatten1 = tf.layers.flatten(concat2)
-
+		
 		#########################################################
 		### combine fully connected result with convolution #####
 		#########################################################
 		concat3 = tf.concat([drop2, flatten1], 1)
-		out, w_out, b_out = new_fc_layer(concat3, conv3b.get_shape().as_list()[-1], layer_out_num3, \
+		neuron_in = self.inside_LSTM_nn_input.get_shape().as_list()[-1] * concat2.get_shape().as_list()[-1] + drop2.get_shape().as_list()[-1]
+		out, w_out, b_out = new_fc_layer(concat3, neuron_in, layer_out_num3, \
 											name='fc1_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
 		# variable list
 		vars = [w_fc1, b_fc1, w_fc2, b_fc2, conv1a_w, conv1a_b, conv1b_w, conv1b_b, conv1c_w, conv1c_b, conv2a_w, conv2a_b, conv2b_w, conv2b_b, conv2c_w, conv2c_b, 
