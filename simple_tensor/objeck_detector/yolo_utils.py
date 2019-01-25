@@ -166,7 +166,7 @@ class ObjectDetector():
 		# total loss
 		total_loss = self.objectness_loss_alpha * objectness_loss + self.center_loss_alpha * ctr_loss + self.size_loss_alpha * sz_loss
 		return total_loss
-		
+
 
 	def read_yolo_labels(self, label_list):
 		"""
@@ -180,10 +180,8 @@ class ObjectDetector():
 		label_grid = []
 
 		for num, i in enumerate(labels):
-			tmp = np.empty((self.grid_height, self.grid_width, 7))
-			tmp[:, :, 1:5] = -1.0
-			tmp[:, :, 0] = 0.0
-			tmp[:, :, -2:] = 0.0
+			tmp = np.zeros((self.grid_height, self.grid_width, 5))
+			tmp[:, :, :] = 0.0
 
 			# read txt label
 			file_name = "labels/" + i + ".txt"
@@ -211,13 +209,13 @@ class ObjectDetector():
 			for j, k, l, m in zip(x, y, w, h):
 				cell_x = int(math.floor(j/(1.0/self.grid_width)))
 				cell_y = int(math.floor(k/(1.0/self.grid_height)))
-				tmp [cell_y, cell_x, 0] = 1.0
-				tmp [cell_y, cell_x, 1] = (j - (cell_x * (1.0/self.grid_width))) / (1.0/self.grid_width)
-				tmp [cell_y, cell_x, 2] = (k - (cell_y * (1.0/self.grid_height))) / (1.0/self.grid_height)
-				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0] + 0.0001)
-				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[1] + 0.0001)
-				tmp [cell_y, cell_x, 5] = (cell_x * (1.0/self.grid_width))
-				tmp [cell_y, cell_x, 6] = (cell_y * (1.0/self.grid_height))
+				tmp [cell_y, cell_x, 0] = 1.0																# add objectness score
+				tmp [cell_y, cell_x, 1] = (j - (cell_x * (1.0/self.grid_width))) / (1.0/self.grid_width)	# add x center values
+				tmp [cell_y, cell_x, 2] = (k - (cell_y * (1.0/self.grid_height))) / (1.0/self.grid_height)	# add y center values
+				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0] + 0.0001)								# add width width value
+				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[1] + 0.0001)								# add height value
+				#tmp [cell_y, cell_x, 5] = (cell_x * (1.0/self.grid_width))
+				#tmp [cell_y, cell_x, 6] = (cell_y * (1.0/self.grid_height))
 
 			label_grid.append(tmp)    
 
