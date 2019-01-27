@@ -193,16 +193,13 @@ class ObjectDetector():
 
 			# get letter x position raw data
 			x = []
-			for j in range (line):
-				x.append(float(a[j*5 + 1]))
 			y = []
-			for j in range (line):
-				y.append(float(a[j*5 + 2]))
 			w = []
-			for j in range (line):
-				w.append(float(a[j*5 + 3]))
 			h = []
 			for j in range (line):
+				x.append(float(a[j*5 + 1]))
+				y.append(float(a[j*5 + 2]))
+				w.append(float(a[j*5 + 3]))
 				h.append(float(a[j*5 + 4]))
 			    
 			# get position in grid

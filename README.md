@@ -77,16 +77,16 @@ new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RELU',
 ###### Parameters:
 **input** : The input tensor, the shape shoud be : [batch, width, depth] <br/>
 **filter_shape** : The shape of filter, [filter height, filter width, input depth, output depth]<br/>
-**name** : The name for this operation
-**dropout_val** : The 1 - dropoout value, ex 0.85 for 0.15 dropped out
-**activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
-**padding** : The type of padding (VALID or SAME)  
-**strides** : The strides, [batch stride, height stride, width stride, depth stride]  
+**name** : The name for this operation <br/>
+**dropout_val** : The 1 - dropoout value, ex 0.85 for 0.15 dropped out <br/>
+**activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU) <br/>
+**padding** : The type of padding (VALID or SAME)   <br/>
+**strides** : The strides, [batch stride, height stride, width stride, depth stride]   <br/>
 
 ###### Returns:
-**output** : The output tensor, the shape should be: _[batch, width, depth]_  
-**weights**: Filter weights of this tensor operation  
-**biases** : Biases of this tensor moperation  
+**output** : The output tensor, the shape should be: _[batch, width, depth]_   <br/>
+**weights**: Filter weights of this tensor operation   <br/>
+**biases** : Biases of this tensor moperation   <br/>
 
 > **case 1**: 
 > - you have a tensor with the shape of [?, 100, 1], and want to apply a convolution with the same shape output.
