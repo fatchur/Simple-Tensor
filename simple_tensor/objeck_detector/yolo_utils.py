@@ -8,8 +8,8 @@ from nodeflux.tensor_utils.tensor_operations import *
 
 
 class ObjectDetector():
-	def __init__(self, input_height=80, input_width=240, grid_height=5, grid_width=15, anchor = [0.05, 0.1], 
-				objectness_loss_alpha = 1, noobjectness_loss_alpha = 1, center_loss_alpha = 1, size_loss_alpha = 1):
+	def __init__(self, input_height, input_width, grid_height, grid_width, 
+					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [0.05, 0.1]):
 		"""
 		Creating an Object
 		"""
@@ -23,6 +23,7 @@ class ObjectDetector():
 		self.noobjectness_loss_alpha = noobjectness_loss_alpha
 		self.center_loss_alpha = center_loss_alpha
 		self.size_loss_alpha = size_loss_alpha
+		self.class_loss_alpha = class_loss_alpha
 
 
 	def iou(self, bbox1, bbox2):
@@ -133,27 +134,19 @@ class ObjectDetector():
 
 		# get x values
 		x_pred = output[:, :, :, 1]
-		x_pred = tf.multiply(x_pred, objectness_label)
 		x_label = label[:, :, :, 1]
-		x_label = tf.multiply(x_label, objectness_label)
 
 		# get y value
 		y_pred = output[:, :, :, 2]
-		y_pred = tf.multiply(y_pred, objectness_label)
 		y_label = label[:, :, :, 2]
-		y_label = tf.multiply(y_label, objectness_label)
 
 		# get width values
 		w_pred = output[:, :, :, 3]
-		w_pred = tf.multiply(w_pred, objectness_label)
 		w_label = label[:, :, :, 3]
-		w_label = tf.multiply(w_label, objectness_label)
 
 		# get height values
 		h_pred = output[:, :, :, 4]
-		h_pred = tf.multiply(h_pred, objectness_label)
 		h_label = label[:, :, :, 4]
-		h_label = tf.multiply(h_label, objectness_label)
 
 		# --- calculate losses ---
 		# objectness loss
