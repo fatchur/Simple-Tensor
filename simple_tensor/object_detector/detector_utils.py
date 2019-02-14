@@ -17,6 +17,8 @@ class ObjectDetector(object):
 		self.input_width = input_width
 		self.grid_height = grid_height
 		self.grid_width = grid_width
+		self.num_vertical_grid = int(math.floor(input_height/grid_height))
+		self.num_horizontal_grid = int(math.floor(input_width/grid_width))
 		self.anchor = anchor
 
 		self.objectness_loss_alpha = objectness_loss_alpha
@@ -157,12 +159,12 @@ class ObjectDetector(object):
 		y_label = label[:, :, :, 2]
 
 		# point grid loss 
-		point_loss = mse_loss(point_grid_pred, point_grid_label)
+		point_loss = self.mse_loss(point_grid_pred, point_grid_label)
 		# no point grid loss
-		nopoint_loss = mse_loss(nopoint_grid_pred, nopoint_grid_label)
+		nopoint_loss = self.mse_loss(nopoint_grid_pred, nopoint_grid_label)
 		# center loss 
-		center_x_loss = mse_loss(x_pred, x_label)
-		center_y_loss = mse_loss(y_pred, y_label)
+		center_x_loss = self.mse_loss(x_pred, x_label)
+		center_y_loss = self.mse_loss(y_pred, y_label)
 		center_loss = (center_x_loss + center_y_loss) / 2.0
 
 		total_loss = self.objectness_loss_alpha * point_loss + \
@@ -171,25 +173,22 @@ class ObjectDetector(object):
 		return total_loss 
 
 	
-	def read_landmark_labels(self, image_name_list, label):
-		label_grid = []
+	def read_landmark_labels(self, image_name, label):
+		tmp = np.zeros((self.grid_height, self.grid_width, 4))
+		tmp[:, :, :] = 0.
 
-		for i in image_name_list:
-			tmp = np.zeros((self.grid_height, self.grid_width, 5))
-			tmp[:, :, :] = 0.
+		# get the list
+		for j in range(4):
+			x = label[image_name][j][0]
+			y = label[image_name][j][1]
+			# the x and y value is relative,
+			# so it should be devided by relative too
+			x_cell = int(math.floor(x / float(self.grid_width/self.input_width)))
+			y_cell = int(math.floor(y / float(self.grid_height/self.input_height)))
+			tmp[y_cell, x_cell, 0] = 1.0
 
-			# get the list
-			for j in range(4):
-				x = label[i][j][0]
-				y = label[i][j][1]
-				x_cell = int(math.floor(x / self.grid_width))
-				y_cell = int(math.floor(x / self.grid_height))
-				tmp[y_cell, x_cell, 0] = 1.0
-
-			label_grid.append(tmp)
-
-		label_grid = np.array(label_grid)
-		return label_grid
+		tmp = np.array(tmp)
+		return tmp
 
 
 	def read_yolo_labels(self, label_list):

@@ -44,7 +44,7 @@ def main():
 				feed_dict = {x_input: image_data_tmp, y_true:image_labels_tmp}
 				#session.run(optimizer, feed_dict)
 				loss = session.run(list_cost, feed_dict)
-				print loss, "---------"
+				print (loss, "---------")
 				tmp_losses.append(loss)
 
 			loss = sum(tmp_losses)/len(tmp_losses)
