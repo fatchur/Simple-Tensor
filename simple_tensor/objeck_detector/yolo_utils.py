@@ -61,35 +61,7 @@ class ObjectDetector():
 		return the_iou
 
 
-	def center_loss(self, output_tensor, label):
-		"""
-		A method for calculating the center loss
-		Args:
-			output_tensor	:		a tensor with shape [?, grid width, grid height, 2], 2 has mean x_center and y_center
-			label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean x_center and y_center
-		Return:
-			a tensor of center_loss with shape [?, grid width, grid height, 1]
-		"""
-		loss = tf.square(tf.subtract(output_tensor, label))
-		loss = tf.reduce_mean(loss)
-		return loss
-
-
-	def size_loss(self, output_tensor, label):
-		"""
-		A method for calculating the width height loss
-		Args:
-			output_tensor	:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-			label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-		Return:
-			a tensor of center_loss with shape [?, grid width, grid height, 1]
-		"""
-		loss = tf.square(tf.subtract(output_tensor, label))
-		loss = tf.reduce_mean(loss)
-		return loss
-
-
-	def objectness_loss(self, output_tensor, label):
+	def mse_loss(self, output_tensor, label):
 		"""
 		A method for calculating the confidence_loss
 		Args:
@@ -97,14 +69,6 @@ class ObjectDetector():
 			label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
 		Return:
 			a tensor of center_loss with shape [?, grid width, grid height, 1]
-		"""
-		loss = tf.square(tf.subtract(output_tensor, label))
-		loss = tf.reduce_mean(loss)
-		return loss
-
-
-	def noobj_loss(self, output_tensor, label):
-		"""
 		"""
 		loss = tf.square(tf.subtract(output_tensor, label))
 		loss = tf.reduce_mean(loss)
@@ -123,7 +87,7 @@ class ObjectDetector():
 		"""
 		A yolo loss main method
 		Args:
-			output_tensor	:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
+			output			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
 			label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
 		Return:
 			SILL ON PROGRESS
@@ -159,6 +123,73 @@ class ObjectDetector():
 		# total loss
 		total_loss = self.objectness_loss_alpha * objectness_loss + self.center_loss_alpha * ctr_loss + self.size_loss_alpha * sz_loss
 		return total_loss
+
+
+	def four_points_landmark_loss(self, output, label):
+		"""
+		A four point landmark loss
+		Args:
+			output			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
+			label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
+		Return:
+			SILL ON PROGRESS
+		"""
+		# get point location
+		point_grid_label = label[:, :, :, 0]
+		point_grid_pred = output[:, :, :, 0]
+		point_grid_pred = tf.multiply(point_grid_pred, point_grid_label)
+
+		# get no point location
+		#nopoint_grid_label = tf.math.logical_not(tf.cast(point_grid_label, tf.bool))
+		#nopoint_grid_label = tf.cast(nopoint_grid_label, tf.float32)
+		nopoint_grid_label = 1.0 - point_grid_label
+		nopoint_grid_pred = 1.0 - output[:, :, :, 0]
+		nopoint_grid_pred = tf.multiply(nopoint_grid_pred, nopoint_grid_label)
+
+		# get x values
+		x_pred = output[:, :, :, 1]
+		x_pred = tf.multiply(x_pred, point_grid_label)
+		x_label = label[:, :, :, 1]
+
+		# get y value
+		y_pred = output[:, :, :, 2]
+		y_pred = tf.multiply(y_pred, point_grid_label)
+		y_label = label[:, :, :, 2]
+
+		# point grid loss 
+		point_loss = mse_loss(point_grid_pred, point_grid_label)
+		# no point grid loss
+		nopoint_loss = mse_loss(nopoint_grid_pred, nopoint_grid_label)
+		# center loss 
+		center_x_loss = mse_loss(x_pred, x_label)
+		center_y_loss = mse_loss(y_pred, y_label)
+		center_loss = (center_x_loss + center_y_loss) / 2.0
+
+		total_loss = self.objectness_loss_alpha * point_loss + \
+					 self.noobjectness_loss_alpha * nopoint_loss + \
+					 self.center_loss_alpha * center_loss
+		return total_loss 
+
+	
+	def read_landmark_labels(self, image_name_list, label):
+		label_grid = []
+
+		for i in image_name_list:
+			tmp = np.zeros((self.grid_height, self.grid_width, 5))
+			tmp[:, :, :] = 0.
+
+			# get the list
+			for j in range(4):
+				x = label[i][j][0]
+				y = label[i][j][1]
+				x_cell = int(math.floor(x / self.grid_width))
+				y_cell = int(math.floor(x / self.grid_height))
+				tmp[y_cell, x_cell, 0] = 1.0
+
+			label_grid.append(tmp)
+
+		label_grid = np.array(label_grid)
+		return label_grid
 
 
 	def read_yolo_labels(self, label_list):
