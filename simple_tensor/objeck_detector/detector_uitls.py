@@ -4,7 +4,7 @@ from os import walk
 import os
 import cv2
 import math
-from nodeflux.tensor_utils.tensor_operations import *
+from simple_tensor.tensor_operations import *
 
 
 class ObjectDetector(object):
@@ -132,7 +132,7 @@ class ObjectDetector(object):
 			output			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
 			label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
 		Return:
-			SILL ON PROGRESS
+			a float tensor
 		"""
 		# get point location
 		point_grid_label = label[:, :, :, 0]

@@ -6,5 +6,5 @@ setup(
     description='a simple package for handling tensorflow tensor',  # Required
     long_description="a simple package for handling tensorflow tensor",  # Optional
     author='Chur Chur',  # Optional
-    packages=["simple_tensor", "simple_tensor.transfer_learning"],  # Required
+    packages=["simple_tensor", "simple_tensor.transfer_learning", "simple_tensor.object_detector"],  # Required
 )
