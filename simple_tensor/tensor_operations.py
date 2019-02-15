@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+
+
 def new_weights(shape, name, data_type=tf.float32):
 	"""
 	Creating new trainable tensor (filter) as weight
@@ -133,8 +135,53 @@ def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LR
 	elif activation == "SOFTMAX":
 		layer == tf.nn.softmax(layer)
 	layer = tf.nn.dropout(layer, dropout_val)
-	return layer, weights, biases
+	return layer, weights, 
+	
 
+def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1]): 
+	"""Function for conv2d depth wise convolution operation
+	
+	Arguments:
+		input {tensor} -- the input tensor
+		filter_shape {list of integer} -- the shape of the filter with format []
+		name {str} -- the name of tensors in this operation
+	
+	Keyword Arguments:
+		dropout_val {float} -- [description] (default: {0.85})
+		activation {str} -- [description] (default: {'LRELU'})
+		padding {str} -- [description] (default: {'SAME'})
+		strides {list} -- [description] (default: {[1, 1, 1, 1]})
+	
+	Return:
+		a tensor as the result of depthwise conv2d operation, its weights, and biases
+	"""
+	shape = filter_shape
+	weights = new_weights(shape=shape, name=name)
+	biases = new_biases(length=filter_shape[3], name=name)
+
+	layer = tf.nn.depthwise_conv2d(input=input,
+							filter=weights,
+							strides=strides,
+							padding=padding, name='convolution_'+name)
+	layer += biases
+
+	if activation == "RELU":
+		layer = tf.nn.relu(layer)
+	elif activation == "LRELU":
+		layer = tf.nn.leaky_relu(layer)
+	elif activation == "SELU":
+		layer = tf.nn.selu(layer)
+	elif activation == "ELU":
+		layer = tf.nn.elu(layer)
+	elif activation == "SIGMOID":
+		layer = tf.nn.sigmoid(layer)
+	elif activation == "SOFTMAX":
+		layer == tf.nn.softmax(layer)
+
+	layer = tf.nn.dropout(layer, dropout_val)
+
+	return layer, weights, biases
+	
 
 def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LRELU', strides = [1,1,1,1], padding = 'SAME'):
 	"""

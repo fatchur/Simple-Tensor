@@ -174,7 +174,7 @@ class ObjectDetector(object):
 
 	
 	def read_landmark_labels(self, image_name, label):
-		tmp = np.zeros((self.grid_height, self.grid_width, 4))
+		tmp = np.zeros((self.num_vertical_grid , self.num_horizontal_grid , 4))
 		tmp[:, :, :] = 0.
 
 		# get the list
@@ -185,6 +185,7 @@ class ObjectDetector(object):
 			# so it should be devided by relative too
 			x_cell = int(math.floor(x / float(self.grid_width/self.input_width)))
 			y_cell = int(math.floor(y / float(self.grid_height/self.input_height)))
+			#print (x_cell, y_cell, x, y, float(self.grid_width/self.input_width), float(self.grid_height/self.input_height))
 			tmp[y_cell, x_cell, 0] = 1.0
 
 		tmp = np.array(tmp)
