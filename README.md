@@ -12,7 +12,7 @@
 
 
 ### ABOUT PROJECT
-This is a simplification of tensorflow tensor operation easier
+This is a simplification of tensorflow tensor operation
 
 ### DEPENDENCIES
 1. Tensorflow (1.0 - 1.12)
