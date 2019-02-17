@@ -10,7 +10,7 @@
 |3rd Jan 2019 | Add conv1d operations                                                                                                           |      v0.0.2       |
 |17th Feb 2019 | Add conv2d depthwise layer, transfer learning package                                                                          |      v0.0.3       |
 |              | The conv1d, conv2d, and conv2d depthwise functions consist dropout operation inside                                            |                   |
-|              | **pertamina safety project depends on this tag**                                                                               |                   |
+|              | **Pertamina safety project depends on this tag**                                                                               |                   |
 
 
 ### ABOUT PROJECT
