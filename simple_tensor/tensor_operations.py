@@ -1,3 +1,5 @@
+
+
 import tensorflow as tf
 
 
@@ -29,7 +31,7 @@ def new_biases(length, name, data_type=tf.float32):
 	return tf.Variable(tf.constant(0.05, shape=[length], dtype=data_type), dtype=data_type, name='bias_'+name)
 
 
-def new_fc_layer(input, num_inputs, num_outputs, name, activation="LRELU", data_type=tf.float32): 
+def new_fc_layer(input, num_inputs, num_outputs, name, dropout_val=0.85, activation="LRELU", data_type=tf.float32): 
 	"""
 	A simplification method of tensorflow fully connected operation
 	Args:
@@ -37,6 +39,7 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="LRELU", data_
 		num_inputs:	an integer, the number of input neurons
 		num_outputs:	an integer, the number of output neurons
 		name:		a string, basic name for all filters/weights and biases for this operation
+		dropout		a float, dropout presentage, by default 0.85 (dropped out 15%)
 		activation:	an uppercase string, the activation used
 				- if you don't need an activation function, fill it with 'non'
 	Return:
@@ -59,15 +62,41 @@ def new_fc_layer(input, num_inputs, num_outputs, name, activation="LRELU", data_
 		layer = tf.nn.sigmoid(layer)
 	elif activation == "SOFTMAX":
 		layer == tf.nn.softmax(layer)
-	return layer, weights, biases
+	
+	layer = tf.nn.dropout(layer, dropout_val)
+	# trainable variable list
+	var_dict = {}
+	vard_dict[name + "_weights"] = weights
+	vard_dict[name + "_biases"] = biases
+
+	return layer, var_dict
 
 
-def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LRELU', padding='SAME', strides=1, data_type=tf.float32):
+def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LRELU', padding='SAME', strides=1, data_type=tf.float32, is_training=True):
+	"""[summary]
+	
+	Arguments:
+		input {3D tensor} -- The input tensor with shape [batch, width, channel]
+		filter_shape {List of integer} -- the shape of the filter with format [filter width, input channel, output channel]
+		name {string} -- The additional name for all tensors in this operation
+	
+	Keyword Arguments:
+		dropout_val {float} -- [description] (default: {0.85})
+		activation {str} -- [description] (default: {'LRELU'})
+		padding {str} -- [description] (default: {'SAME'})
+		strides {int} -- [description] (default: {1})
+		data_type {[type]} -- [description] (default: {tf.float32})
+	
+	Returns:
+		[3D tensor] --  The input tensor with shape [batch, width, channel]
+	"""
 	shape = filter_shape
 	weights = new_weights(shape=shape, name=name, data_type=data_type)
 	biases = new_biases(length=filter_shape[2], name=name, data_type=data_type)
 	layer = tf.nn.conv1d(input, filters = weights, stride = strides, padding = padding, name='convolution1d_' + name)
 	layer += biases
+
+	layer, beta, scale = new_batch_norm(layer, phase_train = is_training, name = name)
 
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
@@ -83,10 +112,17 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
 		layer == tf.nn.softmax(layer)
 
 	layer = tf.nn.dropout(layer, dropout_val)
-	return layer, weights, biases
+	# trainable variable list
+	var_dict = {}
+	vard_dict[name + "_weights"] = weights
+	vard_dict[name + "_biases"] = biases
+	vard_dict[name + "_beta"] = beta
+	vard_dict[name + "_scale"] = scale
+
+	return layer, var_dict
 
 
-def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1]):  
+def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True):  
 	"""
 	A simplification method of tensorflow convolution operation
 	Args:
@@ -122,6 +158,8 @@ def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LR
 							padding=padding, name='convolution_'+name)
 	layer += biases
 
+	layer, beta, scale = new_batch_norm(layer, phase_train = is_training, name = name)
+
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
 	elif activation == "LRELU":
@@ -134,16 +172,25 @@ def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LR
 		layer = tf.nn.sigmoid(layer)
 	elif activation == "SOFTMAX":
 		layer == tf.nn.softmax(layer)
+
 	layer = tf.nn.dropout(layer, dropout_val)
-	return layer, weights, 
+
+	# trainable variable list
+	var_dict = {}
+	vard_dict[name + "_weights"] = weights
+	vard_dict[name + "_biases"] = biases
+	vard_dict[name + "_beta"] = beta
+	vard_dict[name + "_scale"] = scale
+
+	return layer, var_dict
 	
 
-def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1]): 
+def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True): 
 	"""Function for conv2d depth wise convolution operation
 	
 	Arguments:
 		input {tensor} -- the input tensor
-		filter_shape {list of integer} -- the shape of the filter with format []
+		filter_shape {list of integer} -- the shape of the filter with format [filter height, filter width, input channel, multiplier]
 		name {str} -- the name of tensors in this operation
 	
 	Keyword Arguments:
@@ -165,6 +212,8 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 							padding=padding, name='convolution_'+name)
 	layer += biases
 
+	layer, beta, scale = new_batch_norm(layer, phase_train = is_training, name=name)
+
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
 	elif activation == "LRELU":
@@ -180,7 +229,13 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 
 	layer = tf.nn.dropout(layer, dropout_val)
 
-	return layer, weights, biases
+	var_dict = {}
+	vard_dict[name + "_weights"] = weights
+	vard_dict[name + "_biases"] = biases
+	vard_dict[name + "_beta"] = beta
+	vard_dict[name + "_scale"] = scale
+
+	return layer, var_dict
 	
 
 def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LRELU', strides = [1,1,1,1], padding = 'SAME'):
@@ -231,7 +286,7 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LREL
 	return deconv, weights, biases
 
 
-def batch_norm(x, n_out, name, is_convolution =True):
+def batch_norm(x, n_out, name, is_training =True):
 	"""
 	Batch normalization on convolutional maps.
 	Args:
@@ -247,11 +302,41 @@ def batch_norm(x, n_out, name, is_convolution =True):
 
 	beta = tf.Variable(tf.constant(0.0, shape=[n_out]), name='beta_' + name)
 	gamma = tf.Variable(tf.constant(1.0, shape=[n_out]), name='gamma_' + name)
+	
 	if is_convolution:
-		batch_mean, batch_var = tf.nn.moments(x, [0,1,2], name='moments')
+		batch_mean, batch_var = tf.nn.moments(x, [0,1,2], name='moments' + name)
 	else:
-		batch_mean, batch_var = tf.nn.moments(x, [1], name='moments')
+		batch_mean, batch_var = tf.nn.moments(x, [1], name='moments' + name)
 
 	normed = tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, 1e-3)
 	return normed, beta, gamma
+
+
+def new_batch_norm(x, phase_train, name='bn'):
+    """
+    Batch normalization on convolutional maps.
+    Args:
+        x:           Tensor, 4D BHWD input maps
+        phase_train: boolean tf.Varialbe, true indicates training phase
+        name:       string, variable scope
+    Return:
+        normed:      batch-normalized maps
+    """
+	axis = list(range(len(x) - 1))
+	beta = tf.Variable(tf.constant(0.0, shape=axis), name='beta_' + name)
+	gamma = tf.Variable(tf.constant(1.0, shape=axis), name='gamma_' + name)
+	batch_mean, batch_var = tf.nn.moments(x, axis, name='moments_' + name)
+	ema = tf.train.ExponentialMovingAverage(decay=0.5)
+
+	def mean_var_with_update():
+		ema_apply_op = ema.apply([batch_mean, batch_var])
+		with tf.control_dependencies([ema_apply_op]):
+			return tf.identity(batch_mean), tf.identity(batch_var)
+
+	mean, var = tf.cond(phase_train,
+						mean_var_with_update,
+						lambda: (ema.average(batch_mean), ema.average(batch_var)))
+	normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
+
+    return normed, beta, gamma
 
