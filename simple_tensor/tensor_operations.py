@@ -65,8 +65,8 @@ def new_fc_layer(input, num_inputs, num_outputs, name, dropout_val=0.85, activat
 	layer = tf.nn.dropout(layer, dropout_val)
 	# trainable variable list
 	var_dict = {}
-	vard_dict[name + "_weights"] = weights
-	vard_dict[name + "_biases"] = biases
+	var_dict[name + "_weights"] = weights
+	var_dict[name + "_biases"] = biases
 
 	return layer, var_dict
 
@@ -95,7 +95,7 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
 	layer = tf.nn.conv1d(input, filters = weights, stride = strides, padding = padding, name='convolution1d_' + name)
 	layer += biases
 
-	layer, beta, scale = new_batch_norm(layer, phase_train = is_training, name = name)
+	layer, beta, scale = new_batch_norm(layer, axis=[0, 1], phase_train = is_training, name = name)
 
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
@@ -113,10 +113,10 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
 	layer = tf.nn.dropout(layer, dropout_val)
 	# trainable variable list
 	var_dict = {}
-	vard_dict[name + "_weights"] = weights
-	vard_dict[name + "_biases"] = biases
-	vard_dict[name + "_beta"] = beta
-	vard_dict[name + "_scale"] = scale
+	var_dict[name + "_weights"] = weights
+	var_dict[name + "_biases"] = biases
+	var_dict[name + "_beta"] = beta
+	var_dict[name + "_scale"] = scale
 
 	return layer, var_dict
 
@@ -157,7 +157,7 @@ def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = '
 							padding=padding, name='convolution_'+name)
 	layer += biases
 
-	layer, beta, scale = new_batch_norm(layer, phase_train = is_training, name = name)
+	layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train = is_training, name = name)
 
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
@@ -176,10 +176,10 @@ def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = '
 
 	# trainable variable list
 	var_dict = {}
-	vard_dict[name + "_weights"] = weights
-	vard_dict[name + "_biases"] = biases
-	vard_dict[name + "_beta"] = beta
-	vard_dict[name + "_scale"] = scale
+	var_dict[name + "_weights"] = weights
+	var_dict[name + "_biases"] = biases
+	var_dict[name + "_beta"] = beta
+	var_dict[name + "_scale"] = scale
 
 	return layer, var_dict
 	
@@ -210,8 +210,9 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 							strides=strides,
 							padding=padding, name='convolution_'+name)
 	layer += biases
+	print (layer)
 
-	layer, beta, scale = new_batch_norm(layer, phase_train = is_training, name=name)
+	layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train=is_training, name=name)
 
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
@@ -229,10 +230,10 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 	layer = tf.nn.dropout(layer, dropout_val)
 
 	var_dict = {}
-	vard_dict[name + "_weights"] = weights
-	vard_dict[name + "_biases"] = biases
-	vard_dict[name + "_beta"] = beta
-	vard_dict[name + "_scale"] = scale
+	var_dict[name + "_weights"] = weights
+	var_dict[name + "_biases"] = biases
+	var_dict[name + "_beta"] = beta
+	var_dict[name + "_scale"] = scale
 
 	return layer, var_dict
 	
@@ -290,19 +291,18 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LREL
 	return deconv, var_dict
 
 
-def new_batch_norm(x, phase_train, name='bn'):
-    """
-    Batch normalization on convolutional maps.
-    Args:
-        x:           Tensor, 4D BHWD input maps
-        phase_train: boolean tf.Varialbe, true indicates training phase
-        name:       string, variable scope
-    Return:
-        normed:      batch-normalized maps
-    """
-	axis = list(range(len(x) - 1))
-	beta = tf.Variable(tf.constant(0.0, shape=axis), name='beta_' + name)
-	gamma = tf.Variable(tf.constant(1.0, shape=axis), name='gamma_' + name)
+def new_batch_norm(x, axis, phase_train, name='bn'):
+	"""
+	Batch normalization on convolutional maps.
+	Args:
+		x:           Tensor, 4D BHWD input maps
+		phase_train: boolean tf.Varialbe, true indicates training phase
+		name:       string, variable scope
+	Return:
+		normed:      batch-normalized maps
+	"""
+	beta = tf.Variable(tf.constant(0.0, shape=[x.get_shape().as_list()[-1]]), name='beta_' + name)
+	gamma = tf.Variable(tf.constant(1.0, shape=[x.get_shape().as_list()[-1]]), name='gamma_' + name)
 	batch_mean, batch_var = tf.nn.moments(x, axis, name='moments_' + name)
 	ema = tf.train.ExponentialMovingAverage(decay=0.5)
 
@@ -311,10 +311,14 @@ def new_batch_norm(x, phase_train, name='bn'):
 		with tf.control_dependencies([ema_apply_op]):
 			return tf.identity(batch_mean), tf.identity(batch_var)
 
-	mean, var = tf.cond(phase_train,
+	mean, var = tf.cond(tf.cast(phase_train, tf.bool),
 						mean_var_with_update,
 						lambda: (ema.average(batch_mean), ema.average(batch_var)))
+
+	print ("beta", beta)
+	print ("gamma", gamma)
+	print (batch_mean)
 	normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
 
-    return normed, beta, gamma
+	return normed, beta, gamma
 
