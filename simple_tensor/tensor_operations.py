@@ -121,7 +121,7 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
 	return layer, var_dict
 
 
-def new_conv_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True):  
+def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True):  
 	"""
 	A simplification method of tensorflow convolution operation
 	Args:
@@ -282,33 +282,12 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LREL
 		deconv = tf.nn.sigmoid(deconv)
 	elif activation == "SOFTMAX":
 		deconv == tf.nn.softmax(deconv)
-	return deconv, weights, biases
 
+	var_dict = {}
+	vard_dict[name + "_weights"] = weights
+	vard_dict[name + "_biases"] = biases
 
-def batch_norm(x, n_out, name, is_training =True):
-	"""
-	Batch normalization on convolutional maps.
-	Args:
-		x:		Tensor, 4D BHWD input maps
-		n_out:		integer, 
-					- for convolution, depth  of input channel
-					- for fully connected, number of input neuron
-		name:		basic name of tensor filters 
-		is_convolution	Boolean
-	Return:
-		normed:		batch-normalized maps
-	"""
-
-	beta = tf.Variable(tf.constant(0.0, shape=[n_out]), name='beta_' + name)
-	gamma = tf.Variable(tf.constant(1.0, shape=[n_out]), name='gamma_' + name)
-	
-	if is_convolution:
-		batch_mean, batch_var = tf.nn.moments(x, [0,1,2], name='moments' + name)
-	else:
-		batch_mean, batch_var = tf.nn.moments(x, [1], name='moments' + name)
-
-	normed = tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, 1e-3)
-	return normed, beta, gamma
+	return deconv, var_dict
 
 
 def new_batch_norm(x, phase_train, name='bn'):
