@@ -32,7 +32,7 @@ from simple_tensor.transfer_learning.inception_utils import *
 from simple_tensor.transfer_learning.inception_v4 import *
 
 # get all params
-inception_v4_arg_scope = inception_utils.inception_arg_scope
+inception_v4_arg_scope = inception_arg_scope
 arg_scope = inception_v4_arg_scope()
 
 # create input placeholder

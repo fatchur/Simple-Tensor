@@ -8,6 +8,9 @@
 |16th Sept 2018 | Initial Repo was created, Unready to be used  |      v0.0.1           |
 |Dec 2018 | Update on deconvolution filter shape format |      -           |
 |3rd Jan 2019 | Add conv1d operations |      v0.0.2           |
+|17th Feb 2019 | Add conv2d depthwise layer, transfer learning package | v0.0.3 |
+|              | The conv1d, conv2d, and conv2d depthwise functions consist dropout operation inside |          |
+|              | ===>> pertamina safety project depend on this tag |      |
 
 ### ABOUT PROJECT
 This is a project for making tensorflow tensor operation easier
