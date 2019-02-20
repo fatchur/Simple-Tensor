@@ -95,23 +95,32 @@ class ObjectDetector(object):
 			SILL ON PROGRESS
 		"""
 		# get objectness confidence
-		objectness_pred = output[:, :, :, 0]
 		objectness_label = label[:, :, :, 0]
+		objectness_pred = output[:, :, :, 0]
+
+		# get noobjectness confidence
+		noobjectness_label = 1.0 - objectness_label 
+		noobjectness_pred = 1.0 - output[:, :, :, 0]
+		noobjectness_pred = tf.multiply(nopoint_grid_pred, nopoint_grid_label)
 
 		# get x values
 		x_pred = output[:, :, :, 1]
+		x_pred = tf.multiply(x_pred, objectness_label)
 		x_label = label[:, :, :, 1]
 
 		# get y value
 		y_pred = output[:, :, :, 2]
+		y_pred = tf.multiply(y_pred, objectness_label)
 		y_label = label[:, :, :, 2]
 
 		# get width values
 		w_pred = output[:, :, :, 3]
+		w_pred = tf.multiply(w_pred, objectness_label)
 		w_label = label[:, :, :, 3]
 
 		# get height values
 		h_pred = output[:, :, :, 4]
+		h_pred = tf.multiply(h_pred, objectness_label)
 		h_label = label[:, :, :, 4]
 
 		# --- calculate losses ---
