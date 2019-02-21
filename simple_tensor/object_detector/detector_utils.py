@@ -9,7 +9,7 @@ from simple_tensor.tensor_operations import *
 
 class ObjectDetector(object):
 	def __init__(self, input_height, input_width, grid_height, grid_width, 
-					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [0.05, 0.1]):
+					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [(0.5, 0.5)):
 		"""
 		Creating an Object
 		"""
@@ -63,6 +63,23 @@ class ObjectDetector(object):
 		return the_iou
 
 
+	def convert_to_real_ordinat(self, input_tensor, label_tensor):
+		"""[summary]
+		
+		Arguments:
+			input_tensor {[type]} -- [description]
+			label_tensor {[type]} -- [description]
+		
+		Returns:
+			[type] -- [description]
+		"""
+		input_tensor_x = (label_tensor[:, 5] + input_tensor[:, 1] * (1.0/self.grid_width)) * self.input_width
+		input_tensor_y = (label_tensor[:, 6] + input_tensor[:, 2] * (1.0/self.grid_height)) * self.input_height
+		input_tensor_w = (self.anchor[0] * tf.exp(input_tensor[:, 3])) * self.input_width
+		input_tensor_h = (self.anchor[1] * tf.exp(input_tensor[:, 4])) * self.input_height
+		return tf.stack([input_tensor_x, input_tensor_y, input_tensor_w, input_tensor_h])
+
+
 	def mse_loss(self, output_tensor, label):
 		"""
 		A method for calculating the confidence_loss
@@ -77,14 +94,6 @@ class ObjectDetector(object):
 		return loss
 
 
-	def convert_to_real_ordinat(self, input_tensor, label_tensor):
-		input_tensor_x = (label_tensor[:, 5] + input_tensor[:, 1] * (1.0/self.grid_width)) * self.input_width
-		input_tensor_y = (label_tensor[:, 6] + input_tensor[:, 2] * (1.0/self.grid_height)) * self.input_height
-		input_tensor_w = (self.anchor[0] * tf.exp(input_tensor[:, 3])) * self.input_width
-		input_tensor_h = (self.anchor[1] * tf.exp(input_tensor[:, 4])) * self.input_height
-		return tf.stack([input_tensor_x, input_tensor_y, input_tensor_w, input_tensor_h])
-
-
 	def yolo_loss(self, output, label):
 		"""
 		A yolo loss main method
@@ -97,11 +106,12 @@ class ObjectDetector(object):
 		# get objectness confidence
 		objectness_label = label[:, :, :, 0]
 		objectness_pred = output[:, :, :, 0]
+		objectness_pred = tf.multiply(objectness_pred, objectness_label)
 
 		# get noobjectness confidence
 		noobjectness_label = 1.0 - objectness_label 
 		noobjectness_pred = 1.0 - output[:, :, :, 0]
-		noobjectness_pred = tf.multiply(nopoint_grid_pred, nopoint_grid_label)
+		noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
 
 		# get x values
 		x_pred = output[:, :, :, 1]
@@ -125,14 +135,17 @@ class ObjectDetector(object):
 
 		# --- calculate losses ---
 		# objectness loss
-		objectness_loss = self.objectness_loss(objectness_pred, objectness_label)
-		# center loss
-		ctr_loss = self.center_loss(tf.concat([x_pred, y_pred], 3), tf.concat([x_label, y_label], 3))
-		# size loss 
-		sz_loss = self.size_loss(tf.concat([w_pred, h_pred], 3), tf.concat([w_label, h_label], 3))
+		objectness_loss = self.mse_loss(objectness_pred, objectness_label)
 		# no obj loss
+		noobjectness_loss = self.mse_loss(noobjectness_pred, noobjectness_label)
+		# center loss
+		ctr_loss = self.mse_loss(tf.concat([x_pred, y_pred], 3), tf.concat([x_label, y_label], 3))
+		# size loss 
+		sz_loss = self.mse_loss(tf.concat([w_pred, h_pred], 3), tf.concat([w_label, h_label], 3))
+		
 		# total loss
-		total_loss = self.objectness_loss_alpha * objectness_loss + self.center_loss_alpha * ctr_loss + self.size_loss_alpha * sz_loss
+		total_loss = self.objectness_loss_alpha * objectness_loss + self.noobjectness_loss_alpha * noobjectness_loss + \
+					 self.center_loss_alpha * ctr_loss + self.size_loss_alpha * sz_loss
 		return total_loss
 
 
