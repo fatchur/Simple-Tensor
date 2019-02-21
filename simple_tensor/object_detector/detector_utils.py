@@ -8,15 +8,30 @@ from simple_tensor.tensor_operations import *
 
 
 class ObjectDetector(object):
-	def __init__(self, input_height, input_width, grid_height, grid_width, 
-					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [(0.5, 0.5)):
-		"""
-		Creating an Object
+	def __init__(self, input_height, input_width, grid_height, grid_width, output_depth,
+					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [(0.5, 0.5)]:
+		"""[summary]
+		
+		Arguments:
+			input_height {[type]} -- [description]
+			input_width {[type]} -- [description]
+			grid_height {[type]} -- [description]
+			grid_width {[type]} -- [description]
+			output_depth {[type]} -- [description]
+			objectness_loss_alpha {[type]} -- [description]
+			noobjectness_loss_alpha {[type]} -- [description]
+			center_loss_alpha {[type]} -- [description]
+			size_loss_alpha {[type]} -- [description]
+			class_loss_alpha {[type]} -- [description]
+		
+		Keyword Arguments:
+			anchor {[type]} -- [description] (default: {[(0.5, 0.5)})
 		"""
 		self.input_height = input_height
 		self.input_width = input_width
 		self.grid_height = grid_height
 		self.grid_width = grid_width
+		self.output_depth = output_depth
 		self.num_vertical_grid = int(math.floor(input_height/grid_height))
 		self.num_horizontal_grid = int(math.floor(input_width/grid_width))
 		self.anchor = anchor
@@ -214,51 +229,57 @@ class ObjectDetector(object):
 		return tmp
 
 
-	def read_yolo_labels(self, label_list):
+	def read_yolo_labels(self, folder_path, label_file_list):
+		"""[summary]
+		
+		Arguments:
+			folder_path {[type]} -- [description]
+			label_file_list {[type]} -- [description]
+		
+		Returns:
+			[type] -- [description]
 		"""
-		A method for getting all image names in a folder
-		Args:
-			label_list	: a list of label name
-		Return:
-			a tensor of true label with shape [?, with, height, 5]
-		"""
-		labels = label_list
+
 		label_grid = []
 
-		for num, i in enumerate(labels):
-			tmp = np.zeros((self.grid_height, self.grid_width, 5))
+		for idx, i in enumerate(label_file_list):
+			tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid, self.output_depth))
 			tmp[:, :, :] = 0.0
 
-			# read txt label
-			file_name = "labels/" + i + ".txt"
+			#----------------------------------------------------------------#
+			# this part is reading the label in a .txt file for single image #
+			#----------------------------------------------------------------#
+			file_name = folder_path + i + ".txt"
 			file = open(file_name, "r") 
-			a = file.read()
-			a = a.split()
-			length = len(a)
-			line = length/5
+			data = file.read()
+			data = data.split()
+			length = len(data)
+			line_num = int(length/5)
 
-			# get letter x position raw data
+			#----------------------------------------------------------------#
+			#    this part is getting the x, y, w, h values for each line    #
+			#----------------------------------------------------------------#
 			x = []
 			y = []
 			w = []
 			h = []
-			for j in range (line):
-				x.append(float(a[j*5 + 1]))
-				y.append(float(a[j*5 + 2]))
-				w.append(float(a[j*5 + 3]))
-				h.append(float(a[j*5 + 4]))
+			for j in range (line_num):
+				x.append(float(data[j*5 + 1]))
+				y.append(float(data[j*5 + 2]))
+				w.append(float(data[j*5 + 3]))
+				h.append(float(data[j*5 + 4]))
 			    
-			# get position in grid
+			#----------------------------------------------------------------#
+			#   this part is getting the position of object in certain grid  #
+			#----------------------------------------------------------------#
 			for j, k, l, m in zip(x, y, w, h):
-				cell_x = int(math.floor(j/(1.0/self.grid_width)))
-				cell_y = int(math.floor(k/(1.0/self.grid_height)))
+				cell_x = int(math.floor(j / float(1.0 / self.num_horizontal_grid)))
+				cell_y = int(math.floor(k / float(1.0 / self.num_vertical_grid)))
 				tmp [cell_y, cell_x, 0] = 1.0																# add objectness score
-				tmp [cell_y, cell_x, 1] = (j - (cell_x * (1.0/self.grid_width))) / (1.0/self.grid_width)	# add x center values
-				tmp [cell_y, cell_x, 2] = (k - (cell_y * (1.0/self.grid_height))) / (1.0/self.grid_height)	# add y center values
-				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0] + 0.0001)								# add width width value
-				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[1] + 0.0001)								# add height value
-				#tmp [cell_y, cell_x, 5] = (cell_x * (1.0/self.grid_width))
-				#tmp [cell_y, cell_x, 6] = (cell_y * (1.0/self.grid_height))
+				tmp [cell_y, cell_x, 1] = (j - (cell_x * self.grid_width / self.input_width)				# add x center values
+				tmp [cell_y, cell_x, 2] = (k - (cell_y * self.grid_height / self.input_height)				# add y center values
+				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0][0] + 0.0001)							# add width width value
+				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[0][1] + 0.0001)							# add height value
 
 			label_grid.append(tmp)    
 
