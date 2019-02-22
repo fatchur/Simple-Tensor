@@ -18,6 +18,7 @@ class YoloTrain(ObjectDetector):
 				input_width = 512, 
 				grid_height = 128,
 				grid_width = 128, 
+				output_depth = 5, 
 				objectness_loss_alpha = 1., 
 				noobjectness_loss_alpha = 1., 
 				center_loss_alpha = 0., 
@@ -34,6 +35,7 @@ class YoloTrain(ObjectDetector):
 			input_width {int} -- [description] (default: {512})
 			grid_height {int} -- [description] (default: {128})
 			grid_width {int} -- [description] (default: {128})
+			output_depth {int} -- [description] (default: {5})
 			objectness_loss_alpha {[type]} -- [description] (default: {1.})
 			noobjectness_loss_alpha {[type]} -- [description] (default: {1.})
 			center_loss_alpha {[type]} -- [description] (default: {0.})
@@ -45,6 +47,7 @@ class YoloTrain(ObjectDetector):
 							input_width = input_width, \
 							grid_height = grid_height,\
 							grid_width = grid_width, \
+							output_depth = output_depth, \
 							objectness_loss_alpha = objectness_loss_alpha, \
 							noobjectness_loss_alpha = noobjectness_loss_alpha, \
 							center_loss_alpha = center_loss_alpha, \
@@ -53,7 +56,10 @@ class YoloTrain(ObjectDetector):
 
 		self.label_folder_path = label_folder_path
 		self.dataset_folder_path = dataset_folder_path
-		self.label_dict = None
+		self.label_file_list = get_filenames(self.label_folder_path)
+		self.dataset_file_list = get_filenames(self.dataset_folder_path)
+
+		self.all_label_target_np = None
 
 		self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, 3))
 		self.output_placeholder = tf.placeholder(tf.float32, shape=(None,self.num_vertical_grid, self.num_horizontal_grid, 6))
@@ -62,14 +68,14 @@ class YoloTrain(ObjectDetector):
 	def read_target(self):
 		"""Function for reading json label
 		"""
-		label_file_list = get_filenames(self.label_folder_path)
-		self.all_label_target_np = read_yolo_labels(self.label_folder_path, label_file_list)
+		self.all_label_target_np = self.read_yolo_labels(self.label_folder_path, self.label_file_list)
 
 
-	def build_net(self, is_training):
+	def build_net(self, input_tensor, is_training):
 		"""[summary]
 		
 		Arguments:
+			input_tensor {[type]} -- [description]
 			is_training {bool} -- [description]
 		
 		Returns:
@@ -89,7 +95,7 @@ class YoloTrain(ObjectDetector):
 		return logits, var_list
 
 
-	def train_batch_generator(self, batch_size, image_name_list):
+	def train_batch_generator(self, batch_size):
 		"""Train Generator
 		
 		Arguments:
@@ -103,15 +109,18 @@ class YoloTrain(ObjectDetector):
 			y_batch = []
 
 			for i in range(batch_size):
-				if idx >= len(image_name_list):
+				if idx >= len(self.dataset_file_list):
 					idx = 0
-				
-				tmp_x = cv2.imread(self.dataset_folder_path + image_name_list[idx])
-				tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-				print (image_name_list[idx])
-				tmp_y = self.all_label_target_np[image_name_list[idx]]
-				x_batch.append(tmp_x)
-				y_batch.append(tmp_y)
+
+				try:
+					tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+					tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
+					tmp_y = self.all_label_target_np[self.dataset_file_list[idx][:-3] + "txt"]
+					x_batch.append(tmp_x)
+					y_batch.append(tmp_y)
+
+				except:
+					print ('the image or txt file not found')
 
 				idx += 1
 

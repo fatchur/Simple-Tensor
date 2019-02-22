@@ -119,34 +119,34 @@ class ObjectDetector(object):
 			SILL ON PROGRESS
 		"""
 		# get objectness confidence
-		objectness_label = label[:, :, :, 0]
-		objectness_pred = output[:, :, :, 0]
+		objectness_label = label[:, :, :, 0:1]
+		objectness_pred = output[:, :, :, 0:1]
 		objectness_pred = tf.multiply(objectness_pred, objectness_label)
 
 		# get noobjectness confidence
 		noobjectness_label = 1.0 - objectness_label 
-		noobjectness_pred = 1.0 - output[:, :, :, 0]
+		noobjectness_pred = 1.0 - output[:, :, :, 0:1]
 		noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
 
 		# get x values
-		x_pred = output[:, :, :, 1]
+		x_pred = output[:, :, :, 1:2]
 		x_pred = tf.multiply(x_pred, objectness_label)
-		x_label = label[:, :, :, 1]
+		x_label = label[:, :, :, 1:2]
 
 		# get y value
-		y_pred = output[:, :, :, 2]
+		y_pred = output[:, :, :, 2:3]
 		y_pred = tf.multiply(y_pred, objectness_label)
-		y_label = label[:, :, :, 2]
+		y_label = label[:, :, :, 2:3]
 
 		# get width values
-		w_pred = output[:, :, :, 3]
+		w_pred = output[:, :, :, 3:4]
 		w_pred = tf.multiply(w_pred, objectness_label)
-		w_label = label[:, :, :, 3]
+		w_label = label[:, :, :, 3:4]
 
 		# get height values
-		h_pred = output[:, :, :, 4]
+		h_pred = output[:, :, :, 4:]
 		h_pred = tf.multiply(h_pred, objectness_label)
-		h_label = label[:, :, :, 4]
+		h_label = label[:, :, :, 4:]
 
 		# --- calculate losses ---
 		# objectness loss
@@ -280,6 +280,7 @@ class ObjectDetector(object):
 				tmp [cell_y, cell_x, 2] = (k - (cell_y * self.grid_height / self.input_height))				# add y center values
 				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0][0] + 0.0001)							# add width width value
 				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[0][1] + 0.0001)							# add height value
+				tmp [cell_y, cell_x, 5] = 0.0
 
 			label_grid[i] = tmp    
 

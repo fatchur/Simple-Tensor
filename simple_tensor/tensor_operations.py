@@ -210,7 +210,6 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 							strides=strides,
 							padding=padding, name='convolution_'+name)
 	layer += biases
-	print (layer)
 
 	layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train=is_training, name=name)
 
