@@ -87,7 +87,7 @@ class YoloTrain(ObjectDetector):
 					idx = 0
 				
 				tmp_x = cv2.imread(self.dataset_folder_path + image_name_list[idx])
-				tmp_x = cv2.resize(tmp_x, (512, 512))
+				tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
 				print (image_name_list[idx])
 				tmp_y = self.all_label_target_np[image_name_list[idx]]
 				x_batch.append(tmp_x)
@@ -97,12 +97,8 @@ class YoloTrain(ObjectDetector):
 
 			yield (np.array(x_batch), np.array(y_batch))
 	
-		
-
 	
 	
-
-
 
 # =============================================== #
 # This class is the child of ObjectDetector class #
