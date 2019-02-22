@@ -23,7 +23,7 @@ class YoloTrain(ObjectDetector):
 				noobjectness_loss_alpha = 1., 
 				center_loss_alpha = 0., 
 				size_loss_alpha = 0., 
-				class_loss_alpha = 0.
+				class_loss_alpha = 0.,
 				anchor = [(0.5, 0.5)]):
 		"""[summary]
 		
