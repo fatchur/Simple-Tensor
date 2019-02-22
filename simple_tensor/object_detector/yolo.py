@@ -13,15 +13,15 @@ from comdutils.file_utils import *
 # =============================================== #
 class YoloTrain(ObjectDetector):
 	def __init__(self, label_folder_path, dataset_folder_path, 
-						input_height = 512,\
-						input_width = 512, \
-						grid_height = 128,\
-						grid_width = 128, \
-						objectness_loss_alpha = 1., \
-						noobjectness_loss_alpha = 1., \
-						center_loss_alpha = 0., \
-						size_loss_alpha = 0., \
-						class_loss_alpha = 0.):
+				input_height = 512,\
+				input_width = 512, \
+				grid_height = 128,\
+				grid_width = 128, \
+				objectness_loss_alpha = 1., \
+				noobjectness_loss_alpha = 1., \
+				center_loss_alpha = 0., \
+				size_loss_alpha = 0., \
+				class_loss_alpha = 0.):
 		"""[summary]
 		
 		Arguments:
@@ -31,14 +31,14 @@ class YoloTrain(ObjectDetector):
 		"""
 
 		super(YoloTrain, self).__init__(input_height = input_height,\
-										input_width = input_width, \
-										grid_height = grid_height,\
-										grid_width = grid_width, \
-										objectness_loss_alpha = objectness_loss_alpha, \
-										noobjectness_loss_alpha = noobjectness_loss_alpha, \
-										center_loss_alpha = center_loss_alpha, \
-										size_loss_alpha = size_loss_alpha, \
-										class_loss_alpha = class_loss_alpha)
+							input_width = input_width, \
+							grid_height = grid_height,\
+							grid_width = grid_width, \
+							objectness_loss_alpha = objectness_loss_alpha, \
+							noobjectness_loss_alpha = noobjectness_loss_alpha, \
+							center_loss_alpha = center_loss_alpha, \
+							size_loss_alpha = size_loss_alpha, \
+							class_loss_alpha = class_loss_alpha)
 
 		self.label_folder_path = label_folder_path
 		self.dataset_folder_path = dataset_folder_path
