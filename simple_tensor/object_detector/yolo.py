@@ -23,7 +23,8 @@ class YoloTrain(ObjectDetector):
 				noobjectness_loss_alpha = 1., 
 				center_loss_alpha = 0., 
 				size_loss_alpha = 0., 
-				class_loss_alpha = 0.):
+				class_loss_alpha = 0.
+				anchor = [(0.5, 0.5)]):
 		"""[summary]
 		
 		Arguments:
@@ -52,7 +53,8 @@ class YoloTrain(ObjectDetector):
 							noobjectness_loss_alpha = noobjectness_loss_alpha, \
 							center_loss_alpha = center_loss_alpha, \
 							size_loss_alpha = size_loss_alpha, \
-							class_loss_alpha = class_loss_alpha)
+							class_loss_alpha = class_loss_alpha
+							anchor = anchor)
 
 		self.label_folder_path = label_folder_path
 		self.dataset_folder_path = dataset_folder_path

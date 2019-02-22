@@ -8,8 +8,17 @@ from simple_tensor.tensor_operations import *
 
 
 class ObjectDetector(object):
-	def __init__(self, input_height, input_width, grid_height, grid_width, output_depth,
-					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [(0.5, 0.5)]):
+	def __init__(self, input_height, 
+				input_width, 
+				grid_height, 
+				grid_width, 
+				output_depth,
+				objectness_loss_alpha, 
+				noobjectness_loss_alpha, 
+				center_loss_alpha, 
+				size_loss_alpha, 
+				class_loss_alpha, 
+				anchor = [(0.5, 0.5)]):
 		"""[summary]
 		
 		Arguments:
@@ -211,6 +220,15 @@ class ObjectDetector(object):
 
 	
 	def read_landmark_labels(self, image_name, label):
+		"""[summary]
+		
+		Arguments:
+			image_name {[type]} -- [description]
+			label {[type]} -- [description]
+		
+		Returns:
+			[type] -- [description]
+		"""
 		tmp = np.zeros((self.num_vertical_grid , self.num_horizontal_grid , 4))
 		tmp[:, :, :] = 0.
 
