@@ -9,7 +9,7 @@ from simple_tensor.tensor_operations import *
 
 class ObjectDetector(object):
 	def __init__(self, input_height, input_width, grid_height, grid_width, output_depth,
-					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [(0.5, 0.5)]:
+					objectness_loss_alpha, noobjectness_loss_alpha, center_loss_alpha, size_loss_alpha, class_loss_alpha, anchor = [(0.5, 0.5)]):
 		"""[summary]
 		
 		Arguments:
@@ -276,11 +276,11 @@ class ObjectDetector(object):
 				cell_x = int(math.floor(j / float(1.0 / self.num_horizontal_grid)))
 				cell_y = int(math.floor(k / float(1.0 / self.num_vertical_grid)))
 				tmp [cell_y, cell_x, 0] = 1.0																# add objectness score
-				tmp [cell_y, cell_x, 1] = (j - (cell_x * self.grid_width / self.input_width)				# add x center values
-				tmp [cell_y, cell_x, 2] = (k - (cell_y * self.grid_height / self.input_height)				# add y center values
+				tmp [cell_y, cell_x, 1] = (j - (cell_x * self.grid_width / self.input_width))				# add x center values
+				tmp [cell_y, cell_x, 2] = (k - (cell_y * self.grid_height / self.input_height))				# add y center values
 				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0][0] + 0.0001)							# add width width value
 				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[0][1] + 0.0001)							# add height value
 
 			label_grid[i] = tmp    
-			
+
 		return label_grid
