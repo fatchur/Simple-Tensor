@@ -163,9 +163,9 @@ class ObjectDetector(object):
 		# no obj loss
 		noobjectness_loss = self.mse_loss(noobjectness_pred, noobjectness_label)
 		# center loss
-		ctr_loss = self.mse_loss(tf.concat([x_pred, y_pred], 3), tf.concat([x_label, y_label], 3))
+		ctr_loss = self.mse_loss(x_pred, x_label) + self.mse_loss(y_pred, y_label)
 		# size loss 
-		sz_loss = self.mse_loss(tf.concat([w_pred, h_pred], 3), tf.concat([w_label, h_label], 3))
+		sz_loss = self.mse_loss(w_pred, w_label) + self.mse_loss(h_pred, h_label)
 		
 		# total loss
 		total_loss = self.objectness_loss_alpha * objectness_loss + self.noobjectness_loss_alpha * noobjectness_loss + \
