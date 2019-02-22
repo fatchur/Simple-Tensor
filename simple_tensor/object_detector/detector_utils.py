@@ -240,7 +240,7 @@ class ObjectDetector(object):
 			[type] -- [description]
 		"""
 
-		label_grid = []
+		label_grid = {}
 
 		for idx, i in enumerate(label_file_list):
 			tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid, self.output_depth))
@@ -249,7 +249,7 @@ class ObjectDetector(object):
 			#----------------------------------------------------------------#
 			# this part is reading the label in a .txt file for single image #
 			#----------------------------------------------------------------#
-			file_name = folder_path + i + ".txt"
+			file_name = folder_path + i
 			file = open(file_name, "r") 
 			data = file.read()
 			data = data.split()
@@ -281,7 +281,6 @@ class ObjectDetector(object):
 				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0][0] + 0.0001)							# add width width value
 				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[0][1] + 0.0001)							# add height value
 
-			label_grid.append(tmp)    
-
-		label_grid = np.array(label_grid)
+			label_grid[i] = tmp    
+			
 		return label_grid
