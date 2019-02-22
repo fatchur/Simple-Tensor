@@ -53,7 +53,7 @@ class YoloTrain(ObjectDetector):
 							noobjectness_loss_alpha = noobjectness_loss_alpha, \
 							center_loss_alpha = center_loss_alpha, \
 							size_loss_alpha = size_loss_alpha, \
-							class_loss_alpha = class_loss_alpha
+							class_loss_alpha = class_loss_alpha, \
 							anchor = anchor)
 
 		self.label_folder_path = label_folder_path
