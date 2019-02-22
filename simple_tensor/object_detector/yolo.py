@@ -31,14 +31,14 @@ class YoloTrain(ObjectDetector):
 		"""
 
 		super(YoloTrain, self).__init__(input_height = input_height,\
-											 input_width = input_width, \
-											 grid_height = grid_height,\
-											 grid_width = grid_width, \
-											 objectness_loss_alpha = objectness_loss_alpha, \
-											 noobjectness_loss_alpha = noobjectness_loss_alpha, \
-											 center_loss_alpha = center_loss_alpha, \
-											 size_loss_alpha = size_loss_alpha, \
-											 class_loss_alpha = class_loss_alpha)
+										input_width = input_width, \
+										grid_height = grid_height,\
+										grid_width = grid_width, \
+										objectness_loss_alpha = objectness_loss_alpha, \
+										noobjectness_loss_alpha = noobjectness_loss_alpha, \
+										center_loss_alpha = center_loss_alpha, \
+										size_loss_alpha = size_loss_alpha, \
+										class_loss_alpha = class_loss_alpha)
 
 		self.label_folder_path = label_folder_path
 		self.dataset_folder_path = dataset_folder_path
