@@ -12,22 +12,33 @@ from comdutils.file_utils import *
 # in simple_tensor.object_detector.detector_utils #
 # =============================================== #
 class YoloTrain(ObjectDetector):
-	def __init__(self, label_folder_path, dataset_folder_path, 
-				input_height = 512,\
-				input_width = 512, \
-				grid_height = 128,\
-				grid_width = 128, \
-				objectness_loss_alpha = 1., \
-				noobjectness_loss_alpha = 1., \
-				center_loss_alpha = 0., \
-				size_loss_alpha = 0., \
+	def __init__(self, label_folder_path, 
+				dataset_folder_path, 
+				input_height = 512,
+				input_width = 512, 
+				grid_height = 128,
+				grid_width = 128, 
+				objectness_loss_alpha = 1., 
+				noobjectness_loss_alpha = 1., 
+				center_loss_alpha = 0., 
+				size_loss_alpha = 0., 
 				class_loss_alpha = 0.):
 		"""[summary]
 		
 		Arguments:
-			ObjectDetector {[type]} -- [description]
 			label_folder_path {[type]} -- [description]
 			dataset_folder_path {[type]} -- [description]
+		
+		Keyword Arguments:
+			input_height {int} -- [description] (default: {512})
+			input_width {int} -- [description] (default: {512})
+			grid_height {int} -- [description] (default: {128})
+			grid_width {int} -- [description] (default: {128})
+			objectness_loss_alpha {[type]} -- [description] (default: {1.})
+			noobjectness_loss_alpha {[type]} -- [description] (default: {1.})
+			center_loss_alpha {[type]} -- [description] (default: {0.})
+			size_loss_alpha {[type]} -- [description] (default: {0.})
+			class_loss_alpha {[type]} -- [description] (default: {0.})
 		"""
 
 		super(YoloTrain, self).__init__(input_height = input_height,\
