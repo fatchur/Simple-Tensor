@@ -76,7 +76,10 @@ class ObjectDetector(object):
 			[type] -- [description]
 		"""
 		#------------------------------------------------------------------#
-
+		# get the top left and bootom right of prediction result and label #
+		# calculate the overlap and union                                  #
+		# calculate the iou                                                #
+		#------------------------------------------------------------------#
 		x_topleft_pred = tf.maximum(bbox_pred[:, :, :, 0:1] - 0.5 * bbox_pred[:, :, :, 2:3], 0.0)
 		y_topleft_pred = tf.maximum(bbox_pred[:, :, :, 1:2] - 0.5 * bbox_pred[:, :, :, 3:], 0.0)
 		x_bottomright_pred = tf.minimum(bbox_pred[:, :, :, 0:1] + 0.5 * bbox_pred[:, :, :, 2:3], self.input_width)
@@ -88,8 +91,8 @@ class ObjectDetector(object):
 		y_bottomright_label = tf.minimum(bbox_label[:, :, :, 1:2] + 0.5 * bbox_label[:, :, :, 3:], self.input_height)
 
 		#zero_tensor = tf.zeros_like(x_topleft1, dtype=None, name=None, optimize=True)
-		x_overlap = tf.maximum(tf.minimum(x_bottomright_pred, x_bottomright_label) - tf.maximum(x_topleft_pred, x_topleft_label), 0.0)
-		y_overlap = tf.maximum(tf.minimum(y_bottomright_pred, y_bottomright_label) - tf.maximum(y_topleft_pred, y_topleft_label), 0.0)
+		x_overlap = tf.maximum((tf.minimum(x_bottomright_pred, x_bottomright_label) - tf.maximum(x_topleft_pred, x_topleft_label)), 0.0)
+		y_overlap = tf.maximum((tf.minimum(y_bottomright_pred, y_bottomright_label) - tf.maximum(y_topleft_pred, y_topleft_label)), 0.0)
 		overlap = x_overlap * y_overlap
 
 		rect_area_pred = tf.abs(x_bottomright_pred - x_topleft_pred) * tf.abs(y_bottomright_pred - y_topleft_pred)
@@ -140,7 +143,11 @@ class ObjectDetector(object):
 		h_label_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_label), objectness_label)
 		label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
-
+		#------------------------------------------------------#
+		# For each anchor,                                     #
+		# get the output results (objectness, x, y, w, h)      #
+		#------------------------------------------------------#
+		all_losses = 0.0
 		for idx, i in enumerate(self.anchor):
 			base = idx * 5
 			# get objectness confidence
@@ -168,14 +175,6 @@ class ObjectDetector(object):
 			# get height values
 			h_pred = output[:, :, :, (base + 4):(base + 5)]
 			h_pred = tf.multiply(h_pred, objectness_label)
-			
-			# --- calculate losses ---
-			# no obj loss
-			noobjectness_loss = self.mse_loss(noobjectness_pred, noobjectness_label)
-			# center loss
-			ctr_loss = self.mse_loss(x_pred, x_label) + self.mse_loss(y_pred, y_label)
-			# size loss 
-			sz_loss = self.mse_loss(tf.math.sqrt(w_pred), tf.math.sqrt(w_label)) + self.mse_loss(tf.math.sqrt(h_pred), tf.sqrt(h_label))
 
 			#----------------------------------------------#
 			#              calculate the iou               #
@@ -190,13 +189,23 @@ class ObjectDetector(object):
 
 			iou_map = self.iou(pred_bbox, label_bbox)
 
-			# objectness loss
+			#----------------------------------------------#
+			#            calculate the losses              #
+			# objectness, noobjectness, center & size loss #
+			#----------------------------------------------#
 			objectness_loss = self.mse_loss(objectness_pred, iou_map)
-		
-		# total loss
-		total_loss = self.objectness_loss_alpha * objectness_loss + self.noobjectness_loss_alpha * noobjectness_loss + \
-					 self.center_loss_alpha * ctr_loss + self.size_loss_alpha * sz_loss
-		return total_loss
+			noobjectness_loss = self.mse_loss(noobjectness_pred, noobjectness_label)
+			ctr_loss = self.mse_loss(x_pred, x_label) + self.mse_loss(y_pred, y_label)
+			sz_loss = self.mse_loss(tf.math.sqrt(w_pred), tf.math.sqrt(w_label)) + self.mse_loss(tf.math.sqrt(h_pred), tf.sqrt(h_label))
+			
+			total_loss = self.objectness_loss_alpha * objectness_loss + \
+						self.noobjectness_loss_alpha * noobjectness_loss + \
+						self.center_loss_alpha * ctr_loss + \
+						self.size_loss_alpha * sz_loss
+
+			all_losses = all_losses + total_loss
+
+		return all_losses
 
 
 	def four_points_landmark_loss(self, output, label):
