@@ -34,7 +34,7 @@ class ObjectDetector(object):
 			class_loss_alpha {[type]} -- [description]
 		
 		Keyword Arguments:
-			anchor {[type]} -- [description] (default: {[(0.5, 0.5)})
+			anchor {[type]} -- [description [(height, width), (height, width)]] (default: [(0.5, 0.5)) 
 		"""
 		self.input_height = input_height
 		self.input_width = input_width
@@ -51,57 +51,53 @@ class ObjectDetector(object):
 		self.size_loss_alpha = size_loss_alpha
 		self.class_loss_alpha = class_loss_alpha
 
+		self.grid_position_mask_onx = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
+		self.grid_position_mask_ony = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
 
-	def iou(self, bbox1, bbox2):
-		"""
-		A method for calculating the iou of two bounding boxes. 
-		Args:
-			bbox1:		a tensor with shape [?, x_center (NOT relative), y_center (NOT relative), box width (NOT relative), box height (NOT relative)]
-			bbox2:		a tensor with shape [?, x_center (NOT relative), y_center (NOT relative), box width (NOT relative), box height (NOT relative)]
-		Return:
-			a tensor of iou
-		"""
-		# get the top left and bottom right point of bbox1
-		x_topleft1 = bbox1[0, :] - 0.5 * bbox1[2, :]
-		y_topleft1 = bbox1[1, :] - 0.5 * bbox1[3, :]
-		x_bottomright1 = bbox1[0, :] + 0.5 * bbox1[2, :]
-		y_bottomright1 = bbox1[1, :] + 0.5 * bbox1[3, :]
+		for i in self.num_vertical_grid:
+			for j in self.num_horizontal_grid:
+				self.grid_position_mask_onx[:, i, j, :] = j
+				self.grid_position_mask_ony[:, i, j, :] = i
 
-		# get the top left and bottom right point of bbox2
-		x_topleft2 = bbox2[0, :] - 0.5 * bbox2[2, :]
-		y_topleft2 = bbox2[1, :] - 0.5 * bbox2[3, :]
-		x_bottomright2 = bbox2[0, :] + 0.5 * bbox2[2, :]
-		y_bottomright2 = bbox2[1, :] + 0.5 * bbox2[3, :]
+		print (self.grid_position_mask_onx, self.grid_position_mask_ony)
 
-		# calculate the iou
-		zero_tensor = tf.zeros_like(x_topleft1, dtype=None, name=None, optimize=True)
-
-		x_overlap = tf.maximum(zero_tensor, tf.minimum(x_bottomright1, x_bottomright2) - tf.maximum(x_topleft1, x_topleft2) )
-		y_overlap = tf.maximum(zero_tensor, tf.minimum(y_bottomright1, y_bottomright2) - tf.maximum(y_topleft1, y_topleft2) )
-
-		overlap = x_overlap * y_overlap
-		rect1_area = tf.abs(x_bottomright1 - x_topleft1) * tf.abs(y_bottomright1 - y_topleft1)
-		rect2_area = tf.abs(x_bottomright2 - x_topleft2) * tf.abs(y_bottomright2 - y_topleft2)
-		union = rect1_area + rect2_area - 2 * overlap
-		the_iou = overlap / union
-		return the_iou
+		self.grid_position_mask_onx = tf.convert_to_tensor(self.grid_position_mask_onx, dtype=tf.float32)
+		self.grid_position_mask_ony = tf.convert_to_tensor(self.grid_position_mask_ony, dtype=tf.float32)
 
 
-	def convert_to_real_ordinat(self, input_tensor, label_tensor):
+	def iou(self, bbox_pred, bbox_label):
 		"""[summary]
 		
 		Arguments:
-			input_tensor {[type]} -- [description]
-			label_tensor {[type]} -- [description]
+			bbox_pred {[type]} -- [description]
+			bbox_label {[type]} -- [description]
 		
 		Returns:
 			[type] -- [description]
 		"""
-		input_tensor_x = (label_tensor[:, 5] + input_tensor[:, 1] * (1.0/self.grid_width)) * self.input_width
-		input_tensor_y = (label_tensor[:, 6] + input_tensor[:, 2] * (1.0/self.grid_height)) * self.input_height
-		input_tensor_w = (self.anchor[0] * tf.exp(input_tensor[:, 3])) * self.input_width
-		input_tensor_h = (self.anchor[1] * tf.exp(input_tensor[:, 4])) * self.input_height
-		return tf.stack([input_tensor_x, input_tensor_y, input_tensor_w, input_tensor_h])
+		#------------------------------------------------------------------#
+
+		x_topleft_pred = tf.maximum(bbox_pred[:, :, :, 0:1] - 0.5 * bbox_pred[:, :, :, 2:3], 0.0)
+		y_topleft_pred = tf.maximum(bbox_pred[:, :, :, 1:2] - 0.5 * bbox_pred[:, :, :, 3:], 0.0)
+		x_bottomright_pred = tf.minimum(bbox_pred[:, :, :, 0:1] + 0.5 * bbox_pred[:, :, :, 2:3], self.input_width)
+		y_bottomright_pred = tf.minimum(bbox_pred[:, :, :, 1:2] + 0.5 * bbox_pred[:, :, :, 3:], self.input_height)
+
+		x_topleft_label = tf.maximum(bbox_label[:, :, :, 0:1] - 0.5 * bbox_label[:, :, :, 2:3], 0.0)
+		y_topleft_label = tf.maximum(bbox_label[:, :, :, 1:2] - 0.5 * bbox_label[:, :, :, 3:], 0.0)
+		x_bottomright_label = tf.minimum(bbox_label[:, :, :, 0:1] + 0.5 * bbox_label[:, :, :, 2:3], self.input_width)
+		y_bottomright_label = tf.minimum(bbox_label[:, :, :, 1:2] + 0.5 * bbox_label[:, :, :, 3:], self.input_height)
+
+		#zero_tensor = tf.zeros_like(x_topleft1, dtype=None, name=None, optimize=True)
+		x_overlap = tf.maximum(tf.minimum(x_bottomright_pred, x_bottomright_label) - tf.maximum(x_topleft_pred, x_topleft_label), 0.0)
+		y_overlap = tf.maximum(tf.minimum(y_bottomright_pred, y_bottomright_label) - tf.maximum(y_topleft_pred, y_topleft_label), 0.0)
+		overlap = x_overlap * y_overlap
+
+		rect_area_pred = tf.abs(x_bottomright_pred - x_topleft_pred) * tf.abs(y_bottomright_pred - y_topleft_pred)
+		rect_area_label = tf.abs(x_bottomright_label - x_topleft_label) * tf.abs(y_bottomright_label - y_topleft_label)
+		union = rect_area_pred + rect_area_label - 2 * overlap
+		the_iou = overlap / (union + 0.0001)
+
+		return the_iou
 
 
 	def mse_loss(self, output_tensor, label):
@@ -127,45 +123,75 @@ class ObjectDetector(object):
 		Return:
 			SILL ON PROGRESS
 		"""
-		# get objectness confidence
+		#-------------------------------------------------------#
+		#                 Get the output label                  #
+		# Convert the label to real ordinat for iou calculation #
+		#-------------------------------------------------------#
 		objectness_label = label[:, :, :, 0:1]
-		objectness_pred = output[:, :, :, 0:1]
-		objectness_pred = tf.multiply(objectness_pred, objectness_label)
-
-		# get noobjectness confidence
 		noobjectness_label = 1.0 - objectness_label 
-		noobjectness_pred = 1.0 - output[:, :, :, 0:1]
-		noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
-
-		# get x values
-		x_pred = output[:, :, :, 1:2]
-		x_pred = tf.multiply(x_pred, objectness_label)
 		x_label = label[:, :, :, 1:2]
-
-		# get y value
-		y_pred = output[:, :, :, 2:3]
-		y_pred = tf.multiply(y_pred, objectness_label)
 		y_label = label[:, :, :, 2:3]
-
-		# get width values
-		w_pred = output[:, :, :, 3:4]
-		w_pred = tf.multiply(w_pred, objectness_label)
 		w_label = label[:, :, :, 3:4]
-
-		# get height values
-		h_pred = output[:, :, :, 4:]
-		h_pred = tf.multiply(h_pred, objectness_label)
 		h_label = label[:, :, :, 4:]
+		
+		x_label_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_label), objectness_label)
+		y_label_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_label), objectness_label)
+		w_label_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_label), objectness_label)
+		h_label_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_label), objectness_label)
+		label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
-		# --- calculate losses ---
-		# objectness loss
-		objectness_loss = self.mse_loss(objectness_pred, objectness_label)
-		# no obj loss
-		noobjectness_loss = self.mse_loss(noobjectness_pred, noobjectness_label)
-		# center loss
-		ctr_loss = self.mse_loss(x_pred, x_label) + self.mse_loss(y_pred, y_label)
-		# size loss 
-		sz_loss = self.mse_loss(tf.math.sqrt(w_pred), tf.math.sqrt(w_label)) + self.mse_loss(tf.math.sqrt(h_pred), tf.sqrt(h_label))
+
+		for idx, i in enumerate(self.anchor):
+			base = idx * 5
+			# get objectness confidence
+			objectness_pred = output[:, :, :, (base + 0):(base + 1)]
+			objectness_pred = tf.multiply(objectness_pred, objectness_label)
+
+			# get noobjectness confidence
+			noobjectness_pred = 1.0 - output[:, :, :, (base + 0):(base + 1)]
+			noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
+
+			# get x values
+			x_pred = output[:, :, :, (base + 1):(base + 2)]
+			x_pred = tf.multiply(x_pred, objectness_label)
+
+			# get y value
+			y_pred = output[:, :, :, (base + 2):(base + 3)]
+			y_pred = tf.multiply(y_pred, objectness_label)
+			
+
+			# get width values
+			w_pred = output[:, :, :, (base + 3):(base + 4)]
+			w_pred = tf.multiply(w_pred, objectness_label)
+			
+
+			# get height values
+			h_pred = output[:, :, :, (base + 4):(base + 5)]
+			h_pred = tf.multiply(h_pred, objectness_label)
+			
+			# --- calculate losses ---
+			# no obj loss
+			noobjectness_loss = self.mse_loss(noobjectness_pred, noobjectness_label)
+			# center loss
+			ctr_loss = self.mse_loss(x_pred, x_label) + self.mse_loss(y_pred, y_label)
+			# size loss 
+			sz_loss = self.mse_loss(tf.math.sqrt(w_pred), tf.math.sqrt(w_label)) + self.mse_loss(tf.math.sqrt(h_pred), tf.sqrt(h_label))
+
+			#----------------------------------------------#
+			#              calculate the iou               #
+			# 1. calculate pred bbox based on real ordinat #
+			# 2. calculate the iou                         #
+			#----------------------------------------------#
+			x_pred_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_pred), objectness_label)
+			y_pred_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_pred), objectness_label)
+			w_pred_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_pred), objectness_label)
+			h_pred_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_pred), objectness_label)
+			pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
+
+			iou_map = self.iou(pred_bbox, label_bbox)
+
+			# objectness loss
+			objectness_loss = self.mse_loss(objectness_pred, iou_map)
 		
 		# total loss
 		total_loss = self.objectness_loss_alpha * objectness_loss + self.noobjectness_loss_alpha * noobjectness_loss + \
