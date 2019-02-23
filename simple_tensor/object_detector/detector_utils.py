@@ -201,10 +201,10 @@ class ObjectDetector(object):
 	
 			all_losses = all_losses + total_loss
 
-			self.a = objectness_loss
-			self.b = noobjectness_loss
-			self.c = ctr_loss
-			self.d = sz_loss
+		self.a = objectness_loss
+		self.b = noobjectness_loss
+		self.c = ctr_loss
+		self.d = sz_loss
 
 		return all_losses
 
