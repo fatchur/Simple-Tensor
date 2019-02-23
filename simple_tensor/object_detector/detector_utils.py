@@ -126,23 +126,7 @@ class ObjectDetector(object):
 		Return:
 			SILL ON PROGRESS
 		"""
-		#-------------------------------------------------------#
-		#                 Get the output label                  #
-		# Convert the label to real ordinat for iou calculation #
-		#-------------------------------------------------------#
-		objectness_label = label[:, :, :, 0:1]
-		noobjectness_label = 1.0 - objectness_label 
-		x_label = label[:, :, :, 1:2]
-		y_label = label[:, :, :, 2:3]
-		w_label = label[:, :, :, 3:4]
-		h_label = label[:, :, :, 4:]
 		
-		x_label_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_label), objectness_label)
-		y_label_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_label), objectness_label)
-		w_label_real = tf.multiply(self.input_width * [1] * tf.math.exp(w_label), objectness_label)
-		h_label_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_label), objectness_label)
-		label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
-
 		#------------------------------------------------------#
 		# For each anchor,                                     #
 		# get the output results (objectness, x, y, w, h)      #
@@ -152,28 +136,34 @@ class ObjectDetector(object):
 			base = idx * 5
 			# get objectness confidence
 			objectness_pred = output[:, :, :, (base + 0):(base + 1)]
+			objectness_label = label[:, :, :, (base + 0):(base + 1)]
 			objectness_pred = tf.multiply(objectness_pred, objectness_label)
 
 			# get noobjectness confidence
 			noobjectness_pred = 1.0 - output[:, :, :, (base + 0):(base + 1)]
+			noobjectness_label = 1.0 - objectness_label 
 			noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
 
 			# get x values
 			x_pred = output[:, :, :, (base + 1):(base + 2)]
+			x_label = label[:, :, :, (base + 1):(base + 2)]
 			x_pred = tf.multiply(x_pred, objectness_label)
 
 			# get y value
 			y_pred = output[:, :, :, (base + 2):(base + 3)]
+			y_label = label[:, :, :, (base + 2):(base + 3)]
 			y_pred = tf.multiply(y_pred, objectness_label)
 			
 
 			# get width values
 			w_pred = output[:, :, :, (base + 3):(base + 4)]
+			w_label = label[:, :, :, (base + 3):(base + 4)]
 			w_pred = tf.multiply(w_pred, objectness_label)
 			
 
 			# get height values
 			h_pred = output[:, :, :, (base + 4):(base + 5)]
+			h_label = label[:, :, :, (base + 4):(base + 5)]
 			h_pred = tf.multiply(h_pred, objectness_label)
 
 			#----------------------------------------------#
@@ -186,6 +176,12 @@ class ObjectDetector(object):
 			w_pred_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_pred), objectness_label)
 			h_pred_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_pred), objectness_label)
 			pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
+
+			x_label_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_label), objectness_label)
+			y_label_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_label), objectness_label)
+			w_label_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_label), objectness_label)
+			h_label_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_label), objectness_label)
+			label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
 			iou_map = self.iou(pred_bbox, label_bbox)
 
