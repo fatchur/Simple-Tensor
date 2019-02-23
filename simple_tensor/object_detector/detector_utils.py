@@ -54,8 +54,8 @@ class ObjectDetector(object):
 		self.grid_position_mask_onx = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
 		self.grid_position_mask_ony = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
 
-		for i in self.num_vertical_grid:
-			for j in self.num_horizontal_grid:
+		for i in range(self.num_vertical_grid):
+			for j in range(self.num_horizontal_grid):
 				self.grid_position_mask_onx[:, i, j, :] = j
 				self.grid_position_mask_ony[:, i, j, :] = i
 
@@ -346,6 +346,6 @@ class ObjectDetector(object):
 			# get objectness confidence
 			objectness_pred = result[:, :, :, (base + 0):(base + 1)]
 			objectness_pred = np.where(objectness_pred > threshold)
-			
+
 
 
