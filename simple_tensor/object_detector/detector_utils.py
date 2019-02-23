@@ -126,7 +126,7 @@ class ObjectDetector(object):
 		Return:
 			SILL ON PROGRESS
 		"""
-		
+
 		#------------------------------------------------------#
 		# For each anchor,                                     #
 		# get the output results (objectness, x, y, w, h)      #
@@ -198,8 +198,13 @@ class ObjectDetector(object):
 						self.noobjectness_loss_alpha * noobjectness_loss + \
 						self.center_loss_alpha * ctr_loss + \
 						self.size_loss_alpha * sz_loss
-
+	
 			all_losses = all_losses + total_loss
+
+			self.a = objectness_loss
+			self.b = noobjectness_loss
+			self.c = ctr_loss
+			self.d = sz_loss
 
 		return all_losses
 
