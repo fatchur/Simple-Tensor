@@ -338,3 +338,14 @@ class ObjectDetector(object):
 			label_grid[i] = tmp    
 
 		return label_grid
+
+
+	def get_yolo_result(self, result, threshold):
+		for idx, i in enumerate(self.anchor):
+			base = idx * 5
+			# get objectness confidence
+			objectness_pred = result[:, :, :, (base + 0):(base + 1)]
+			objectness_pred = np.where(objectness_pred > threshold)
+			
+
+
