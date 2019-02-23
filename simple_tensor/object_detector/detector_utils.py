@@ -296,7 +296,8 @@ class ObjectDetector(object):
 		label_dict = {}
 
 		for idx, i in enumerate(label_file_list):
-			label = []
+			tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid, 5 * len(self.anchor) + 1))
+			tmp[:, :, :] = 0.0
 			#----------------------------------------------------------------#
 			# this part is reading the label in a .txt file for single image #
 			#----------------------------------------------------------------#
@@ -323,28 +324,20 @@ class ObjectDetector(object):
 			#----------------------------------------------------------------#
 			#   this part is getting the position of object in certain grid  #
 			#----------------------------------------------------------------#
-			for j in self.anchor:
-				tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid, 5))
-				tmp[:, :, :] = 0.0
-
+			for idx_anchor, j in enumerate(self.anchor):
 				for k, l, m, n in zip(x, y, w, h):
 					cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid)))
 					cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid)))
-					tmp [cell_y, cell_x, 0] = 1.0																# add objectness score
-					tmp [cell_y, cell_x, 1] = (k - (cell_x * self.grid_width / self.input_width))				# add x center values
-					tmp [cell_y, cell_x, 2] = (l - (cell_y * self.grid_height / self.input_height))				# add y center values
-					tmp [cell_y, cell_x, 3] = math.log(m/j[0] + 0.0001)											# add width width value
-					tmp [cell_y, cell_x, 4] = math.log(n/j[1] + 0.0001)											# add height value
-				
-				label.append(tmp)
-			label = np.array(label)
-			print (label.shape)
-			
-			tmp [cell_y, cell_x, 5] = 0.0
+					tmp [cell_y, cell_x, 5 * idx_anchor + 0] = 1.0																# add objectness score
+					tmp [cell_y, cell_x, 5 * idx_anchor + 1] = (k - (cell_x * self.grid_width / self.input_width))				# add x center values
+					tmp [cell_y, cell_x, 5 * idx_anchor + 2] = (l - (cell_y * self.grid_height / self.input_height))			# add y center values
+					tmp [cell_y, cell_x, 5 * idx_anchor + 3] = math.log(m/j[0] + 0.0001)										# add width width value
+					tmp [cell_y, cell_x, 5 * idx_anchor + 4] = math.log(n/j[1] + 0.0001)										# add height value
 
-			label_grid[i] = tmp    
+			tmp [cell_y, cell_x, -1] = 0.0
+			label_dict[i] = tmp    
 
-		return label_grid
+		return label_dict
 
 
 	def get_yolo_result(self, result, threshold):
