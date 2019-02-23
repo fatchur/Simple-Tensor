@@ -139,7 +139,7 @@ class ObjectDetector(object):
 		
 		x_label_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_label), objectness_label)
 		y_label_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_label), objectness_label)
-		w_label_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_label), objectness_label)
+		w_label_real = tf.multiply(self.input_width * [1] * tf.math.exp(w_label), objectness_label)
 		h_label_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_label), objectness_label)
 		label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
@@ -293,12 +293,10 @@ class ObjectDetector(object):
 			[type] -- [description]
 		"""
 
-		label_grid = {}
+		label_dict = {}
 
 		for idx, i in enumerate(label_file_list):
-			tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid, self.output_depth))
-			tmp[:, :, :] = 0.0
-
+			label = []
 			#----------------------------------------------------------------#
 			# this part is reading the label in a .txt file for single image #
 			#----------------------------------------------------------------#
@@ -325,15 +323,24 @@ class ObjectDetector(object):
 			#----------------------------------------------------------------#
 			#   this part is getting the position of object in certain grid  #
 			#----------------------------------------------------------------#
-			for j, k, l, m in zip(x, y, w, h):
-				cell_x = int(math.floor(j / float(1.0 / self.num_horizontal_grid)))
-				cell_y = int(math.floor(k / float(1.0 / self.num_vertical_grid)))
-				tmp [cell_y, cell_x, 0] = 1.0																# add objectness score
-				tmp [cell_y, cell_x, 1] = (j - (cell_x * self.grid_width / self.input_width))				# add x center values
-				tmp [cell_y, cell_x, 2] = (k - (cell_y * self.grid_height / self.input_height))				# add y center values
-				tmp [cell_y, cell_x, 3] = math.log(l/self.anchor[0][0] + 0.0001)							# add width width value
-				tmp [cell_y, cell_x, 4] = math.log(m/self.anchor[0][1] + 0.0001)							# add height value
-				tmp [cell_y, cell_x, 5] = 0.0
+			for j in self.anchor:
+				tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid, 5))
+				tmp[:, :, :] = 0.0
+
+				for k, l, m, n in zip(x, y, w, h):
+					cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid)))
+					cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid)))
+					tmp [cell_y, cell_x, 0] = 1.0																# add objectness score
+					tmp [cell_y, cell_x, 1] = (k - (cell_x * self.grid_width / self.input_width))				# add x center values
+					tmp [cell_y, cell_x, 2] = (l - (cell_y * self.grid_height / self.input_height))				# add y center values
+					tmp [cell_y, cell_x, 3] = math.log(m/j[0] + 0.0001)											# add width width value
+					tmp [cell_y, cell_x, 4] = math.log(n/j[1] + 0.0001)											# add height value
+				
+				label.append(tmp)
+			label = np.array(label)
+			print (label.shape)
+			
+			tmp [cell_y, cell_x, 5] = 0.0
 
 			label_grid[i] = tmp    
 
