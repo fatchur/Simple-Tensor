@@ -64,7 +64,7 @@ class YoloTrain(ObjectDetector):
 		self.all_label_target_np = None
 
 		self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, 3))
-		self.output_placeholder = tf.placeholder(tf.float32, shape=(None,self.num_vertical_grid, self.num_horizontal_grid, 6))
+		self.output_placeholder = tf.placeholder(tf.float32, shape=(None,self.num_vertical_grid, self.num_horizontal_grid, len(anchor)*5 + 1))
 
 	
 	def read_target(self):
