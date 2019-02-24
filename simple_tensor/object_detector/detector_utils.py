@@ -194,15 +194,15 @@ class ObjectDetector(object):
 			#            calculate the losses              #
 			# objectness, noobjectness, center & size loss #
 			#----------------------------------------------#
-			objectness_loss = self.mse_loss(objectness_pred, objectness_label)
-			noobjectness_loss = self.mse_loss(noobjectness_pred, noobjectness_label)
-			ctr_loss = self.mse_loss(x_pred_real, x_label_real) + self.mse_loss(y_pred_real, y_label_real)
+			objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, objectness_label)
+			noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
+			ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real, x_label_real) + self.mse_loss(y_pred_real, y_label_real))
 			#sz_loss = self.mse_loss(tf.math.sqrt(w_pred_real), tf.math.sqrt(w_label_real)) + self.mse_loss(tf.math.sqrt(h_pred_real), tf.sqrt(h_label_real))
-			sz_loss = self.mse_loss(w_pred_real, w_label_real) + self.mse_loss(h_pred_real, h_label_real)
+			sz_loss =  self.size_loss_alpha * (self.mse_loss(w_pred_real, w_label_real) + self.mse_loss(h_pred_real, h_label_real))
 			
-			total_loss = self.objectness_loss_alpha * objectness_loss + \
-						self.noobjectness_loss_alpha * noobjectness_loss + \
-						self.center_loss_alpha * ctr_loss + self.size_loss_alpha * sz_loss
+			total_loss = objectness_loss + \
+						 noobjectness_loss + \
+						 ctr_loss + sz_loss
 	
 			all_losses = all_losses + total_loss
 			objectness_losses = objectness_losses + objectness_loss
