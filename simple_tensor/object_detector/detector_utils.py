@@ -204,7 +204,7 @@ class ObjectDetector(object):
 
 		self.a = objectness_loss
 		self.b = noobjectness_loss
-		self.c = center_loss
+		self.c = ctr_loss
 		self.d = sz_loss
 		self.e = w_pred
 		self.f = h_pred
