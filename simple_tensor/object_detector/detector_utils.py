@@ -132,6 +132,11 @@ class ObjectDetector(object):
 		# get the output results (objectness, x, y, w, h)      #
 		#------------------------------------------------------#
 		all_losses = 0.0
+		objectness_losses = 0.0
+		noobjectness_losses = 0.0
+		center_losses = 0.0
+		size_losses = 0.0
+
 		for idx, i in enumerate(self.anchor):
 			base = idx * 5
 			# get objectness confidence
@@ -201,15 +206,12 @@ class ObjectDetector(object):
 						self.size_loss_alpha * sz_loss
 	
 			all_losses = all_losses + total_loss
+			objectness_losses = objectness_losses + objectness_loss
+			noobjectness_losses = noobjectness_losses + noobjectness_loss
+			center_losses = center_losses + ctr_loss
+			size_losses = size_losses + sz_loss
 
-		self.a = objectness_loss
-		self.b = noobjectness_loss
-		self.c = ctr_loss
-		self.d = sz_loss
-		self.e = w_pred
-		self.f = h_pred
-
-		return all_losses
+		return all_losses, objectness_losses, noobjectness_losses, center_losses, size_losses
 
 
 	def four_points_landmark_loss(self, output, label):
