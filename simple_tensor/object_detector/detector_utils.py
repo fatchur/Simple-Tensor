@@ -202,7 +202,7 @@ class ObjectDetector(object):
 			
 			total_loss = self.objectness_loss_alpha * objectness_loss + \
 						self.noobjectness_loss_alpha * noobjectness_loss + \
-						self.center_loss_alpha * ctr_loss #self.size_loss_alpha * sz_loss
+						self.center_loss_alpha * ctr_loss + self.size_loss_alpha * sz_loss
 	
 			all_losses = all_losses + total_loss
 			objectness_losses = objectness_losses + objectness_loss
