@@ -210,8 +210,8 @@ class ObjectDetector(object):
 			center_losses = center_losses + ctr_loss
 			size_losses = size_losses + sz_loss
 
-		self.a = w_pred
-		self.b = h_pred
+		self.a = w_pred_real
+		self.b = h_pred_real
 
 		return all_losses, objectness_losses, noobjectness_losses, center_losses, size_losses
 
