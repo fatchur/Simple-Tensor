@@ -212,6 +212,8 @@ class ObjectDetector(object):
 
 		self.a = w_pred_real
 		self.b = h_pred_real
+		self.c = w_label_real
+		self.d = h_label_real
 
 		return all_losses, objectness_losses, noobjectness_losses, center_losses, size_losses
 
