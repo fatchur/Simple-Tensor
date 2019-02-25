@@ -194,7 +194,7 @@ class ObjectDetector(object):
 			#            calculate the losses              #
 			# objectness, noobjectness, center & size loss #
 			#----------------------------------------------#
-			objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, objectness_label)
+			objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, iou_map)
 			noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
 			ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real/self.input_width, x_label_real/self.input_width) + 
 												 self.mse_loss(y_pred_real/self.input_height, y_label_real/self.input_height))
