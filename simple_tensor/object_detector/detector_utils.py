@@ -140,22 +140,22 @@ class ObjectDetector(object):
 		for idx, i in enumerate(self.anchor):
 			base = idx * 5
 			# get objectness confidence
-			objectness_pred = output[:, :, :, (base + 0):(base + 1)]
+			objectness_pred = tf.nn.sigmoid(output[:, :, :, (base + 0):(base + 1)])
 			objectness_label = label[:, :, :, (base + 0):(base + 1)]
 			objectness_pred = tf.multiply(objectness_pred, objectness_label)
 
 			# get noobjectness confidence
-			noobjectness_pred = 1.0 - output[:, :, :, (base + 0):(base + 1)]
+			noobjectness_pred = 1.0 - tf.nn.sigmoid(output[:, :, :, (base + 0):(base + 1)])
 			noobjectness_label = 1.0 - objectness_label 
 			noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
 
 			# get x values
-			x_pred = output[:, :, :, (base + 1):(base + 2)]
+			x_pred = tf.nn.sigmoid(output[:, :, :, (base + 1):(base + 2)])
 			x_label = label[:, :, :, (base + 1):(base + 2)]
 			x_pred = tf.multiply(x_pred, objectness_label)
 
 			# get y value
-			y_pred = output[:, :, :, (base + 2):(base + 3)]
+			y_pred = tf.nn.sigmoid(output[:, :, :, (base + 2):(base + 3)])
 			y_label = label[:, :, :, (base + 2):(base + 3)]
 			y_pred = tf.multiply(y_pred, objectness_label)
 			
@@ -197,9 +197,8 @@ class ObjectDetector(object):
 			objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, objectness_label)
 			noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
 			ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real, x_label_real) + self.mse_loss(y_pred_real, y_label_real))
-			#sz_loss = self.mse_loss(tf.math.sqrt(w_pred_real), tf.math.sqrt(w_label_real)) + self.mse_loss(tf.math.sqrt(h_pred_real), tf.sqrt(h_label_real))
-			sz_loss =  self.size_loss_alpha * (self.mse_loss(tf.sqrt(w_pred_real/self.input_width), tf.sqrt(w_label_real/self.input_width)) + 
-											   self.mse_loss(tf.sqrt(h_pred_real/self.input_height), tf.sqrt(h_label_real/self.input_height)))
+			sz_loss =  self.size_loss_alpha * (self.mse_loss(w_pred_real/self.input_width, w_label_real/self.input_width) + 
+											   self.mse_loss(h_pred_real/self.input_height, h_label_real/self.input_height))
 			
 			total_loss = objectness_loss + \
 						 noobjectness_loss + \
