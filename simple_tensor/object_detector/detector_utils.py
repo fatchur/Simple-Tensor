@@ -355,9 +355,13 @@ class ObjectDetector(object):
 		for i in range(len(result)):
 			for idx, j in enumerate(self.anchor):
 				base = idx * 5
+				# doing sigmoid operation
+				result[i, :, :, base + 0] =  1 / (1 + np.exp(-result[i, :, :, base + 0]))
+				result[i, :, :, base + 1] =  1 / (1 + np.exp(-result[i, :, :, base + 1]))
+				result[i, :, :, base + 2] =  1 / (1 + np.exp(-result[i, :, :, base + 2]))
+
 				# get objectness confidence
 				objectness_pred = result[i, :, :, base + 0]
-				objectness_pred = 1 / (1 + np.exp(-objectness_pred))
 
 				res = np.where(objectness_pred > threshold)
 				print (objectness_pred, objectness_pred.shape)
@@ -366,7 +370,11 @@ class ObjectDetector(object):
 				for c, d in zip(res[0], res[1]):
 					print (c, d)
 					cell = result[i, c, d, idx * 5 : (idx+1) * 5]
-					print (cell, cell.shape)
+					print ("the cell:", cell, cell.shape)
+					x = cell[1]
+					y = cell[2]
+					w = cell[3]
+					h = cell[4]
 					print ("============")
 
 
