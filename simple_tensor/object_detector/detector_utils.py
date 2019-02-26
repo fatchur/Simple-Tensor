@@ -350,6 +350,15 @@ class ObjectDetector(object):
 
 
 	def get_yolo_result(self, result, threshold):
+		"""[summary]
+		
+		Arguments:
+			result {[type]} -- [description]
+			threshold {[type]} -- [description]
+		
+		Returns:
+			[type] -- [description]
+		"""
 		outputs = []
 
 		for i in range(len(result)):
@@ -370,8 +379,8 @@ class ObjectDetector(object):
 					conf = cell[0]
 					x = (cell[1] + self.grid_position_mask_onx_np[0, c, d, 0]) * self.input_width
 					y = (cell[2] + self.grid_position_mask_ony_np[0, c, d, 0]) * self.input_height
-					w = math.exp(cell[3]) * j[1]
-					h = math.exp(cell[4]) * j[0]
+					w = math.exp(cell[3]) * j[1] * self.input_width
+					h = math.exp(cell[4]) * j[0] * self.input_height
 					tmp.append([conf, x, y, w, h])
 
 			# get the best 
