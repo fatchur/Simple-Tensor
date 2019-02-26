@@ -59,8 +59,6 @@ class ObjectDetector(object):
 				self.grid_position_mask_onx[:, i, j, :] = j
 				self.grid_position_mask_ony[:, i, j, :] = i
 
-		print (self.grid_position_mask_onx, self.grid_position_mask_ony)
-
 		self.grid_position_mask_onx = tf.convert_to_tensor(self.grid_position_mask_onx, dtype=tf.float32)
 		self.grid_position_mask_ony = tf.convert_to_tensor(self.grid_position_mask_ony, dtype=tf.float32)
 
@@ -363,13 +361,14 @@ class ObjectDetector(object):
 				
 				for c, d, e in zip(res[0], res[1], res[0]):
 					cell = result[c, d, idx * 5 : (idx+1) * 5]
-					print (cell)
+					print (cell, cell.shape)
+					print ("============")
 					x = cell[0]
 					y = cell[1]
 					w = cell[2]
 					h = cell[3]
 
-					
+
 
 
 
