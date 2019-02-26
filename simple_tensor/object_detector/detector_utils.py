@@ -377,8 +377,8 @@ class ObjectDetector(object):
 				for c, d in zip(res[0], res[1]):
 					cell = result[i, c, d, idx * 5 : (idx+1) * 5]
 					conf = cell[0]
-					x = (cell[1] + self.grid_position_mask_onx_np[0, c, d, 0]) * self.input_width
-					y = (cell[2] + self.grid_position_mask_ony_np[0, c, d, 0]) * self.input_height
+					x = (cell[1] + (self.grid_position_mask_onx_np[0, c, d, 0] * self.grid_width / self.input_width)) * self.input_width
+					y = (cell[2] + (self.grid_position_mask_ony_np[0, c, d, 0] * self.grid_height / self.input_height)) * self.input_height
 					w = math.exp(cell[3]) * j[1] * self.input_width
 					h = math.exp(cell[4]) * j[0] * self.input_height
 					tmp.append([conf, x, y, w, h, c, d])
