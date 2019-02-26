@@ -357,7 +357,8 @@ class ObjectDetector(object):
 				base = idx * 5
 				# get objectness confidence
 				objectness_pred = result[i, :, :, (base + 0):(base + 1)]
-				objectness_pred = 1 / (1 + np.exp(objectness_pred))
+				objectness_pred = 1 / (1 + np.exp(-objectness_pred))
+
 				res = np.where(objectness_pred > threshold)
 				print (objectness_pred)
 				print ("res", res)
@@ -367,10 +368,6 @@ class ObjectDetector(object):
 					cell = result[c, d, idx * 5 : (idx+1) * 5]
 					print (cell, cell.shape)
 					print ("============")
-					x = cell[0]
-					y = cell[1]
-					w = cell[2]
-					h = cell[3]
 
 
 
