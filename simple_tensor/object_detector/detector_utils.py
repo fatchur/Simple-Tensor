@@ -384,6 +384,7 @@ class ObjectDetector(object):
 					tmp.append([conf, x, y, w, h, c, d])
 
 			# get the best 
+			'''
 			if len(tmp) > 0:
 				tmp = np.array(tmp)
 				print (tmp, tmp.shape)
@@ -392,6 +393,8 @@ class ObjectDetector(object):
 				outputs.append(tmp[max, :])
 			else:
 				outputs.append([])
+			'''
+			outputs.append(tmp)
 
 		return outputs
 
