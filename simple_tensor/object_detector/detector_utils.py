@@ -363,21 +363,24 @@ class ObjectDetector(object):
 
 				# get objectness confidence
 				objectness_pred = result[i, :, :, base + 0]
-
 				res = np.where(objectness_pred > threshold)
-				print (objectness_pred, objectness_pred.shape)
-				print ("res", res)
 				
 				for c, d in zip(res[0], res[1]):
-					print (c, d)
 					cell = result[i, c, d, idx * 5 : (idx+1) * 5]
-					print ("the cell:", cell, cell.shape)
 					x = (cell[1] + self.grid_position_mask_onx_np[0, c, d, 0]) * self.input_width
 					y = (cell[2] + self.grid_position_mask_ony_np[0, c, d, 0]) * self.input_height
 					w = math.exp(cell[3]) * j[1]
 					h = math.exp(cell[4]) * j[0]
-					tmp.append((x, y, w, h))
+					tmp.append([x, y, w, h])
 					print ("============")
+
+			# get the best 
+			if len(tmp > 0):
+				tmp = np.array(tmp)
+				print (tmp, tmp.shape)
+				max = np.argmax(tmp[:, 0])
+				print (max)
+
 			outputs.append(tmp)
 
 		return outputs
