@@ -51,16 +51,16 @@ class ObjectDetector(object):
 		self.size_loss_alpha = size_loss_alpha
 		self.class_loss_alpha = class_loss_alpha
 
-		self.grid_position_mask_onx = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
-		self.grid_position_mask_ony = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
+		self.grid_position_mask_onx_np = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
+		self.grid_position_mask_ony_np = np.zeros((1, self.num_vertical_grid , self.num_horizontal_grid , 1))
 
 		for i in range(self.num_vertical_grid):
 			for j in range(self.num_horizontal_grid):
-				self.grid_position_mask_onx[:, i, j, :] = j
-				self.grid_position_mask_ony[:, i, j, :] = i
+				self.grid_position_mask_onx_np[:, i, j, :] = j
+				self.grid_position_mask_ony_np[:, i, j, :] = i
 
-		self.grid_position_mask_onx = tf.convert_to_tensor(self.grid_position_mask_onx, dtype=tf.float32)
-		self.grid_position_mask_ony = tf.convert_to_tensor(self.grid_position_mask_ony, dtype=tf.float32)
+		self.grid_position_mask_onx = tf.convert_to_tensor(self.grid_position_mask_onx_np, dtype=tf.float32)
+		self.grid_position_mask_ony = tf.convert_to_tensor(self.grid_position_mask_ony_np, dtype=tf.float32)
 
 
 	def iou(self, bbox_pred, bbox_label):
