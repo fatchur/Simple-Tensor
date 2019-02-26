@@ -375,7 +375,7 @@ class ObjectDetector(object):
 					print ("============")
 
 			# get the best 
-			if len(tmp > 0):
+			if len(tmp) > 0:
 				tmp = np.array(tmp)
 				print (tmp, tmp.shape)
 				max = np.argmax(tmp[:, 0])
