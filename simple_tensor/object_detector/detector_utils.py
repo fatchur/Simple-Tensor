@@ -380,8 +380,9 @@ class ObjectDetector(object):
 				print (tmp, tmp.shape)
 				max = np.argmax(tmp[:, 0])
 				print (max)
-
-			outputs.append(tmp)
+				outputs.append(tmp[max, :])
+			else:
+				outputs.append([])
 
 		return outputs
 
