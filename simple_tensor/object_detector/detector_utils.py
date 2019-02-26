@@ -381,7 +381,7 @@ class ObjectDetector(object):
 					y = (cell[2] + self.grid_position_mask_ony_np[0, c, d, 0]) * self.input_height
 					w = math.exp(cell[3]) * j[1] * self.input_width
 					h = math.exp(cell[4]) * j[0] * self.input_height
-					tmp.append([conf, x, y, w, h])
+					tmp.append([conf, x, y, w, h, c, d])
 
 			# get the best 
 			if len(tmp) > 0:
