@@ -364,7 +364,7 @@ class ObjectDetector(object):
 				print ("res", res)
 				
 				for c, d in zip(res[0], res[1]):
-					print (c, d, e)
+					print (c, d)
 					cell = result[i, c, d, idx * 5 : (idx+1) * 5]
 					print (cell, cell.shape)
 					print ("============")
