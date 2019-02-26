@@ -360,7 +360,7 @@ class ObjectDetector(object):
 				objectness_pred = 1 / (1 + np.exp(-objectness_pred))
 
 				res = np.where(objectness_pred > threshold)
-				print (objectness_pred)
+				print (objectness_pred, objectness_pred.shape)
 				print ("res", res)
 				
 				for c, d, e in zip(res[0], res[1], res[2]):
