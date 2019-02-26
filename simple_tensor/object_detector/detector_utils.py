@@ -356,16 +356,16 @@ class ObjectDetector(object):
 			for idx, j in enumerate(self.anchor):
 				base = idx * 5
 				# get objectness confidence
-				objectness_pred = result[i, :, :, (base + 0):(base + 1)]
+				objectness_pred = result[i, :, :, base + 0]
 				objectness_pred = 1 / (1 + np.exp(-objectness_pred))
 
 				res = np.where(objectness_pred > threshold)
 				print (objectness_pred, objectness_pred.shape)
 				print ("res", res)
 				
-				for c, d, e in zip(res[0], res[1], res[2]):
+				for c, d in zip(res[0], res[1]):
 					print (c, d, e)
-					cell = result[c, d, idx * 5 : (idx+1) * 5]
+					cell = result[i, c, d, idx * 5 : (idx+1) * 5]
 					print (cell, cell.shape)
 					print ("============")
 
