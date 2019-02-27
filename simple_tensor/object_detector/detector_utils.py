@@ -41,6 +41,8 @@ class ObjectDetector(object):
 		self.grid_height = grid_height
 		self.grid_width = grid_width
 		self.output_depth = output_depth
+		self.grid_relatif_width = self.grid_width / self.input_width
+		self.grid_relatif_height = self.grid_height / self.input_height
 		self.num_vertical_grid = int(math.floor(input_height/grid_height))
 		self.num_horizontal_grid = int(math.floor(input_width/grid_width))
 		self.anchor = anchor
@@ -337,11 +339,11 @@ class ObjectDetector(object):
 				for k, l, m, n in zip(x, y, w, h):
 					cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid)))
 					cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid)))
-					tmp [cell_y, cell_x, 5 * idx_anchor + 0] = 1.0																# add objectness score
-					tmp [cell_y, cell_x, 5 * idx_anchor + 1] = (k - (cell_x * self.grid_width / self.input_width))				# add x center values
-					tmp [cell_y, cell_x, 5 * idx_anchor + 2] = (l - (cell_y * self.grid_height / self.input_height))			# add y center values
-					tmp [cell_y, cell_x, 5 * idx_anchor + 3] = math.log(m/j[1] + 0.0001)										# add width width value
-					tmp [cell_y, cell_x, 5 * idx_anchor + 4] = math.log(n/j[0] + 0.0001)										# add height value
+					tmp [cell_y, cell_x, 5 * idx_anchor + 0] = 1.0																				# add objectness score
+					tmp [cell_y, cell_x, 5 * idx_anchor + 1] = (k - (cell_x * self.grid_relatif_width)) * self.input_width/self.grid_width  	# add x center values
+					tmp [cell_y, cell_x, 5 * idx_anchor + 2] = (l - (cell_y * self.grid_relatif_height)) * self.input_height/self.grid_height	# add y center values
+					tmp [cell_y, cell_x, 5 * idx_anchor + 3] = math.log(m/j[1] + 0.0001)														# add width width value
+					tmp [cell_y, cell_x, 5 * idx_anchor + 4] = math.log(n/j[0] + 0.0001)														# add height value
 
 			tmp [cell_y, cell_x, -1] = 0.0
 			label_dict[i] = tmp    
