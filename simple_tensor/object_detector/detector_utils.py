@@ -340,8 +340,8 @@ class ObjectDetector(object):
 					tmp [cell_y, cell_x, 5 * idx_anchor + 0] = 1.0																# add objectness score
 					tmp [cell_y, cell_x, 5 * idx_anchor + 1] = (k - (cell_x * self.grid_width / self.input_width))				# add x center values
 					tmp [cell_y, cell_x, 5 * idx_anchor + 2] = (l - (cell_y * self.grid_height / self.input_height))			# add y center values
-					tmp [cell_y, cell_x, 5 * idx_anchor + 3] = math.log(m/j[0] + 0.0001)										# add width width value
-					tmp [cell_y, cell_x, 5 * idx_anchor + 4] = math.log(n/j[1] + 0.0001)										# add height value
+					tmp [cell_y, cell_x, 5 * idx_anchor + 3] = math.log(m/j[1] + 0.0001)										# add width width value
+					tmp [cell_y, cell_x, 5 * idx_anchor + 4] = math.log(n/j[0] + 0.0001)										# add height value
 
 			tmp [cell_y, cell_x, -1] = 0.0
 			label_dict[i] = tmp    
@@ -362,6 +362,7 @@ class ObjectDetector(object):
 		outputs = []
 
 		for i in range(len(result)):
+
 			tmp = []
 			for idx, j in enumerate(self.anchor):
 				base = idx * 5
