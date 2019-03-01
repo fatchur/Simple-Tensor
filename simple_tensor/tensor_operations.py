@@ -210,7 +210,6 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 							strides=strides,
 							padding=padding, name='convolution_'+name)
 	layer += biases
-	print (layer)
 
 	layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train=is_training, name=name)
 
@@ -314,10 +313,7 @@ def new_batch_norm(x, axis, phase_train, name='bn'):
 	mean, var = tf.cond(tf.cast(phase_train, tf.bool),
 						mean_var_with_update,
 						lambda: (ema.average(batch_mean), ema.average(batch_var)))
-
-	print ("beta", beta)
-	print ("gamma", gamma)
-	print (batch_mean)
+						
 	normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
 
 	return normed, beta, gamma
