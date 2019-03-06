@@ -6,11 +6,11 @@ import numpy as np
 
 class LSTM(object):
 	def __init__(self, 
-				input_feature_num, 
-				output_feature_num, 
-				memory_feature_num, 
-				dropout_val=0.85, 
-				data_type=tf.float64):
+			input_feature_num, 
+			output_feature_num, 
+			memory_feature_num, 
+			dropout_val=0.85, 
+			data_type=tf.float64):
 		"""
 		CLSTM Constructor
 		Args:
@@ -46,10 +46,10 @@ class LSTM(object):
 
 	
 	def inside_LSTM_nn(self, 
-					layer_out_num1, 
-					layer_out_num2, 
-					layer_out_num3, 
-					nn_code, cell_code):
+				layer_out_num1, 
+				layer_out_num2, 
+				layer_out_num3, 
+				nn_code, cell_code):
 		"""
 		A function of neural netwok block inside LSTM. 
 		Args:
@@ -99,7 +99,12 @@ class LSTM(object):
 		return drop3, vars
 
 
-	def inside_LSTM_hybridnn(self, layer_out_num1, layer_out_num2, layer_out_num3, nn_code, cell_code):
+	def inside_LSTM_hybridnn(self, 
+						layer_out_num1, 
+						layer_out_num2, 
+						layer_out_num3, 
+						nn_code, 
+						cell_code):
 		"""
 		A function of neural netwok block inside LSTM. 
 		Args:
@@ -186,7 +191,12 @@ class LSTM(object):
 		return out, vars
 
 
-	def inside_LSTM_deepnn(self, layer_out_num1, layer_out_num2, layer_out_num3, nn_code, cell_code):
+	def inside_LSTM_deepnn(self, 
+					layer_out_num1, 
+					layer_out_num2, 
+					layer_out_num3, 
+					nn_code, 
+					cell_code):
 		"""
 		A function of neural netwok block inside LSTM. 
 		Args:
@@ -245,7 +255,8 @@ class LSTM(object):
 		return fc1, vars
 
 
-	def build_lstm_cell(self, last_output, last_memmory, input_tensor, num_hidden_neuron=5, cell_code='1', inside_nn_type='fc'):
+	def build_lstm_cell(self, 
+					last_output, last_memmory, input_tensor, num_hidden_neuron=5, cell_code='1', inside_nn_type='fc'):
 		"""
 		A function of LSTM cell#self.input_feature_num = input_feature_num
 		#self.output_feature_num = output_feature_num
