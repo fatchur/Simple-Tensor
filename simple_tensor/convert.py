@@ -8,7 +8,7 @@ from tensorflow.python.saved_model import tag_constants, signature_constants
 from tensorflow.python.saved_model.signature_def_utils_impl import predict_signature_def
 
 
-def convert_to_tfmodel(keras_model_path, result_model_path):
+def keras_to_tfmodel(keras_model_path, result_model_path):
     """Function for model converter
     
     Arguments:
@@ -50,7 +50,7 @@ def convert_to_tfmodel(keras_model_path, result_model_path):
 #------------ example ------------#
 # KERAS_MODEL_PATH='model_7.hdf5'
 # print (tf.__version__)
-# convert_to_tf(KERAS_MODEL_PATH)
+# convert_to_tf(KERAS_MODEL_PATH, '/home/serving/)
 #---------------------------------#
 
 
