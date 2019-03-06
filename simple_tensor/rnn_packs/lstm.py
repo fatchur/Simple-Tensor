@@ -100,11 +100,11 @@ class LSTM(object):
 
 
 	def inside_LSTM_hybridnn(self, 
-						layer_out_num1, 
-						layer_out_num2, 
-						layer_out_num3, 
-						nn_code, 
-						cell_code):
+					layer_out_num1, 
+					layer_out_num2, 
+					layer_out_num3, 
+					nn_code, 
+					cell_code):
 		"""
 		A function of neural netwok block inside LSTM. 
 		Args:
@@ -192,11 +192,11 @@ class LSTM(object):
 
 
 	def inside_LSTM_deepnn(self, 
-					layer_out_num1, 
-					layer_out_num2, 
-					layer_out_num3, 
-					nn_code, 
-					cell_code):
+				layer_out_num1, 
+				layer_out_num2, 
+				layer_out_num3, 
+				nn_code, 
+				cell_code):
 		"""
 		A function of neural netwok block inside LSTM. 
 		Args:
@@ -256,7 +256,12 @@ class LSTM(object):
 
 
 	def build_lstm_cell(self, 
-					last_output, last_memmory, input_tensor, num_hidden_neuron=5, cell_code='1', inside_nn_type='fc'):
+				last_output, 
+				last_memmory, 
+				input_tensor, 
+				num_hidden_neuron=5, 
+				cell_code='1', 
+				inside_nn_type='fc'):
 		"""
 		A function of LSTM cell#self.input_feature_num = input_feature_num
 		#self.output_feature_num = output_feature_num
@@ -356,9 +361,19 @@ class LSTM(object):
 
 
 class SimpleSquenceLSTM(LSTM):
-	def __init__(self, batch_size, num_lstm_cell, input_feature_num, output_feature_num, memory_feature_num, 
-					hidden_neuron_num=5, dropout_val=0.95, with_residual= False, residual_season=1, return_memmory=False, 
-					tf_data_type=tf.float32, np_data_type=np.float32):
+	def __init__(self, 
+			batch_size, 
+			num_lstm_cell, 
+			input_feature_num, 
+			output_feature_num, 
+			memory_feature_num, 
+			hidden_neuron_num=5, 
+			dropout_val=0.95, 
+			with_residual= False, 
+			residual_season=1, 
+			return_memmory=False, 
+			tf_data_type=tf.float32, 
+			np_data_type=np.float32):
 		"""
 		A Constructor
 		Args:
@@ -384,8 +399,11 @@ class SimpleSquenceLSTM(LSTM):
 		self.input_feature_placeholder = tf.placeholder(self.tf_data_type, shape=(None, num_lstm_cell, self.input_feature_num), name='input_feature_placeholder')
 		# gate for target
 		self.output = tf.placeholder(self.tf_data_type, shape=(None, num_lstm_cell, self.output_feature_num), name='output_placeholder')
+
 	
-	def build_net(self, inside_nn_type="fc", scoope=''):
+	def build_net(self, 
+			inside_nn_type="fc", 
+			scoope=''):
 		"""
 		A function for buliding sequence of LSTM
 		Args:
