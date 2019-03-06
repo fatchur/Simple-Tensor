@@ -54,19 +54,36 @@ class LSTM(object):
 		"""
 		# first fully connected layer + dropout
 		if cell_code != '0':
-			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, self.nn_inside_LSTM_inputfeature_num, layer_out_num1, \
-												name='fc1_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
+			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
+												self.nn_inside_LSTM_inputfeature_num, layer_out_num1, 
+												name='fc1_nn' + nn_code +"_" + cell_code, 
+												activation="LRELU", 
+												data_type=self.tf_data_type)
 		else:
-			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, self.nn_inside_LSTM_inputfeature_num-1, layer_out_num1, \
-												name='fc1_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
+			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
+												self.nn_inside_LSTM_inputfeature_num-1, layer_out_num1, 
+												name='fc1_nn' + nn_code +"_" + cell_code, 
+												activation="LRELU", 
+												data_type=self.tf_data_type)
+
 		drop1 = tf.nn.dropout(fc1, self.dropout_val)
 		# second fully connected layer + dropout
-		fc2, w_fc2, b_fc2 = new_fc_layer(drop1, layer_out_num1, layer_out_num2,\
-											name='fc2_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
+		fc2, w_fc2, b_fc2 = new_fc_layer(drop1, 
+											layer_out_num1, 
+											layer_out_num2,
+											name='fc2_nn' + nn_code +"_" + cell_code, 
+											activation="LRELU", 
+											data_type=self.tf_data_type)
+
 		drop2 = tf.nn.dropout(fc2, self.dropout_val)
 		# third fully connected layer + dropout
-		fc3, w_fc3, b_fc3 = new_fc_layer(drop2, layer_out_num2, layer_out_num3,\
-											 name='fc3_nn' + nn_code +"_" + cell_code, activation="none", data_type=self.tf_data_type)
+		fc3, w_fc3, b_fc3 = new_fc_layer(drop2, 
+											layer_out_num2, 
+											layer_out_num3,
+											name='fc3_nn' + nn_code +"_" + cell_code, 
+											activation="none", 
+											data_type=self.tf_data_type)
+
 		drop3 = tf.nn.dropout(fc3, self.dropout_val)
 		# variable list
 		vars = [w_fc1, b_fc1, w_fc2, b_fc2, w_fc3, b_fc3]
@@ -90,15 +107,28 @@ class LSTM(object):
 		#######################################
 		# first fully connected layer + drop out
 		if cell_code != '0':
-			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, self.nn_inside_LSTM_inputfeature_num, layer_out_num1, \
-												name='fc1_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
+			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
+												self.nn_inside_LSTM_inputfeature_num, 
+												layer_out_num1, 
+												name='fc1_nn' + nn_code +"_" + cell_code, 
+												activation="LRELU", 
+												data_type=self.tf_data_type)
 		else:
-			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, self.nn_inside_LSTM_inputfeature_num-1, layer_out_num1, \
-												name='fc1_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
+			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
+												self.nn_inside_LSTM_inputfeature_num-1, 
+												layer_out_num1, 
+												name='fc1_nn' + nn_code +"_" + cell_code, 
+												activation="LRELU", 
+												data_type=self.tf_data_type)
+
 		drop1 = tf.nn.dropout(fc1, self.dropout_val)
 		# second fully connected layer + drop out
-		fc2, w_fc2, b_fc2 = new_fc_layer(drop1, layer_out_num1, layer_out_num2,\
-											name='fc2_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
+		fc2, w_fc2, b_fc2 = new_fc_layer(drop1, 
+											layer_out_num1, layer_out_num2,
+											name='fc2_nn' + nn_code +"_" + cell_code, 
+											activation="LRELU", 
+											data_type=self.tf_data_type)
+
 		drop2 = tf.nn.dropout(fc2, self.dropout_val)
 
 		#######################################
@@ -107,13 +137,13 @@ class LSTM(object):
 		# convolution layer 1
 		batch = tf.shape(self.inside_LSTM_nn_input)[0]
 		width = tf.shape(self.inside_LSTM_nn_input)[1]
-		conv1a, conv1a_w, conv1a_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[3, 1, 32], name='conv1d1a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv1b, conv1b_w, conv1b_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[5, 1, 32], name='conv1d1b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv1c, conv1c_w, conv1c_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[7, 1, 32], name='conv1d1c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv1a, conv1a_w, conv1a_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[2, 1, 8], name='conv1d1a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv1b, conv1b_w, conv1b_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[2, 1, 8], name='conv1d1b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv1c, conv1c_w, conv1c_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[2, 1, 8], name='conv1d1c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 2
-		conv2a, conv2a_w, conv2a_b = new_conv1d_layer(input=conv1a, filter_shape=[3, conv1a.get_shape().as_list()[-1], 32], name='conv1d2a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv2b, conv2b_w, conv2b_b = new_conv1d_layer(input=conv1b, filter_shape=[5, conv1b.get_shape().as_list()[-1], 32], name='conv1d2b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv2c, conv2c_w, conv2c_b = new_conv1d_layer(input=conv1c, filter_shape=[7, conv1c.get_shape().as_list()[-1], 32], name='conv1d2c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv2a, conv2a_w, conv2a_b = new_conv1d_layer(input=conv1a, filter_shape=[2, conv1a.get_shape().as_list()[-1], 8], name='conv1d2a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv2b, conv2b_w, conv2b_b = new_conv1d_layer(input=conv1b, filter_shape=[2, conv1b.get_shape().as_list()[-1], 8], name='conv1d2b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv2c, conv2c_w, conv2c_b = new_conv1d_layer(input=conv1c, filter_shape=[2, conv1c.get_shape().as_list()[-1], 8], name='conv1d2c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# concatenate 
 		concat1 = tf.concat([conv2a, conv2b, conv2c], -1)
 
@@ -121,11 +151,11 @@ class LSTM(object):
 		###### convolution block 2 ############
 		#######################################
 		# convolution layer 1
-		conv3a, conv3a_w, conv3a_b = new_conv1d_layer(input=concat1, filter_shape=[3, concat1.get_shape().as_list()[-1], 32], name='conv1d3a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv3b, conv3b_w, conv3b_b = new_conv1d_layer(input=concat1, filter_shape=[5, concat1.get_shape().as_list()[-1], 32], name='conv1d3b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv3a, conv3a_w, conv3a_b = new_conv1d_layer(input=concat1, filter_shape=[2, concat1.get_shape().as_list()[-1], 8], name='conv1d3a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv3b, conv3b_w, conv3b_b = new_conv1d_layer(input=concat1, filter_shape=[2, concat1.get_shape().as_list()[-1], 8], name='conv1d3b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 2
-		conv4a, conv4a_w, conv4a_b = new_conv1d_layer(input=conv3a, filter_shape=[3, conv3a.get_shape().as_list()[-1], 32], name='conv1d4' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv4b, conv4b_w, conv4b_b = new_conv1d_layer(input=conv3b, filter_shape=[5, conv3b.get_shape().as_list()[-1], 32], name='conv1d5' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv4a, conv4a_w, conv4a_b = new_conv1d_layer(input=conv3a, filter_shape=[2, conv3a.get_shape().as_list()[-1], 8], name='conv1d4' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv4b, conv4b_w, conv4b_b = new_conv1d_layer(input=conv3b, filter_shape=[2, conv3b.get_shape().as_list()[-1], 8], name='conv1d5' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# concatenate 
 		concat2 = tf.concat([conv4a, conv4b], -1)
 		# flatten
@@ -162,33 +192,33 @@ class LSTM(object):
 		# convolution layer 1
 		batch = tf.shape(self.inside_LSTM_nn_input)[0]
 		width = tf.shape(self.inside_LSTM_nn_input)[1]
-		conv1a, conv1a_w, conv1a_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[3, 1, 32], name='conv1d1a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv1b, conv1b_w, conv1b_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[5, 1, 32], name='conv1d1b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv1c, conv1c_w, conv1c_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[7, 1, 32], name='conv1d1c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv1a, conv1a_w, conv1a_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[2, 1, 8], name='conv1d1a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv1b, conv1b_w, conv1b_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[2, 1, 8], name='conv1d1b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv1c, conv1c_w, conv1c_b = new_conv1d_layer(input=tf.reshape(self.inside_LSTM_nn_input, [batch, width, 1]), filter_shape=[3, 1, 8], name='conv1d1c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 2
-		conv2a, conv2a_w, conv2a_b = new_conv1d_layer(input=conv1a, filter_shape=[3, conv1a.get_shape().as_list()[-1], 32], name='conv1d2a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv2b, conv2b_w, conv2b_b = new_conv1d_layer(input=conv1b, filter_shape=[5, conv1b.get_shape().as_list()[-1], 32], name='conv1d2b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv2c, conv2c_w, conv2c_b = new_conv1d_layer(input=conv1c, filter_shape=[7, conv1c.get_shape().as_list()[-1], 32], name='conv1d2c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv2a, conv2a_w, conv2a_b = new_conv1d_layer(input=conv1a, filter_shape=[2, conv1a.get_shape().as_list()[-1], 8], name='conv1d2a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv2b, conv2b_w, conv2b_b = new_conv1d_layer(input=conv1b, filter_shape=[2, conv1b.get_shape().as_list()[-1], 8], name='conv1d2b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv2c, conv2c_w, conv2c_b = new_conv1d_layer(input=conv1c, filter_shape=[3, conv1c.get_shape().as_list()[-1], 8], name='conv1d2c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 3
-		conv3a, conv3a_w, conv3a_b = new_conv1d_layer(input=conv2a, filter_shape=[3, conv2a.get_shape().as_list()[-1], 64], name='conv1d3a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv3b, conv3b_w, conv3b_b = new_conv1d_layer(input=conv2b, filter_shape=[5, conv2b.get_shape().as_list()[-1], 64], name='conv1d3b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
-		conv3c, conv3c_w, conv3c_b = new_conv1d_layer(input=conv2c, filter_shape=[7, conv2c.get_shape().as_list()[-1], 64], name='conv1d3c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv3a, conv3a_w, conv3a_b = new_conv1d_layer(input=conv2a, filter_shape=[2, conv2a.get_shape().as_list()[-1], 8], name='conv1d3a' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv3b, conv3b_w, conv3b_b = new_conv1d_layer(input=conv2b, filter_shape=[2, conv2b.get_shape().as_list()[-1], 8], name='conv1d3b' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv3c, conv3c_w, conv3c_b = new_conv1d_layer(input=conv2c, filter_shape=[3, conv2c.get_shape().as_list()[-1], 8], name='conv1d3c' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		#######################################
 		###### convolution block 2 ############
 		#######################################
 		# convolution layer 1
 		concat1 = tf.concat([conv3a, conv3b, conv3c], -1)
-		conv4, conv4_w, conv4_b = new_conv1d_layer(input=concat1, filter_shape=[5, concat1.get_shape().as_list()[-1], 128], name='conv1d4' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
-		conv5, conv5_w, conv5_b = new_conv1d_layer(input=conv4, filter_shape=[3, conv4.get_shape().as_list()[-1], 128], name='conv1d5' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv4, conv4_w, conv4_b = new_conv1d_layer(input=concat1, filter_shape=[2, concat1.get_shape().as_list()[-1], 8], name='conv1d4' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
+		conv5, conv5_w, conv5_b = new_conv1d_layer(input=conv4, filter_shape=[3, conv4.get_shape().as_list()[-1], 8], name='conv1d5' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 2
-		conv6, conv6_w, conv6_b = new_conv1d_layer(input=conv5, filter_shape=[5, conv5.get_shape().as_list()[-1], 128], name='conv1d6' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
-		conv7, conv7_w, conv7_b = new_conv1d_layer(input=conv6, filter_shape=[3, conv6.get_shape().as_list()[-1], 128], name='conv1d7' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv6, conv6_w, conv6_b = new_conv1d_layer(input=conv5, filter_shape=[2, conv5.get_shape().as_list()[-1], 8], name='conv1d6' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
+		conv7, conv7_w, conv7_b = new_conv1d_layer(input=conv6, filter_shape=[3, conv6.get_shape().as_list()[-1], 8], name='conv1d7' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 3
-		conv8, conv8_w, conv8_b = new_conv1d_layer(input=conv7, filter_shape=[5, conv7.get_shape().as_list()[-1], 128], name='conv1d8' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
-		conv9, conv9_w, conv9_b = new_conv1d_layer(input=conv8, filter_shape=[3, conv8.get_shape().as_list()[-1], 128], name='conv1d9' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv8, conv8_w, conv8_b = new_conv1d_layer(input=conv7, filter_shape=[2, conv7.get_shape().as_list()[-1], 8], name='conv1d8' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
+		conv9, conv9_w, conv9_b = new_conv1d_layer(input=conv8, filter_shape=[3, conv8.get_shape().as_list()[-1], 8], name='conv1d9' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 		# convolution layer 4
-		conv10, conv10_w, conv10_b = new_conv1d_layer(input=conv9, filter_shape=[5, conv9.get_shape().as_list()[-1], 128], name='conv1d10' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
-		conv11, conv11_w, conv11_b = new_conv1d_layer(input=conv10, filter_shape=[3, conv10.get_shape().as_list()[-1], 128], name='conv1d11' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
+		conv10, conv10_w, conv10_b = new_conv1d_layer(input=conv9, filter_shape=[2, conv9.get_shape().as_list()[-1], 8], name='conv1d10' + nn_code +"_" + cell_code, strides=2, data_type=self.tf_data_type)
+		conv11, conv11_w, conv11_b = new_conv1d_layer(input=conv10, filter_shape=[3, conv10.get_shape().as_list()[-1], 8], name='conv1d11' + nn_code +"_" + cell_code, data_type=self.tf_data_type)
 
 		flatten1 = tf.layers.flatten(conv11)
 		fc1, w_fc1, b_fc1 = new_fc_layer(flatten1, conv10.get_shape().as_list()[-1], layer_out_num3, \
@@ -203,7 +233,7 @@ class LSTM(object):
 		return fc1, vars
 
 
-	def build_lstm_cell(self, last_output, last_memmory, input_tensor, num_hidden_neuron=10, cell_code='1', inside_nn_type='fc'):
+	def build_lstm_cell(self, last_output, last_memmory, input_tensor, num_hidden_neuron=5, cell_code='1', inside_nn_type='fc'):
 		"""
 		A function of LSTM cell#self.input_feature_num = input_feature_num
 		#self.output_feature_num = output_feature_num
@@ -304,7 +334,7 @@ class LSTM(object):
 
 class SimpleSquenceLSTM(LSTM):
 	def __init__(self, batch_size, num_lstm_cell, input_feature_num, output_feature_num, memory_feature_num, 
-					hidden_neuron_num=10, dropout_val=0.95, with_residual= False, residual_season=1, return_memmory=False, 
+					hidden_neuron_num=5, dropout_val=0.95, with_residual= False, residual_season=1, return_memmory=False, 
 					tf_data_type=tf.float32, np_data_type=np.float32):
 		"""
 		A Constructor
@@ -361,9 +391,8 @@ class SimpleSquenceLSTM(LSTM):
 				last_memmory = memory 
 			outs.append(out)
 			cell_vars.extend(cell_var)
-		print ('out shape', outs[0])
+
 		outs = tf.transpose(tf.stack(outs), [1, 0, 2])
-		print (outs)
 
 		if self.return_memmory:
 			memmories = tf.reshape(list(memmories.values()), [self.batch_size, self.num_lstm_cell, self.memory_feature_num])
