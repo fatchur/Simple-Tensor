@@ -55,25 +55,25 @@ class LSTM(object):
 		# first fully connected layer + dropout
 		if cell_code != '0':
 			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
-										self.nn_inside_LSTM_inputfeature_num, layer_out_num1, 
-										name='fc1_nn' + nn_code +"_" + cell_code, 
-										activation="LRELU", 
-										data_type=self.tf_data_type)
+								self.nn_inside_LSTM_inputfeature_num, layer_out_num1, 
+								name='fc1_nn' + nn_code +"_" + cell_code, 
+								activation="LRELU", 
+								data_type=self.tf_data_type)
 		else:
 			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
-										self.nn_inside_LSTM_inputfeature_num-1, layer_out_num1, 
-										name='fc1_nn' + nn_code +"_" + cell_code, 
-										activation="LRELU", 
-										data_type=self.tf_data_type)
+								self.nn_inside_LSTM_inputfeature_num-1, layer_out_num1, 
+								name='fc1_nn' + nn_code +"_" + cell_code, 
+								activation="LRELU", 
+								data_type=self.tf_data_type)
 
 		drop1 = tf.nn.dropout(fc1, self.dropout_val)
 		# second fully connected layer + dropout
 		fc2, w_fc2, b_fc2 = new_fc_layer(drop1, 
-									layer_out_num1, 
-									layer_out_num2,
-									name='fc2_nn' + nn_code +"_" + cell_code, 
-									activation="LRELU", 
-									data_type=self.tf_data_type)
+							layer_out_num1, 
+							layer_out_num2,
+							name='fc2_nn' + nn_code +"_" + cell_code, 
+							activation="LRELU", 
+							data_type=self.tf_data_type)
 
 		drop2 = tf.nn.dropout(fc2, self.dropout_val)
 		# third fully connected layer + dropout
