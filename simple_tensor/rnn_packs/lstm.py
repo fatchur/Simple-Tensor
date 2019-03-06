@@ -55,34 +55,34 @@ class LSTM(object):
 		# first fully connected layer + dropout
 		if cell_code != '0':
 			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
-												self.nn_inside_LSTM_inputfeature_num, layer_out_num1, 
-												name='fc1_nn' + nn_code +"_" + cell_code, 
-												activation="LRELU", 
-												data_type=self.tf_data_type)
+										self.nn_inside_LSTM_inputfeature_num, layer_out_num1, 
+										name='fc1_nn' + nn_code +"_" + cell_code, 
+										activation="LRELU", 
+										data_type=self.tf_data_type)
 		else:
 			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
-												self.nn_inside_LSTM_inputfeature_num-1, layer_out_num1, 
-												name='fc1_nn' + nn_code +"_" + cell_code, 
-												activation="LRELU", 
-												data_type=self.tf_data_type)
+										self.nn_inside_LSTM_inputfeature_num-1, layer_out_num1, 
+										name='fc1_nn' + nn_code +"_" + cell_code, 
+										activation="LRELU", 
+										data_type=self.tf_data_type)
 
 		drop1 = tf.nn.dropout(fc1, self.dropout_val)
 		# second fully connected layer + dropout
 		fc2, w_fc2, b_fc2 = new_fc_layer(drop1, 
-											layer_out_num1, 
-											layer_out_num2,
-											name='fc2_nn' + nn_code +"_" + cell_code, 
-											activation="LRELU", 
-											data_type=self.tf_data_type)
+									layer_out_num1, 
+									layer_out_num2,
+									name='fc2_nn' + nn_code +"_" + cell_code, 
+									activation="LRELU", 
+									data_type=self.tf_data_type)
 
 		drop2 = tf.nn.dropout(fc2, self.dropout_val)
 		# third fully connected layer + dropout
 		fc3, w_fc3, b_fc3 = new_fc_layer(drop2, 
-											layer_out_num2, 
-											layer_out_num3,
-											name='fc3_nn' + nn_code +"_" + cell_code, 
-											activation="none", 
-											data_type=self.tf_data_type)
+									layer_out_num2, 
+									layer_out_num3,
+									name='fc3_nn' + nn_code +"_" + cell_code, 
+									activation="none", 
+									data_type=self.tf_data_type)
 
 		drop3 = tf.nn.dropout(fc3, self.dropout_val)
 		# variable list
@@ -108,26 +108,26 @@ class LSTM(object):
 		# first fully connected layer + drop out
 		if cell_code != '0':
 			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
-												self.nn_inside_LSTM_inputfeature_num, 
-												layer_out_num1, 
-												name='fc1_nn' + nn_code +"_" + cell_code, 
-												activation="LRELU", 
-												data_type=self.tf_data_type)
+										self.nn_inside_LSTM_inputfeature_num, 
+										layer_out_num1, 
+										name='fc1_nn' + nn_code +"_" + cell_code, 
+										activation="LRELU", 
+										data_type=self.tf_data_type)
 		else:
 			fc1, w_fc1, b_fc1 = new_fc_layer(self.inside_LSTM_nn_input, 
-												self.nn_inside_LSTM_inputfeature_num-1, 
-												layer_out_num1, 
-												name='fc1_nn' + nn_code +"_" + cell_code, 
-												activation="LRELU", 
-												data_type=self.tf_data_type)
+										self.nn_inside_LSTM_inputfeature_num-1, 
+										layer_out_num1, 
+										name='fc1_nn' + nn_code +"_" + cell_code, 
+										activation="LRELU", 
+										data_type=self.tf_data_type)
 
 		drop1 = tf.nn.dropout(fc1, self.dropout_val)
 		# second fully connected layer + drop out
 		fc2, w_fc2, b_fc2 = new_fc_layer(drop1, 
-											layer_out_num1, layer_out_num2,
-											name='fc2_nn' + nn_code +"_" + cell_code, 
-											activation="LRELU", 
-											data_type=self.tf_data_type)
+									layer_out_num1, layer_out_num2,
+									name='fc2_nn' + nn_code +"_" + cell_code, 
+									activation="LRELU", 
+									data_type=self.tf_data_type)
 
 		drop2 = tf.nn.dropout(fc2, self.dropout_val)
 
@@ -166,8 +166,11 @@ class LSTM(object):
 		#########################################################
 		concat3 = tf.concat([drop2, flatten1], 1)
 		neuron_in = self.inside_LSTM_nn_input.get_shape().as_list()[-1] * concat2.get_shape().as_list()[-1] + drop2.get_shape().as_list()[-1]
-		out, w_out, b_out = new_fc_layer(concat3, neuron_in, layer_out_num3, \
-											name='fc1_nn' + nn_code +"_" + cell_code, activation="LRELU", data_type=self.tf_data_type)
+		out, w_out, b_out = new_fc_layer(concat3,\
+			 						neuron_in, layer_out_num3, 
+									name='fc1_nn' + nn_code +"_" + cell_code,
+									activation="LRELU", 
+									data_type=self.tf_data_type)
 		# variable list
 		vars = [w_fc1, b_fc1, w_fc2, b_fc2, conv1a_w, conv1a_b, conv1b_w, conv1b_b, conv1c_w, conv1c_b, conv2a_w, conv2a_b, conv2b_w, conv2b_b, conv2c_w, conv2c_b, 
 				conv3a_w, conv3a_b, conv3b_w, conv3b_b, conv4a_w, conv4a_b, conv4b_w, conv4b_b, w_out, b_out]
