@@ -32,7 +32,7 @@ fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 10000, 5000, "fc1",
 ```
 
 
-#### :shipit: One-D Convolution AND dropout
+#### :shipit: One-D Convolution + batchnorm + activation + dropout
 ##### Function:
 ```python
 new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RELU', padding='SAME', strides=1, data_type=tf.float32)  
@@ -74,7 +74,7 @@ conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3
 
 
 
-#### :shipit: Two-D Convolution AND dropout
+#### :shipit: Two-D Convolution + batchnorm + activation + dropout
 ##### Function:
 ```python
 new_conv_layer(input, filter_shape, name, activation = "RELU", padding='SAME', strides=[1, 1, 1, 1])  
@@ -114,7 +114,7 @@ conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3
 conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3, 3, 3, 8], name='conv1', activation='LRELU', padding='SAME', strides=[1, 2, 2, 1])
 ```
 
-#### :shipit: Deconvolution or Convolution 2D Transpose
+#### :shipit: Deconvolution or Convolution 2D Transpose 
 ##### Function:
 ```python
 new_deconv_layer(input, parameter_list, output_shape, name, activation = 'RELU', strides = [1,1,1,1], padding = 'SAME')
