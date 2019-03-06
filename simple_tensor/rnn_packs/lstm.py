@@ -16,9 +16,9 @@ class LSTM(object):
 		Args:
 			input_feature_num   :		an integer, the number of input feature
 			output_feature_num  :		an integer, the number of the output feture
-			memory_feature_num  :       an integer, the number of LSTM feature memory
-			dropout_val			:		a float
-			data_type			:		a tensorflow data type
+			memory_feature_num  :       	an integer, the number of LSTM feature memory
+			dropout_val	    :		a float
+			data_type	    :		a tensorflow data type
 		"""
 		# the number of feature as input vector
 		self.input_feature_num = input_feature_num
@@ -56,8 +56,8 @@ class LSTM(object):
 			layer_out_num1      :		an integer, the number of output from layer 1 int this block
 			layer_out_num2      :		an integer, the number of output from layer 2 int this block
 			layer_out_num3      :		an integer, the number of output from layer 3 int this block
-			nn_code             :       a string, the code for this block (just for graph naming)
-			cell_code           :       a string, the code for the LSTM cell (just for graph naming)
+			nn_code             :       	a string, the code for this block (just for graph naming)
+			cell_code           :       	a string, the code for the LSTM cell (just for graph naming)
 		Return:
 			the output tensor and variable list of this block
 		"""
@@ -111,8 +111,8 @@ class LSTM(object):
 			layer_out_num1      :		an integer, the number of output from layer 1 int this block
 			layer_out_num2      :		an integer, the number of output from layer 2 int this block
 			layer_out_num3      :		an integer, the number of output from layer 3 int this block
-			nn_code             :       a string, the code for this block (just for graph naming)
-			cell_code           :       a string, the code for the LSTM cell (just for graph naming)
+			nn_code             :       	a string, the code for this block (just for graph naming)
+			cell_code           :       	a string, the code for the LSTM cell (just for graph naming)
 		Return:
 			the output tensor and variable list of this block
 		"""
@@ -282,44 +282,44 @@ class LSTM(object):
 
 		## forget block
 		s2, s2_vars = self.inside_LSTM_nn(num_hidden_neuron, 
-								num_hidden_neuron, 
-								self.nn1_inside_LSTM_outputfeature_num, '1', cell_code)
+							num_hidden_neuron, 
+							self.nn1_inside_LSTM_outputfeature_num, '1', cell_code)
 		s2 = tf.nn.sigmoid(s2, name = 's2_sig_' + cell_code)
 
 		## Learn block1 (sigmoid)
 		if inside_nn_type == 'deep':
 			s3, s3_vars = self.inside_LSTM_deepnn(num_hidden_neuron, 
-										num_hidden_neuron, 
-										self.nn2_inside_LSTM_outputfeature_num, '2', cell_code)
+								num_hidden_neuron, 
+								self.nn2_inside_LSTM_outputfeature_num, '2', cell_code)
 		elif inside_nn_type == 'fc':
 			s3, s3_vars = self.inside_LSTM_nn(num_hidden_neuron, 
-									num_hidden_neuron, 
-									self.nn2_inside_LSTM_outputfeature_num, '2', cell_code)
+								num_hidden_neuron, 
+								self.nn2_inside_LSTM_outputfeature_num, '2', cell_code)
 		else:
 			s3, s3_vars = self.inside_LSTM_hybridnn(num_hidden_neuron, 
-										num_hidden_neuron, 
-										self.nn2_inside_LSTM_outputfeature_num, '2', cell_code)
+									num_hidden_neuron, 
+									self.nn2_inside_LSTM_outputfeature_num, '2', cell_code)
 		s3 = tf.nn.sigmoid(s3, name = 's3_sig_' + cell_code)
 
 		## Learn block2 (tanh)
 		s4, s4_vars = self.inside_LSTM_nn(num_hidden_neuron, 
-								num_hidden_neuron, 
-								self.nn3_inside_LSTM_outputfeature_num, '3', cell_code)
+							num_hidden_neuron, 
+							self.nn3_inside_LSTM_outputfeature_num, '3', cell_code)
 		s4 = tf.tanh(s4, name='tanh_s4_' + cell_code)
 
 		## output block
 		if inside_nn_type == 'deep':
 			s5, s5_vars = self.inside_LSTM_deepnn(num_hidden_neuron, 
-										num_hidden_neuron, 
-										self.nn4_inside_LSTM_outputfeature_num, '4', cell_code)
+								num_hidden_neuron, 
+								self.nn4_inside_LSTM_outputfeature_num, '4', cell_code)
 		elif inside_nn_type == 'fc':
 			s5, s5_vars = self.inside_LSTM_nn(num_hidden_neuron, 
 								num_hidden_neuron, 
 								self.nn4_inside_LSTM_outputfeature_num, '4', cell_code)
 		else:
 			s5, s5_vars = self.inside_LSTM_hybridnn(num_hidden_neuron, 
-										num_hidden_neuron, 
-										self.nn4_inside_LSTM_outputfeature_num, '4', cell_code)			
+									num_hidden_neuron, 
+									self.nn4_inside_LSTM_outputfeature_num, '4', cell_code)			
 		s5 = tf.nn.sigmoid(s5, name = 's5_sig_' + cell_code)
 		
 		## multiply
@@ -337,9 +337,9 @@ class LSTM(object):
 		drop_s10 = tf.nn.dropout(s10, self.dropout_val)
 
 		pre_out, w_out, b_out = new_fc_layer(drop_s10, 
-									self.memory_feature_num, 
-									self.output_feature_num,
-									name='out_nn_' + cell_code, activation="none", data_type=self.tf_data_type)
+							self.memory_feature_num, 
+							self.output_feature_num,
+							name='out_nn_' + cell_code, activation="none", data_type=self.tf_data_type)
 
 		s10_vars = [w_out, b_out]
 		LSTM_vars =  list(chain(*[s2_vars, s3_vars, s4_vars, s5_vars, s10_vars]))
