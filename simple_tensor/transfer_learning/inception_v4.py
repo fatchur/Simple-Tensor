@@ -249,7 +249,9 @@ def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
   raise ValueError('Unknown final endpoint %s' % final_endpoint)
 
 
-def inception_v4(inputs, num_classes=1001, is_training=True,
+def inception_v4(inputs,  num_classes=1001, 
+                 final_endpoint='Mixed_7d',
+                 is_training=True,
                  dropout_keep_prob=0.8,
                  reuse=None,
                  scope='InceptionV4',
@@ -276,5 +278,5 @@ def inception_v4(inputs, num_classes=1001, is_training=True,
   with tf.variable_scope(scope, 'InceptionV4', [inputs], reuse=reuse) as scope:
     with slim.arg_scope([slim.batch_norm, slim.dropout],
                         is_training=is_training):
-      net, end_points = inception_v4_base(inputs, scope=scope)
+      net, end_points = inception_v4_base(inputs, final_endpoint=final_endpoint, scope=scope)
     return net, end_points
