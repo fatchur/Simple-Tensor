@@ -63,12 +63,7 @@ def new_fc_layer(input, num_inputs, num_outputs, name, dropout_val=0.85, activat
 		layer == tf.nn.softmax(layer)
 	
 	layer = tf.nn.dropout(layer, dropout_val)
-	# trainable variable list
-	var_dict = {}
-	var_dict[name + "_weights"] = weights
-	var_dict[name + "_biases"] = biases
-
-	return layer, var_dict
+	return layer, [weights, biases]
 
 
 def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LRELU', padding='SAME', strides=1, data_type=tf.float32, is_training=True):
@@ -111,14 +106,7 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
 		layer == tf.nn.softmax(layer)
 
 	layer = tf.nn.dropout(layer, dropout_val)
-	# trainable variable list
-	var_dict = {}
-	var_dict[name + "_weights"] = weights
-	var_dict[name + "_biases"] = biases
-	var_dict[name + "_beta"] = beta
-	var_dict[name + "_scale"] = scale
-
-	return layer, var_dict
+	return layer, [weights, biases, beta, scale]
 
 
 def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True):  
@@ -173,15 +161,7 @@ def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = '
 		layer == tf.nn.softmax(layer)
 
 	layer = tf.nn.dropout(layer, dropout_val)
-
-	# trainable variable list
-	var_dict = {}
-	var_dict[name + "_weights"] = weights
-	var_dict[name + "_biases"] = biases
-	var_dict[name + "_beta"] = beta
-	var_dict[name + "_scale"] = scale
-
-	return layer, var_dict
+	return layer, [weights, biases, beta, scale]
 	
 
 def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True): 
@@ -227,14 +207,7 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 		layer == tf.nn.softmax(layer)
 
 	layer = tf.nn.dropout(layer, dropout_val)
-
-	var_dict = {}
-	var_dict[name + "_weights"] = weights
-	var_dict[name + "_biases"] = biases
-	var_dict[name + "_beta"] = beta
-	var_dict[name + "_scale"] = scale
-
-	return layer, var_dict
+	return layer, [weights, biases, beta, scale]
 	
 
 def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LRELU', strides = [1,1,1,1], padding = 'SAME'):
@@ -283,11 +256,7 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LREL
 	elif activation == "SOFTMAX":
 		deconv == tf.nn.softmax(deconv)
 
-	var_dict = {}
-	vard_dict[name + "_weights"] = weights
-	vard_dict[name + "_biases"] = biases
-
-	return deconv, var_dict
+	return deconv, [weights, biases]
 
 
 def new_batch_norm(x, axis, phase_train, name='bn'):
