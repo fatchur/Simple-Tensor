@@ -90,7 +90,7 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
 	layer = tf.nn.conv1d(input, filters = weights, stride = strides, padding = padding, name='convolution1d_' + name)
 	layer += biases
 
-	layer, beta, scale = new_batch_norm(layer, axis=[0, 1], phase_train = is_training, name = name)
+	#layer, beta, scale = new_batch_norm(layer, axis=[0, 1], phase_train = is_training, name = name)
 
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
@@ -106,7 +106,7 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
 		layer == tf.nn.softmax(layer)
 
 	layer = tf.nn.dropout(layer, dropout_val)
-	return layer, [weights, biases, beta, scale]
+	return layer, [weights, biases] #, beta, scale]
 
 
 def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True):  
@@ -145,7 +145,7 @@ def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = '
 							padding=padding, name='convolution_'+name)
 	layer += biases
 
-	layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train = is_training, name = name)
+	#layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train = is_training, name = name)
 
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
@@ -161,7 +161,7 @@ def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = '
 		layer == tf.nn.softmax(layer)
 
 	layer = tf.nn.dropout(layer, dropout_val)
-	return layer, [weights, biases, beta, scale]
+	return layer, [weights, biases] #, beta, scale]
 	
 
 def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True): 
@@ -191,7 +191,7 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 							padding=padding, name='convolution_'+name)
 	layer += biases
 
-	layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train=is_training, name=name)
+	#layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train=is_training, name=name)
 
 	if activation == "RELU":
 		layer = tf.nn.relu(layer)
@@ -207,7 +207,7 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
 		layer == tf.nn.softmax(layer)
 
 	layer = tf.nn.dropout(layer, dropout_val)
-	return layer, [weights, biases, beta, scale]
+	return layer, [weights, biases] #, beta, scale]
 	
 
 def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LRELU', strides = [1,1,1,1], padding = 'SAME'):
