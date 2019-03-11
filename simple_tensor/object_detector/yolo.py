@@ -73,7 +73,7 @@ class YoloTrain(ObjectDetector):
 		self.all_label_target_np = self.read_yolo_labels(self.label_folder_path, self.label_file_list)
 
 
-	def build_net(self, input_tensor, final_endpoint='Mixed_7d', is_training):
+	def build_net(self, input_tensor, is_training, final_endpoint='Mixed_7d'):
 		"""[summary]
 		
 		Arguments:
@@ -83,6 +83,7 @@ class YoloTrain(ObjectDetector):
 		Returns:
 			[type] -- [description]
 		"""
+		print ("NOTICE, your inception v4 base model is end with node: ", final_endpoint)
 		# claclute the output from inception v4 for the given input image
 		# get all params
 		inception_v4_arg_scope = inception_arg_scope
