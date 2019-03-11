@@ -73,7 +73,7 @@ class YoloTrain(ObjectDetector):
 		self.all_label_target_np = self.read_yolo_labels(self.label_folder_path, self.label_file_list)
 
 
-	def build_net(self, input_tensor, is_training):
+	def build_net(self, input_tensor, final_endpoint='Mixed_7d', is_training):
 		"""[summary]
 		
 		Arguments:
@@ -90,7 +90,7 @@ class YoloTrain(ObjectDetector):
 		# build inception v4 base graph
 		with slim.arg_scope(arg_scope):
 			# get output (logits)
-			logits, end_points = inception_v4(input_tensor, num_classes=1, is_training=is_training)
+			logits, end_points = inception_v4(input_tensor, num_classes=1, final_endpoint=final_endpoint, is_training=is_training)
 			# get inception variable name
 			var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
