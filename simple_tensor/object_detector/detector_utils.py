@@ -196,8 +196,8 @@ class ObjectDetector(object):
 			#----------------------------------------------#
 			objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, iou_map)
 			noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
-			ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real/self.input_width, x_label_real/self.input_width) + 
-												 self.mse_loss(y_pred_real/self.input_height, y_label_real/self.input_height))
+			ctr_loss = self.center_loss_alpha * (self.mse_loss((x_pred_real - self.grid_position_mask_onx * self.grid_width)/self.grid_width, (x_label_real - self.grid_position_mask_onx * self.grid_width)/self.grid_width) + 
+												 self.mse_loss((y_pred_real - self.grid_position_mask_ony * self.grid_height)/self.grid_height, (y_label_real - self.grid_position_mask_ony * self.grid_height) /self.grid_height))
 			sz_loss =  self.size_loss_alpha * (self.mse_loss(w_pred_real/self.input_width, w_label_real/self.input_width) + 
 											   self.mse_loss(h_pred_real/self.input_height, h_label_real/self.input_height))
 			
