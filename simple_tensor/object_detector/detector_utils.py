@@ -176,8 +176,8 @@ class ObjectDetector(object):
 			# 1. calculate pred bbox based on real ordinat #
 			# 2. calculate the iou                         #
 			#----------------------------------------------#
-			x_pred_real = tf.multiply(self.grid_width * x_pred, objectness_label)
-			y_pred_real = tf.multiply(self.grid_height * y_pred, objectness_label)
+			x_pred_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_pred), objectness_label)
+			y_pred_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_pred, objectness_label)
 			w_pred_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_pred), objectness_label)
 			h_pred_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_pred), objectness_label)
 			pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
@@ -196,10 +196,9 @@ class ObjectDetector(object):
 			#----------------------------------------------#
 			objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, iou_map)
 			noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
-			ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real / self.grid_width, x_label_real /self.grid_width) + 
-												 self.mse_loss(y_pred_real / self.grid_height, y_label_real /self.grid_height))
-			sz_loss =  self.size_loss_alpha * (self.mse_loss(w_pred_real/self.input_width, w_label_real/self.input_width) + 
-											   self.mse_loss(h_pred_real/self.input_height, h_label_real/self.input_height))
+			ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred, x_label) + self.mse_loss(y_pred, y_label_real))
+			sz_loss =  self.size_loss_alpha * (self.mse_loss(tf.sqrt(w_pred_real/self.input_width), tf.sqrt(w_label_real/self.input_width)) + 
+						self.mse_loss(tf.sqrt(h_pred_real/self.input_height), tf.sqrt(h_label_real/self.input_height)))
 			
 			total_loss = objectness_loss + \
 						 noobjectness_loss + \
