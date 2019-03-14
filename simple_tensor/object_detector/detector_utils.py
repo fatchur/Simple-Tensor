@@ -177,7 +177,7 @@ class ObjectDetector(object):
 			# 2. calculate the iou                         #
 			#----------------------------------------------#
 			x_pred_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_pred), objectness_label)
-			y_pred_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_pred, objectness_label)
+			y_pred_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_pred, objectness_label))
 			w_pred_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_pred), objectness_label)
 			h_pred_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_pred), objectness_label)
 			pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
