@@ -38,7 +38,7 @@ class ImageRecognition():
 		if len(classes) > 2:
 			self.output_placeholder = tf.placeholder(tf.float32, shape=(None, len(self.classes)))
 		else:
-			self.output_placeholder = tf.placeholder(tf.float32, shape=(None, 1)
+			self.output_placeholder = tf.placeholder(tf.float32, shape=(None, 1))
 
 		self.read_image_filename()
 
