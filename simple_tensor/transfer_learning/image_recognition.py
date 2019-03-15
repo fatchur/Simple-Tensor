@@ -1,7 +1,6 @@
 import json
 import tensorflow as tf
 from simple_tensor.tensor_operations import *
-from simple_tensor.object_detector.detector_utils import *
 from simple_tensor.transfer_learning.inception_utils import *
 from simple_tensor.transfer_learning.inception_v4 import *
 from comdutils.file_utils import *
