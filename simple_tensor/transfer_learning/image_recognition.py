@@ -46,11 +46,11 @@ class ImageRecognition():
 		"""Function for getting the image filenames for each class
 		"""
 		self.file_list_by_class = {}
-		for i in classes:
+		for i in self.classes:
 			self.file_list_by_class[i] = get_filenames(self.dataset_folder_path)
 
 		self.lenfile_each_class = {}
-		for i in classes:
+		for i in self.classes:
 			self.lenfile_each_class[i] = len(self.file_list_by_class[i])
 
 		print ('-------------------------------------------------------')
@@ -75,14 +75,15 @@ class ImageRecognition():
 		print (" NOTICE, your inception v4 base model is end with node:")
 		print (final_endpoint)
 		print ('-------------------------------------------------------')
-		# claclute the output from inception v4 for the given input image
-		# get all params
+		
 		inception_v4_arg_scope = inception_arg_scope
 		arg_scope = inception_v4_arg_scope()
 		# build inception v4 base graph
 		with slim.arg_scope(arg_scope):
 			# get output (logits)
-			logits, end_points = inception_v4(input_tensor, num_classes=1, final_endpoint=final_endpoint, is_training=False)
+			logits, end_points = inception_v4(input_tensor, num_classes=1, 
+										final_endpoint=final_endpoint, 
+										is_training=False)
 			# get inception variable name
 			var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
