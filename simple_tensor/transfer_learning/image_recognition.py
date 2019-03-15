@@ -7,17 +7,13 @@ from simple_tensor.transfer_learning.inception_v4 import *
 from comdutils.file_utils import *
 
 
-# =============================================== #
-# This class is the child of ObjectDetector class #
-# in simple_tensor.object_detector.detector_utils #
-# =============================================== #
 class ImageRecognition():
 	def __init__(self,
-				classes,
-				dataset_folder_path, 
-				input_height = 512,
-				input_width = 512, 
-				input_channel = 3):
+		classes,
+		dataset_folder_path, 
+		input_height = 512,
+		input_width = 512, 
+		input_channel = 3):
 		"""Constructor
 		
 		Arguments:
@@ -66,11 +62,11 @@ class ImageRecognition():
 	def build_inceptionv4_basenet(self, input_tensor, 
 						is_training = False, 
 						final_endpoint='Mixed_7d'):
-		"""[summary]
+		"""Fucntion for creating inception v4 base network
 		
 		Arguments:
 			input_tensor {tensorflow tensor} -- The input tensor
-			is_training {bool} -- [description]
+			is_training {bool} -- training or not 
 		
 		Returns:
 			[type] -- [description]
