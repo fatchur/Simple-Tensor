@@ -112,7 +112,7 @@ class ImageRecognition():
 			x_batch = []
 			y_batch = []
 
-			for i in range(int(batch_size/len(self.classes)):
+			for i in range(int(batch_size/len(self.classes))):
 				for j in self.classes:
 					index = idx % self.lenfile_each_class[j]
 					try:
