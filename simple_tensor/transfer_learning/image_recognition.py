@@ -14,6 +14,7 @@ class ImageRecognition():
 		input_height = 512,
 		input_width = 512, 
 		input_channel = 3):
+
 		"""Constructor
 		
 		Arguments:
@@ -60,8 +61,8 @@ class ImageRecognition():
 
 
 	def build_inceptionv4_basenet(self, input_tensor, 
-						is_training = False, 
-						final_endpoint='Mixed_7d'):
+					is_training = False, 
+					final_endpoint='Mixed_7d'):
 		"""Fucntion for creating inception v4 base network
 		
 		Arguments:
@@ -75,15 +76,15 @@ class ImageRecognition():
 		print (" NOTICE, your inception v4 base model is end with node:")
 		print (final_endpoint)
 		print ('-------------------------------------------------------')
-		
+
 		inception_v4_arg_scope = inception_arg_scope
 		arg_scope = inception_v4_arg_scope()
 		# build inception v4 base graph
 		with slim.arg_scope(arg_scope):
 			# get output (logits)
 			logits, end_points = inception_v4(input_tensor, num_classes=1, 
-										final_endpoint=final_endpoint, 
-										is_training=False)
+									final_endpoint=final_endpoint, 
+									is_training=False)
 			# get inception variable name
 			var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
@@ -91,9 +92,9 @@ class ImageRecognition():
 
 
 	def build_scratch_net(self, max_layer_num=30,
-						max_depth_for_layer=16,
-						hidden_layer_activation='LRELU',
-						output_activation='SIGMOID'):
+					max_depth_for_layer=16,
+					hidden_layer_activation='LRELU',
+					output_activation='SIGMOID'):
 
 		print ('==== sorry unready')
 
