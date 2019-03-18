@@ -1,4 +1,6 @@
 import json
+import cv2
+import numpy as np
 import tensorflow as tf
 from simple_tensor.tensor_operations import *
 from simple_tensor.transfer_learning.inception_utils import *
@@ -6,7 +8,7 @@ from simple_tensor.transfer_learning.inception_v4 import *
 from comdutils.file_utils import *
 
 
-class ImageRecognition():
+class ImageRecognition(object):
 	def __init__(self,
 		classes,
 		dataset_folder_path, 
@@ -47,15 +49,30 @@ class ImageRecognition():
 		"""
 		self.file_list_by_class = {}
 		for i in self.classes:
-			self.file_list_by_class[i] = get_filenames(self.dataset_folder_path)
+			self.file_list_by_class[i] = get_filenames(self.dataset_folder_path + i)
+
+		self.file_list_by_class_train = {}
+		self.file_list_by_class_val = {}
+		for i in self.classes:
+			border = int(0.8 * len(self.file_list_by_class[i]))
+			self.file_list_by_class_train[i] = self.file_list_by_class[i][:border]
+			self.file_list_by_class_val[i] = self.file_list_by_class[i][border:]
 
 		self.lenfile_each_class = {}
+		self.lenfile_each_class_train = {}
+		self.lenfile_each_class_val = {}
 		for i in self.classes:
 			self.lenfile_each_class[i] = len(self.file_list_by_class[i])
-
+			self.lenfile_each_class_train[i] = len(self.file_list_by_class_train[i])
+			self.lenfile_each_class_val[i] = len(self.file_list_by_class_val[i])
+			
 		print ('-------------------------------------------------------')
 		print ("------ INFO, the number of your dataset each class are:")
 		print ( self.lenfile_each_class)
+		print ("------ Train split: ")
+		print (self.lenfile_each_class_train)
+		print ("------ Val split: ")
+		print (self.lenfile_each_class_val)
 		print ('-------------------------------------------------------')
 
 
@@ -98,7 +115,7 @@ class ImageRecognition():
 		print ('==== sorry unready')
 
 
-	def train_batch_generator(self, batch_size):
+	def batch_generator(self, batch_size):
 		"""Train Generator
 		
 		Arguments:
@@ -106,25 +123,57 @@ class ImageRecognition():
 			image_name_list {list of string} -- the list of image name
 		"""
 		# Infinite loop.
-		idx = 0
+		idx_train = 0
+		idx_val = 0
+
 		while True:
 			x_batch = []
 			y_batch = []
+			x_batch_val = []
+			y_batch_val = []
 
 			for i in range(int(batch_size/len(self.classes))):
 				for j in self.classes:
-					index = idx % self.lenfile_each_class[j]
-					try:
-						tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class[j][index])
-						tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-						tmp_x = tmp_x.astype(np.float32)/255.
-						x_batch.append(tmp_x)
-						y_batch.append(self.classes.index(j))
-					except:
-						print ('problem with this image', self.file_list_by_class[j][index])
+					index_t = idx_train % self.lenfile_each_class_train[j]
+					index_v = idx_val % self.lenfile_each_class_val[j]
 
-				idx += 1
+					# train
+					tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_train[j][index_t])
+					tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
+					if self.input_channel == 1:
+						tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2GRAY)
+						tmp_x = tmp_x.reshape((self.input_height, self.input_width, 1))
+					tmp_x = tmp_x.astype(np.float32)/255.
+					x_batch.append(tmp_x)
+					y_batch.append([self.classes.index(j)])
+					# val
+					tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_val[j][index_v])
+					tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
+					if self.input_channel == 1:
+						tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2GRAY)
+						tmp_x = tmp_x.reshape((self.input_height, self.input_width, 1))
+					tmp_x = tmp_x.astype(np.float32)/255.
+					x_batch_val.append(tmp_x)
+					y_batch_val.append([self.classes.index(j)])
 
-			yield (np.array(x_batch), np.array(y_batch))
+				idx_train += 1
+				idx_val += 1
+
+			yield (np.array(x_batch), np.array(y_batch), np.array(x_batch_val), np.array(y_batch_val))
 	
+
+	def calculate_sigmoidcrosentropy_loss(self, predicted, labels):
+		"""[summary]
+		
+		Arguments:
+			predicted {[type]} -- [description]
+			labels {[type]} -- [description]
+		
+		Returns:
+			[type] -- [description]
+		"""
+		cost = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=predicted )
+		cost = tf.reduce_mean(cost)
+		return cost
+
 	
