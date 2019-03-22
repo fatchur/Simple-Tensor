@@ -15,7 +15,7 @@
 This is a simplification of tensorflow tensor operation
 
 ### DEPENDENCIES
-1. Tensorflow (1.0 - 1.12)
+1. Tensorflow (1.4.1 - 1.12)
 
 For installing tensorflow, with GPU:
 ```python
@@ -35,13 +35,13 @@ pip2 install tensorflow
 ### DOCKER
 We already prepared the all in one docker for computer vision and deep learning libraries, including tensorflow 1.12, Opencv3.4.2 and contrib, CUDA 9, CUDNN 7, Keras, jupyter, numpy, sklearn, scipy, statsmodel, pandas, matplotlib, seaborn, flask, gunicorn etc. See the list of dockerfile below:
 
-##### Docker: Ubuntu 16.04 with GPU (Cuda 9, cudnn 7.2)
+##### Docker: Ubuntu 16.04 with GPU (Cuda 9, cudnn 7.2) [TESTED]
 * https://github.com/fatchur/Opencv-contribt-Tensorflow-GPU-DS-Tools-Docker/tree/master/docker-16.04
 ##### Docker: Ubuntu 18.04 with GPU (Cuda 9, cudnn 7.2)
 * https://github.com/fatchur/Opencv-contribt-Tensorflow-GPU-DS-Tools-Docker/tree/master/docker-18.04
-##### Docker: Ubuntu 16.04 with GPU (Cuda 9, cudnn 7.2)
+##### Docker: Ubuntu 16.04 without GPU (Cuda 9, cudnn 7.2) [TESTED]
 * https://github.com/fatchur/Opencv-contribt-Tensorflow-GPU-DS-Tools-Docker/tree/without_gpu/docker-16.04
-##### Docker: Ubuntu 18.04 with GPU (Cuda 9, cudnn 7.2)
+##### Docker: Ubuntu 18.04 without GPU (Cuda 9, cudnn 7.2) {TESTED}
 * https://github.com/fatchur/Opencv-contribt-Tensorflow-GPU-DS-Tools-Docker/tree/without_gpu/docker-18.04
 
 
@@ -50,6 +50,11 @@ We already prepared the all in one docker for computer vision and deep learning 
 #### :shipit: Installing The Package
 ```python
 python setup.py install
+```
+or
+
+```python
+pip3 install simple_tensor
 ```
 
 #### :shipit: Import The Package
@@ -75,8 +80,8 @@ from simple_tensor.transfer_learning.inception_v4 import *
 - Object Detector Package
 ```python
 import tensorflow as tf
-from simple_tensor.transfer_learning.detector_utils import *
-from simple_tensor.transfer_learning.yolo_v4 import *
+from simple_tensor.object_detector.detector_utils import *
+from simple_tensor.object_detector.yolo_v4 import *
 ```
 
 
