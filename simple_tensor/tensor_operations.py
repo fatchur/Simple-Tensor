@@ -269,9 +269,11 @@ def new_batch_norm(x, axis, phase_train, name='bn'):
 	Return:
 		normed:      batch-normalized maps
 	"""
+	
 	beta = tf.Variable(tf.constant(0.0, shape=[x.get_shape().as_list()[-1]]), name='beta_' + name)
 	gamma = tf.Variable(tf.constant(1.0, shape=[x.get_shape().as_list()[-1]]), name='gamma_' + name)
-	batch_mean, batch_var = tf.nn.moments(x, axis, name='moments_' + name)
+	mean, var = tf.nn.moments(x, axis, name='moments_' + name)
+	'''
 	ema = tf.train.ExponentialMovingAverage(decay=0.5)
 
 	def mean_var_with_update():
@@ -282,8 +284,10 @@ def new_batch_norm(x, axis, phase_train, name='bn'):
 	mean, var = tf.cond(tf.cast(phase_train, tf.bool),
 						mean_var_with_update,
 						lambda: (ema.average(batch_mean), ema.average(batch_var)))
-						
-	normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
+	'''
 
+
+	normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
+	
 	return normed, beta, gamma
 
