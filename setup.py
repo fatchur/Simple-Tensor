@@ -11,6 +11,7 @@ setup(
     description='a simple package for handling tensorflow tensor',  # Required
     long_description=long_description,
     long_description_content_type='text/markdown',
-    author='Chur Chur',  # Optional
+    author='fatchur_rahman',  # Optional
+    author_email='fatchur.rahman1@gmail.com', #optional
     packages=["simple_tensor", "simple_tensor.transfer_learning", "simple_tensor.object_detector"],  # Required
 )
