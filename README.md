@@ -54,7 +54,7 @@ python setup.py install
 or
 
 ```python
-pip3 install simple_tensor
+pip3 install simple-tensor
 ```
 
 #### :shipit: Import The Package
