@@ -1,10 +1,16 @@
 from setuptools import setup, find_packages
 
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='simple_tensor',  # Required
-    version='v0.4',  # Required
+    version='v0.4.1',  # Required
     description='a simple package for handling tensorflow tensor',  # Required
-    long_description="a simple package for handling tensorflow tensor",  # Optional
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Chur Chur',  # Optional
     packages=["simple_tensor", "simple_tensor.transfer_learning", "simple_tensor.object_detector"],  # Required
 )
