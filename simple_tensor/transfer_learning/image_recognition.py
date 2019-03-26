@@ -115,7 +115,7 @@ class ImageRecognition(object):
 		print ('==== sorry unready')
 
 
-	def batch_generator(self, batch_size):
+	def batch_generator(self, batch_size, batch_size_val):
 		"""Train Generator
 		
 		Arguments:
@@ -135,7 +135,6 @@ class ImageRecognition(object):
 			for i in range(int(batch_size/len(self.classes))):
 				for j in self.classes:
 					index_t = idx_train % self.lenfile_each_class_train[j]
-					index_v = idx_val % self.lenfile_each_class_val[j]
 
 					# train
 					tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_train[j][index_t])
@@ -146,6 +145,13 @@ class ImageRecognition(object):
 					tmp_x = tmp_x.astype(np.float32)/255.
 					x_batch.append(tmp_x)
 					y_batch.append([self.classes.index(j)])
+
+				idx_train += 1
+
+			for i in range(int(batch_size_val/len(self.classes)):
+				for j in self.classes:
+					index_v = idx_val % self.lenfile_each_class_val[j]
+
 					# val
 					tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_val[j][index_v])
 					tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
@@ -156,7 +162,6 @@ class ImageRecognition(object):
 					x_batch_val.append(tmp_x)
 					y_batch_val.append([self.classes.index(j)])
 
-				idx_train += 1
 				idx_val += 1
 
 			yield (np.array(x_batch), np.array(y_batch), np.array(x_batch_val), np.array(y_batch_val))
