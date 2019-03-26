@@ -181,4 +181,19 @@ class ImageRecognition(object):
 		cost = tf.reduce_mean(cost)
 		return cost
 
+
+	def calculate_mse_loss(self, predicted, labels):
+			"""[summary]
+			
+			Arguments:
+				predicted {[type]} -- [description]
+				labels {[type]} -- [description]
+			
+			Returns:
+				[type] -- [description]
+			"""
+			cost = tf.math.square(predicted - labels)
+			cost = tf.reduce_mean(cost)
+			return cost
+
 	
