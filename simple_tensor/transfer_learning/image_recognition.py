@@ -54,7 +54,7 @@ class ImageRecognition(object):
 		self.file_list_by_class_train = {}
 		self.file_list_by_class_val = {}
 		for i in self.classes:
-			border = int(0.8 * len(self.file_list_by_class[i]))
+			border = int(0.9 * len(self.file_list_by_class[i]))
 			self.file_list_by_class_train[i] = self.file_list_by_class[i][:border]
 			self.file_list_by_class_val[i] = self.file_list_by_class[i][border:]
 
