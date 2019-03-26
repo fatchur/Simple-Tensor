@@ -148,7 +148,7 @@ class ImageRecognition(object):
 
 				idx_train += 1
 
-			for i in range(int(batch_size_val/len(self.classes)):
+			for i in range(int(batch_size_val/len(self.classes))):
 				for j in self.classes:
 					index_v = idx_val % self.lenfile_each_class_val[j]
 
