@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from simple_tensor import *
 
 from os import path
 this_directory = path.abspath(path.dirname(__file__))
@@ -7,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='simple_tensor',  # Required
-    version='v0.4.1',  # Required
+    version=version,  # Required
     description='a simple package for handling tensorflow tensor',  # Required
     long_description=long_description,
     long_description_content_type='text/markdown',
