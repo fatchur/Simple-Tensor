@@ -3,12 +3,20 @@
 ### NEWS
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-|16th Sept 2018 | Initial Repo was created, Unready to be used                                                                                  |      v0.0.1       |
-|Dec 2018 | Update on deconvolution filter shape format                                                                                         |      -            |
 |3rd Jan 2019 | Add conv1d operations                                                                                                           |      v0.0.2       |
 |17th Feb 2019 | Add conv2d depthwise layer, transfer learning package                                                                          |      v0.0.3       |
 |              | The conv1d, conv2d, and conv2d depthwise functions consist dropout operation inside                                            |                   |
 |              | **Pertamina safety project depends on this tag**                                                                               |                   |
+|March 2019    | simple_tensor is available on pypi (pip3 install simple-tensor)                                                                |     >=v0.4.0      |
+|March 2019    | Add Inceptionv4 and Densenet for transfer-learning package                                                                     |      v0.4.2       |
+
+
+### Tensorflow Compatibility
+| Tensorflow version      |        Simple-Tensor Version      |   
+| ----------------------- | --------------------------------- | 
+| 1.4.1 - 1.12            |      >=v0.4.0                     |
+| 1.3.1                   |      >=v0.4.3                     |
+
 
 
 ### ABOUT PROJECT
