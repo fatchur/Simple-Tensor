@@ -46,7 +46,8 @@ fc1, _ = new_fc_layer(input=flatten_input,
                       activation="RELU")
 ```
 
-> **case 2**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000, with dropout 15% or (0.15) and *WITHOUT* activation function 
+> **case 2**: 
+you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000, with dropout 15% or (0.15) and *WITHOUT* activation function
 
 ```python
 fc1, _ = new_fc_layer(input=flatten_input, 
@@ -57,25 +58,31 @@ fc1, _ = new_fc_layer(input=flatten_input,
 ```
 
 
-#### :shipit: One-D Convolution + batchnorm + activation + dropout
-##### Function:
+## :shipit: One-D Convolution + batchnorm + activation + dropout
+### Function:
 ```python
-new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RELU', padding='SAME', strides=1, data_type=tf.float32)  
+new_conv1d_layer(input, 
+                 filter_shape, 
+                 name, 
+                 dropout_val=0.85, 
+                 activation='RELU', 
+                 padding='SAME', 
+                 strides=1, 
+                 data_type=tf.float32)  
 ```
 
-##### Parameters:
-**input** : The input tensor, the shape shoud be : [batch, width, depth] <br/>
-**filter_shape** : The shape of filter, [filter height, filter width, input depth, output depth]<br/>
-**name** : The name for this operation <br/>
-**dropout_val** : The 1 - dropoout value, ex 0.85 for 0.15 dropped out <br/>
-**activation** : The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU) <br/>
-**padding** : The type of padding (VALID or SAME)   <br/>
+### Parameters:
+**input** : The input tensor, the shape shoud be : [batch, width, depth]        
+**filter_shape** : The shape of filter, [filter height, filter width, input depth, output depth]    
+**name** : The name for this operation  
+**dropout_val** : The 1 - dropoout value, ex 0.85 for 0.15 dropped out  
+**activation** : The type of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
+**padding** : The type of padding (VALID or SAME)       
 **strides** : The strides, [batch stride, height stride, width stride, depth stride]   <br/>
 
 ##### Returns:
 **output** : The output tensor, the shape should be: _[batch, width, depth]_   <br/>
-**weights**: Filter weights of this tensor operation   <br/>
-**biases** : Biases of this tensor moperation   <br/>
+**None**: removed in the future version v1.x
 
 > **case 1**: 
 > - you have a tensor with the shape of [?, 100, 1], and want to apply a convolution with the same shape output.
@@ -84,17 +91,23 @@ new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='RELU',
 > - by default, the padding method is SAME
 
 ```python
-conv1d_result, weights_of_conv1d, biases_of_conv1d = new_conv1d_layer(input_tensor, [3, 3, 3], name='conv1da', activation='LRELU')
+conv1d_result, _ = new_conv1d_layer(input_tensor, [3, 3, 3],
+                                     name='conv1da', 
+                                     activation='LRELU')
 ```
 
 > **case 2**: 
 > - you have a tensor with the shape of [?, 100, 1], and want to apply convolution with the output shape:[?, 50, 8] or half of the intial width and height. 
 > - Because the output width and height is half of input size, so the stride is [1, 2, 1]
-> - suppose your filter designed to be 3 in width, so the filter shape is [3=.filter width, 3=>input depth, 8=>output depth].
+> - suppose your filter designed to be 3 in width, so the filter shape is [3=>filter width, 3=>input depth, 8=>output depth].
 > - by default, the padding method is SAME
 
 ```python
-conv_result, weights_of_conv1, biases_of_conv1 = new_conv_layer(input_tensor, [3, 3, 8], name='conv1', activation='LRELU', padding='SAME', strides=[1, 2, 2, 1])
+conv_result, _ = new_conv_layer(input_tensor, [3, 3, 8], 
+                                name='conv1', 
+                                activation='LRELU', 
+                                padding='SAME', 
+                                strides=[1, 2, 2, 1])
 ```
 
 
