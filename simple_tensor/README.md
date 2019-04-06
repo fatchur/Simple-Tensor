@@ -39,13 +39,21 @@ new_fc_layer(input,
 > **case 1**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000, with dropout 15% or (0.15), Lrelu activated, and with bias
 
 ```python
-fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 10000, 5000, "fc1", activation="RELU")
+fc1, _ = new_fc_layer(input=flatten_input, 
+                      num_inputs=10000, 
+                      num_outputs=5000, 
+                      name="fc1", 
+                      activation="RELU")
 ```
 
-> **case 2**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000, with dropout 15% or (0.15) and WITHOUT activation function 
+> **case 2**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000, with dropout 15% or (0.15) and *WITHOUT* activation function 
 
 ```python
-fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 10000, 5000, "fc1", activation="NONE")
+fc1, _ = new_fc_layer(input=flatten_input, 
+                      num_inputs=10000, 
+                      num_outputs=5000, 
+                      name="fc1", 
+                      activation="RELU")
 ```
 
 
