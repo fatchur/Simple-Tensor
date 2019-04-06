@@ -10,15 +10,15 @@ from simple_tensor.tensor_operations import *
 ### Function:
 ```python
 new_fc_layer(input, 
-                 num_inputs, 
-                 num_outputs, 
-                 name, 
-                 dropout_val=0.85, 
-                 activation="LRELU",
-                 lrelu_alpha=0.2, 
-                 data_type=tf.float32,
-                 is_training=True,
-                 use_bias=True)
+             num_inputs, 
+             num_outputs, 
+             name, 
+             dropout_val=0.85, 
+             activation="LRELU",
+             lrelu_alpha=0.2, 
+             data_type=tf.float32,
+             is_training=True,
+             use_bias=True)
 ```
 
 #### Parameters:
@@ -53,7 +53,7 @@ fc1, _ = new_fc_layer(input=flatten_input,
                       num_inputs=10000, 
                       num_outputs=5000, 
                       name="fc1", 
-                      activation="RELU")
+                      activation="NONE")
 ```
 
 
