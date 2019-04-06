@@ -3,7 +3,9 @@ from tensorflow.python import control_flow_ops
 
 
 
-def new_weights(shape, name, data_type=tf.float32):
+def new_weights(shape, 
+                name, 
+                data_type=tf.float32):
     """
     Creating new trainable tensor (filter) as weight
     Args:
@@ -17,7 +19,9 @@ def new_weights(shape, name, data_type=tf.float32):
     return tf.Variable(tf.truncated_normal(shape, stddev=0.05, dtype=data_type), dtype=data_type, name='weight_'+name)
 
 
-def new_biases(length, name, data_type=tf.float32):
+def new_biases(length, 
+               name, 
+               data_type=tf.float32):
     """
     Creating new trainable tensor as bias
     Args:
@@ -30,7 +34,15 @@ def new_biases(length, name, data_type=tf.float32):
     return tf.Variable(tf.constant(0.05, shape=[length], dtype=data_type), dtype=data_type, name='bias_'+name)
 
 
-def new_fc_layer(input, num_inputs, num_outputs, name, dropout_val=0.85, activation="LRELU", data_type=tf.float32): 
+def new_fc_layer(input, 
+                 num_inputs, 
+                 num_outputs, 
+                 name, 
+                 dropout_val=0.85, 
+                 activation="LRELU", 
+                 data_type=tf.float32,
+                 is_training=True,
+                 use_bias=True): 
     """
     A simplification method of tensorflow fully connected operation
     Args:
@@ -46,7 +58,9 @@ def new_fc_layer(input, num_inputs, num_outputs, name, dropout_val=0.85, activat
     """
     weights = new_weights(shape=[num_inputs, num_outputs], name=name, data_type=data_type)
     biases = new_biases(length=num_outputs, name=name, data_type=data_type)
-    layer = tf.matmul(input, weights) + biases
+    layer = tf.matmul(input, weights)
+    if use_bias:
+        layer += biases
 
     if activation=="RELU":
         layer = tf.nn.relu(layer)
@@ -65,7 +79,17 @@ def new_fc_layer(input, num_inputs, num_outputs, name, dropout_val=0.85, activat
     return layer, [weights, biases]
 
 
-def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LRELU', padding='SAME', strides=1, data_type=tf.float32, is_training=True):
+def new_conv1d_layer(input, 
+                     filter_shape, 
+                     name, 
+                     dropout_val=0.85, 
+                     activation='LRELU', 
+                     padding='SAME', 
+                     strides=1, 
+                     data_type=tf.float32, 
+                     is_training=True,
+                     use_bias=True,
+                     use_batchnorm=False):
     """[summary]
     
     Arguments:
@@ -87,9 +111,11 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
     weights = new_weights(shape=shape, name=name, data_type=data_type)
     biases = new_biases(length=filter_shape[2], name=name, data_type=data_type)
     layer = tf.nn.conv1d(input, filters = weights, stride = strides, padding = padding, name='convolution1d_' + name)
-    layer += biases
+    if use_bias:
+        layer += biases
 
-    #layer, beta, scale = new_batch_norm(layer, axis=[0, 1], phase_train = is_training, name = name)
+    if use_batchnorm:
+        layer = batch_norm(inputs=layer, training = is_training)
 
     if activation == "RELU":
         layer = tf.nn.relu(layer)
@@ -108,7 +134,17 @@ def new_conv1d_layer(input, filter_shape, name, dropout_val=0.85, activation='LR
     return layer, [weights, biases] #, beta, scale]
 
 
-def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True):  
+def new_conv2d_layer(input, 
+                     filter_shape, 
+                     name, 
+                     dropout_val=0.85, 
+                     activation = 'LRELU', 
+                     padding='SAME', 
+                     strides=[1, 1, 1, 1],
+                     data_type=tf.float32,  
+                     is_training=True,
+                     use_bias=True,
+                     use_batchnorm=False):  
     """
     A simplification method of tensorflow convolution operation
     Args:
@@ -142,9 +178,11 @@ def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = '
                             filter=weights,
                             strides=strides,
                             padding=padding, name='convolution_'+name)
-    layer += biases
-
-    #layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train = is_training, name = name)
+    if use_bias:
+        layer += biases
+    
+    if use_batchnorm:
+        layer = batch_norm(inputs=layer, training = is_training)
 
     if activation == "RELU":
         layer = tf.nn.relu(layer)
@@ -163,7 +201,17 @@ def new_conv2d_layer(input, filter_shape, name, dropout_val=0.85, activation = '
     return layer, [weights, biases] #, beta, scale]
     
 
-def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, activation = 'LRELU', padding='SAME', strides=[1, 1, 1, 1], is_training=True): 
+def new_conv2d_depthwise_layer(input, 
+                               filter_shape, 
+                               name, 
+                               dropout_val=0.85, 
+                               activation = 'LRELU', 
+                               padding='SAME', 
+                               strides=[1, 1, 1, 1], 
+                               data_type=tf.float32,  
+                               is_training=True,
+                               use_bias=True,
+                               use_batchnorm=False): 
     """Function for conv2d depth wise convolution operation
     
     Arguments:
@@ -188,9 +236,10 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
                             filter=weights,
                             strides=strides,
                             padding=padding, name='convolution_'+name)
-    layer += biases
-
-    #layer, beta, scale = new_batch_norm(layer, axis=[0, 1, 2], phase_train=is_training, name=name)
+    if use_bias:
+        layer += biases
+    if use_batchnorm:
+        layer = batch_norm(inputs=layer, training = is_training)
 
     if activation == "RELU":
         layer = tf.nn.relu(layer)
@@ -209,7 +258,15 @@ def new_conv2d_depthwise_layer(input, filter_shape, name, dropout_val=0.85, acti
     return layer, [weights, biases] #, beta, scale]
     
 
-def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LRELU', strides = [1,1,1,1], padding = 'SAME'):
+def new_deconv_layer(input, 
+                     filter_shape, 
+                     output_shape, 
+                     name, 
+                     activation = 'LRELU',  
+                     padding = 'SAME',
+                     strides = [1,1,1,1],
+                     data_type=tf.float32,  
+                     use_bias=True):
     """
     A simplification method of tensorflow deconvolution operation
     Args:
@@ -240,7 +297,8 @@ def new_deconv_layer(input, filter_shape, output_shape, name, activation = 'LREL
                                     strides = strides,
                                     padding = padding, 
                                     name=name)
-    deconv += biases
+    if use_bias:
+        deconv += biases
 
     if activation == 'RELU':
         deconv = tf.nn.relu(deconv)
@@ -284,9 +342,16 @@ def new_batch_norm(x, axis, phase_train, name='bn'):
                         mean_var_with_update,
                         lambda: (ema.average(batch_mean), ema.average(batch_var)))
     '''
-
-
     normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
     
     return normed, beta, gamma
+
+
+def batch_norm(inputs, training, data_format='channel_last'):
+    """Performs a batch normalization using a standard set of parameters."""
+    return tf.layers.batch_normalization(
+        inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
+        momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
+        scale=True, training=training)
+
 
