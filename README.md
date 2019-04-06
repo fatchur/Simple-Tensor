@@ -5,10 +5,11 @@
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 |3rd Jan 2019 | Add conv1d operations                                                                                                           |      v0.0.2       |
 |17th Feb 2019 | Add conv2d depthwise layer, transfer learning package                                                                          |      v0.0.3       |
-|              | The conv1d, conv2d, and conv2d depthwise functions consist dropout operation inside                                            |                   |
-|              | **Pertamina safety project depends on this tag**                                                                               |                   |
+|              | The conv1d, conv2d, and conv2d depthwise functions consist dropout operation inside                                            |         
 |March 2019    | simple_tensor is available on pypi (pip3 install simple-tensor)                                                                |     >=v0.4.0      |
-|March 2019    | Add Inceptionv4 and Densenet for transfer-learning package                                                                     |      v0.4.2       |
+|March 2019    | Add Inceptionv4 and Densenet for transfer-learning package                                                                     |      v0.4.3       |
+|29th March 2019    | Simple tensor for Tensorflow 1.13.1 is available on pypi                                                                  |      v0.4.3       |
+|              | **Pertamina safety project depends on this tag**                                                                               |                   |
 
 
 ### Tensorflow Compatibility

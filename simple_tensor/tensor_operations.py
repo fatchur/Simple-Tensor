@@ -39,7 +39,8 @@ def new_fc_layer(input,
                  num_outputs, 
                  name, 
                  dropout_val=0.85, 
-                 activation="LRELU", 
+                 activation="LRELU",
+                 lrelu_alpha=0.2, 
                  data_type=tf.float32,
                  is_training=True,
                  use_bias=True): 
@@ -66,7 +67,7 @@ def new_fc_layer(input,
     if activation=="RELU":
         layer = tf.nn.relu(layer)
     elif activation=="LRELU":
-        layer = tf.nn.leaky_relu(layer, name=name + '_LRELU')
+        layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha, name=name + '_LRELU')
     elif activation == "SELU":
         layer = tf.nn.selu(layer)
     elif activation == "ELU":
@@ -84,7 +85,8 @@ def new_conv1d_layer(input,
                      filter_shape, 
                      name, 
                      dropout_val=0.85, 
-                     activation='LRELU', 
+                     activation='LRELU',
+                     lrelu_alpha=0.2,  
                      padding='SAME', 
                      strides=1, 
                      data_type=tf.float32, 
@@ -122,7 +124,7 @@ def new_conv1d_layer(input,
     if activation == "RELU":
         layer = tf.nn.relu(layer)
     elif activation == "LRELU":
-        layer = tf.nn.leaky_relu(layer)
+        layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
     elif activation == "SELU":
         layer = tf.nn.selu(layer)
     elif activation == "ELU":
@@ -141,6 +143,7 @@ def new_conv2d_layer(input,
                      name, 
                      dropout_val=0.85, 
                      activation = 'LRELU', 
+                     lrelu_alpha=0.2,
                      padding='SAME', 
                      strides=[1, 1, 1, 1],
                      data_type=tf.float32,  
@@ -189,7 +192,7 @@ def new_conv2d_layer(input,
     if activation == "RELU":
         layer = tf.nn.relu(layer)
     elif activation == "LRELU":
-        layer = tf.nn.leaky_relu(layer)
+        layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
     elif activation == "SELU":
         layer = tf.nn.selu(layer)
     elif activation == "ELU":
@@ -208,6 +211,7 @@ def new_conv2d_depthwise_layer(input,
                                name, 
                                dropout_val=0.85, 
                                activation = 'LRELU', 
+                               lrelu_alpha=0.2, 
                                padding='SAME', 
                                strides=[1, 1, 1, 1], 
                                data_type=tf.float32,  
@@ -247,7 +251,7 @@ def new_conv2d_depthwise_layer(input,
     if activation == "RELU":
         layer = tf.nn.relu(layer)
     elif activation == "LRELU":
-        layer = tf.nn.leaky_relu(layer)
+        layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
     elif activation == "SELU":
         layer = tf.nn.selu(layer)
     elif activation == "ELU":
@@ -266,6 +270,7 @@ def new_deconv_layer(input,
                      output_shape, 
                      name, 
                      activation = 'LRELU',  
+                     lrelu_alpha=0.2, 
                      padding = 'SAME',
                      strides = [1,1,1,1],
                      data_type=tf.float32,  
@@ -310,7 +315,7 @@ def new_deconv_layer(input,
     if activation == 'RELU':
         deconv = tf.nn.relu(deconv)
     elif activation == "LRELU":
-        deconv = tf.nn.leaky_relu(deconv)
+        deconv = tf.nn.leaky_relu(deconv, alpha=lrelu_alpha)
     elif activation == "SELU":
         deconv = tf.nn.selu(deconv)
     elif activation == "ELU":
@@ -359,6 +364,9 @@ def new_batch_norm(x,
 
 def batch_norm(inputs, 
                training, 
+               momentum=0.9,
+               epsilon=1e-5,
+               scale=True,
                data_format='channel_last'):
     """Performs a batch normalization using a standard set of parameters.
     
@@ -375,7 +383,7 @@ def batch_norm(inputs,
 
     return tf.layers.batch_normalization(
         inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
-        momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
-        scale=True, training=training)
+        momentum=momentum, epsilon=epsilon,
+        scale=scale, training=training)
 
 
