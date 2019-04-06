@@ -9,7 +9,7 @@
 |March 2019    | simple_tensor is available on pypi (pip3 install simple-tensor)                                                                |     >=v0.4.0      |
 |March 2019    | Add Inceptionv4 and Densenet for transfer-learning package                                                                     |      v0.4.3       |
 |29th March 2019    | Simple tensor for Tensorflow 1.13.1 is available on pypi                                                                  |      v0.4.3       |
-|              | **Pertamina safety project depends on this tag**                                                                               |                   |
+|              | **nanananan project depends on this tag**                                                                               |                   |
 
 
 ### Tensorflow Compatibility
