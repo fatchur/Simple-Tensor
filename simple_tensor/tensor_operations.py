@@ -57,9 +57,10 @@ def new_fc_layer(input,
         a tensor as the result of activated matrix multiplication, its weights, and biases
     """
     weights = new_weights(shape=[num_inputs, num_outputs], name=name, data_type=data_type)
-    biases = new_biases(length=num_outputs, name=name, data_type=data_type)
     layer = tf.matmul(input, weights)
+
     if use_bias:
+        biases = new_biases(length=num_outputs, name=name, data_type=data_type)
         layer += biases
 
     if activation=="RELU":
@@ -76,7 +77,7 @@ def new_fc_layer(input,
         layer == tf.nn.softmax(layer)
     
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, [weights, biases]
+    return layer, None
 
 
 def new_conv1d_layer(input, 
@@ -109,9 +110,10 @@ def new_conv1d_layer(input,
     """
     shape = filter_shape
     weights = new_weights(shape=shape, name=name, data_type=data_type)
-    biases = new_biases(length=filter_shape[2], name=name, data_type=data_type)
     layer = tf.nn.conv1d(input, filters = weights, stride = strides, padding = padding, name='convolution1d_' + name)
+
     if use_bias:
+        biases = new_biases(length=filter_shape[2], name=name, data_type=data_type)
         layer += biases
 
     if use_batchnorm:
@@ -131,7 +133,7 @@ def new_conv1d_layer(input,
         layer == tf.nn.softmax(layer)
 
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, [weights, biases] #, beta, scale]
+    return layer, None
 
 
 def new_conv2d_layer(input, 
@@ -171,14 +173,14 @@ def new_conv2d_layer(input,
     """
 
     shape = filter_shape
-    weights = new_weights(shape=shape, name=name)
-    biases = new_biases(length=filter_shape[3], name=name)
-
+    weights = new_weights(shape=shape, name=name, data_type=data_type)
     layer = tf.nn.conv2d(input=input,
                             filter=weights,
                             strides=strides,
                             padding=padding, name='convolution_'+name)
+    
     if use_bias:
+        biases = new_biases(length=filter_shape[3], name=name, data_type=data_type)
         layer += biases
     
     if use_batchnorm:
@@ -198,7 +200,7 @@ def new_conv2d_layer(input,
         layer == tf.nn.softmax(layer)
 
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, [weights, biases] #, beta, scale]
+    return layer, None
     
 
 def new_conv2d_depthwise_layer(input, 
@@ -229,15 +231,16 @@ def new_conv2d_depthwise_layer(input,
         a tensor as the result of depthwise conv2d operation, its weights, and biases
     """
     shape = filter_shape
-    weights = new_weights(shape=shape, name=name)
-    biases = new_biases(length=filter_shape[3], name=name)
-
+    weights = new_weights(shape=shape, name=name, data_type=data_type)
     layer = tf.nn.depthwise_conv2d(input=input,
                             filter=weights,
                             strides=strides,
                             padding=padding, name='convolution_'+name)
+
     if use_bias:
+        biases = new_biases(length=filter_shape[3], name=name, data_type=data_type)
         layer += biases
+
     if use_batchnorm:
         layer = batch_norm(inputs=layer, training = is_training)
 
@@ -255,7 +258,7 @@ def new_conv2d_depthwise_layer(input,
         layer == tf.nn.softmax(layer)
 
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, [weights, biases] #, beta, scale]
+    return layer, None
     
 
 def new_deconv_layer(input, 
@@ -288,8 +291,10 @@ def new_deconv_layer(input,
     Return:
         a result of deconvolution operation, its weights, and biases
     """
-    weights = tf.Variable(tf.truncated_normal([filter_shape[0], filter_shape[1], filter_shape[3], filter_shape[2]], stddev=0.05), name='weight_' + name)
-    biases = new_biases(length=filter_shape[3], name=name)
+    weights = tf.Variable(tf.truncated_normal([filter_shape[0], filter_shape[1], filter_shape[3], filter_shape[2]], 
+                                              stddev=0.05), 
+                                              name='weight_' + name,
+                                              data_type=data_type)
     deconv_shape = tf.stack(output_shape)
     deconv = tf.nn.conv2d_transpose(input=input, 
                                     filter = weights, 
@@ -297,7 +302,9 @@ def new_deconv_layer(input,
                                     strides = strides,
                                     padding = padding, 
                                     name=name)
+
     if use_bias:
+        biases = new_biases(length=filter_shape[3], name=name, data_type=data_type)
         deconv += biases
 
     if activation == 'RELU':
@@ -313,10 +320,13 @@ def new_deconv_layer(input,
     elif activation == "SOFTMAX":
         deconv == tf.nn.softmax(deconv)
 
-    return deconv, [weights, biases]
+    return deconv, None
 
 
-def new_batch_norm(x, axis, phase_train, name='bn'):
+def new_batch_norm(x, 
+                   axis, 
+                   phase_train, 
+                   name='bn'):
     """
     Batch normalization on convolutional maps.
     Args:
@@ -347,8 +357,22 @@ def new_batch_norm(x, axis, phase_train, name='bn'):
     return normed, beta, gamma
 
 
-def batch_norm(inputs, training, data_format='channel_last'):
-    """Performs a batch normalization using a standard set of parameters."""
+def batch_norm(inputs, 
+               training, 
+               data_format='channel_last'):
+    """Performs a batch normalization using a standard set of parameters.
+    
+    Arguments:
+        inputs {[type]} -- [description]
+        training {[type]} -- [description]
+    
+    Keyword Arguments:
+        data_format {str} -- [description] (default: {'channel_last'})
+    
+    Returns:
+        [type] -- [description]
+    """
+
     return tf.layers.batch_normalization(
         inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
         momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
