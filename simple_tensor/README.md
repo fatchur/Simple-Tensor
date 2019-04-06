@@ -1,34 +1,51 @@
 # README #
 
-#### :shipit: Import The Package
+## :shipit: Import The Package
 ```python
 from simple_tensor.tensor_operations import *
 ```
 
 
-#### :shipit: Fully connected operation
-##### Function:
+## :shipit: Fully connected operation
+### Function:
 ```python
-new_fc_layer(input, num_inputs, num_outputs, name, activation="RELU")
+new_fc_layer(input, 
+                 num_inputs, 
+                 num_outputs, 
+                 name, 
+                 dropout_val=0.85, 
+                 activation="LRELU",
+                 lrelu_alpha=0.2, 
+                 data_type=tf.float32,
+                 is_training=True,
+                 use_bias=True)
 ```
 
-##### Parameters:
-**input** : &nbsp; &nbsp; The flatten input tensor, the shape should be: [batch, number of neuron]   
-**num_inputs** : &nbsp; The number of input neuron  
-**num_outputs** : &nbsp; The number of output neuron  
-**name** : &nbsp;  The name of the node for this operation  
-**activation** : &nbsp; The kind of the activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
+#### Parameters:
+**input** : &nbsp; {tensor} &nbsp; The flatten input tensor, the shape should be: [batch, number of neuron]     
+**num_inputs** : &nbsp; {int} &nbsp; The number of input neuron     
+**num_outputs** : &nbsp; {int} &nbsp; The number of output neuron   
+**name** : &nbsp;  {str} &nbsp; The name of the node for this operation     
+**activation** : &nbsp; {str} &nbsp; The type of activation function used (RELU, LRELU, SELU, SIGMOID, SOFTMAX or ElU)  
+**lrelu_alpha** : &nbsp; {float} &nbsp; The alpha of leaky relu         
+**data_type** : &nbsp; {tensorflow data type} &nbsp; tensorflow data type   
+**is_training** : &nbsp; {bool} &nbsp; training 'true', inferencing 'false'
 
-##### Returns:
+#### Returns:
 **output** : The output tensor, the shape should be: [batch, number of neuron] <br/>
-**weights**: Filter weights of this tensor operation  <br/>
-**biases** : Biases of this tensor moperation  
+**None**: removed in the future version v1.x
 
 
-> **case 1**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000
+> **case 1**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000, with dropout 15% or (0.15), Lrelu activated, and with bias
 
 ```python
 fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 10000, 5000, "fc1", activation="RELU")
+```
+
+> **case 2**: you have a flatten layer with total neuron: 10000, and want to apply a matrix multiplication operation with output neuron: 5000, with dropout 15% or (0.15) and WITHOUT activation function 
+
+```python
+fc1, weight_of_fc1, bias_d_fc1 = new_fc_layer(flatten_input, 10000, 5000, "fc1", activation="NONE")
 ```
 
 
