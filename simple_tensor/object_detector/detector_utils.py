@@ -141,8 +141,8 @@ class ObjectDetector(object):
         """
         A method for calculating the confidence_loss
         Args:
-            output_tensor	:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-            label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
+            output_tensor   :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
+            label           :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
         Return:
             a tensor of center_loss with shape [?, grid width, grid height, 1]
         """
@@ -155,8 +155,8 @@ class ObjectDetector(object):
         """
         A yolo loss main method
         Args:
-            output			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-            label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
+            output        :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
+            label         :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
         Return:
             SILL ON PROGRESS
         """
@@ -170,6 +170,7 @@ class ObjectDetector(object):
         noobjectness_losses = 0.0
         center_losses = 0.0
         size_losses = 0.0
+        class_losses = 0.0
         
         for i in range(3):
 
@@ -301,11 +302,11 @@ class ObjectDetector(object):
                     for k, l, m, n in zip(x, y, w, h):
                         cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid[i])))
                         cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
-                        tmp [cell_y, cell_x, base + 0] = 1.0																				# add objectness score
+                        tmp [cell_y, cell_x, base + 0] = 1.0																				    # add objectness score
                         tmp [cell_y, cell_x, base + 1] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
                         tmp [cell_y, cell_x, base + 2] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
-                        tmp [cell_y, cell_x, base + 3] = math.log(m/j[1] + 0.0001)														    # add width width value
-                        tmp [cell_y, cell_x, base + 4] = math.log(n/j[0] + 0.0001)														    # add height value
+                        tmp [cell_y, cell_x, base + 3] = math.log(m/j[1] + 0.0001)														        # add width width value
+                        tmp [cell_y, cell_x, base + 4] = math.log(n/j[0] + 0.0001)														        # add height value
 
                 tmps.append(tmp)
             label_dict[val] = tmps
