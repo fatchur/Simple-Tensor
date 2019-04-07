@@ -325,55 +325,451 @@ class ObjectDetector(object):
         return label_dict
 
 
-    def get_yolo_result(self, result, threshold):
+    def build_yolov3_net(self):
         """[summary]
-        
-        Arguments:
-            result {[type]} -- [description]
-            threshold {[type]} -- [description]
         
         Returns:
             [type] -- [description]
         """
-        outputs = []
+        _BATCH_NORM_DECAY = 0.9
+        _BATCH_NORM_EPSILON = 1e-05
+        _LEAKY_RELU = 0.1
+        _ANCHORS = [(10, 13), (16, 30), (33, 23),
+                    (30, 61), (62, 45), (59, 119),
+                    (116, 90), (156, 198), (373, 326)]
+        _MODEL_SIZE = (416, 416)
 
-        for i in range(len(result)):
+        #-------------------------------------------------------------------------#
+        def fixed_padding(inputs, 
+                          kernel_size, 
+                          data_format):
+            """ResNet implementation of fixed padding.
+            Pads the input along the spatial dimensions independently of input size.
 
-            tmp = []
-            for idx, j in enumerate(self.anchor):
-                base = idx * 5
-                # doing sigmoid operation
-                result[i, :, :, base + 0] =  1 / (1 + np.exp(-result[i, :, :, base + 0]))
-                result[i, :, :, base + 1] =  1 / (1 + np.exp(-result[i, :, :, base + 1]))
-                result[i, :, :, base + 2] =  1 / (1 + np.exp(-result[i, :, :, base + 2]))
+            Args:
+                inputs: Tensor input to be padded.
+                kernel_size: The kernel to be used in the conv2d or max_pool2d.
+                data_format: The input format.
+            Returns:
+                A tensor with the same format as the input.
+            """
+            pad_total = kernel_size - 1
+            pad_beg = pad_total // 2
+            pad_end = pad_total - pad_beg
 
-                # get objectness confidence
-                objectness_pred = result[i, :, :, base + 0]
-                res = np.where(objectness_pred > threshold)
-                
-                for c, d in zip(res[0], res[1]):
-                    cell = result[i, c, d, idx * 5 : (idx+1) * 5]
-                    conf = cell[0]
-                    x = (cell[1] + (self.grid_position_mask_onx_np[0, c, d, 0] * self.grid_width / self.input_width)) * self.input_width
-                    y = (cell[2] + (self.grid_position_mask_ony_np[0, c, d, 0] * self.grid_height / self.input_height)) * self.input_height
-                    w = math.exp(cell[3]) * j[1] * self.input_width
-                    h = math.exp(cell[4]) * j[0] * self.input_height
-                    tmp.append([conf, x, y, w, h, c, d])
-
-            # get the best 
-            '''
-            if len(tmp) > 0:
-                tmp = np.array(tmp)
-                print (tmp, tmp.shape)
-                max = np.argmax(tmp[:, 0])
-                print (max)
-                outputs.append(tmp[max, :])
+            if data_format == 'channels_first':
+                padded_inputs = tf.pad(inputs, [[0, 0], [0, 0],
+                                                [pad_beg, pad_end],
+                                                [pad_beg, pad_end]])
             else:
-                outputs.append([])
-            '''
-            outputs.append(tmp)
+                padded_inputs = tf.pad(inputs, [[0, 0], [pad_beg, pad_end],
+                                                [pad_beg, pad_end], [0, 0]])
+            return padded_inputs
+        
+        #-------------------------------------------------------------------------#
+        def darknet53_residual_block(inputs, 
+                                     filters, 
+                                     training, 
+                                     data_format,
+                                     stride=1, 
+                                     name='res'):
+            """[summary]
+            Arguments:
+                inputs {[type]} -- [description]
+                filters {[type]} -- [description]
+                training {[type]} -- [description]
+                data_format {[type]} -- [description]
+            
+            Keyword Arguments:
+                stride {int} -- [description] (default: {1})
+                name {str} -- [description] (default: {'res'})
+            
+            Returns:
+                [type] -- [description]
+            """
+            shortcut = inputs
+            
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
+                            name = name + '_input_conv1', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU', 
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding=('SAME' if stride == 1 else 'VALID'), 
+                            strides=[1, stride, stride, 1],  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+            
+            inputs, _ = new_conv2d_layer(input=(inputs if stride == 1 else fixed_padding(inputs, 3, 'channels_last')), 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
+                            name = name + '_input_conv2', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding=('SAME' if stride == 1 else 'VALID'), 
+                            strides=[1, stride, stride, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
 
-        return outputs
+            inputs += shortcut
+            return inputs
+        
+        #-------------------------------------------------------------------------#
+        def darknet53(inputs, training, data_format):
+            """[summary]
+            
+            Arguments:
+                inputs {[type]} -- [description]
+                training {[type]} -- [description]
+                data_format {[type]} -- [description]
+            
+            Returns:
+                [type] -- [description]
+            """
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 32], 
+                            name = 'main_input_conv1', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU,  
+                            padding='SAME', 
+                            strides=[1, 1, 1, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+            
+            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 64], 
+                            name = 'main_input_conv2', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU,  
+                            padding='VALID', 
+                            strides=[1, 2, 2, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+
+            inputs = darknet53_residual_block(inputs, filters=32, training=training,
+                                            data_format=data_format, name='res1')
+            
+            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 128], 
+                            name = 'main_input_conv3', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding='VALID', 
+                            strides=[1, 2, 2, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+
+            for i in range(2):
+                inputs = darknet53_residual_block(inputs, filters=64,
+                                                training=training,
+                                                data_format=data_format, name='res' + str(i+1))
+                
+            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 256], 
+                            name = 'main_input_conv4', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding='VALID', 
+                            strides=[1, 2, 2, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+        
+            for i in range(8):
+                inputs = darknet53_residual_block(inputs, filters=128,
+                                                training=training,
+                                                data_format=data_format, name='res' + str(i+3))
+
+            route1 = inputs
+            
+            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 512], 
+                            name = 'main_input_conv5', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU,
+                            padding='VALID', 
+                            strides=[1, 2, 2, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+            
+            for i in range(8):
+                inputs = darknet53_residual_block(inputs, filters=256,
+                                                training=training,
+                                                data_format=data_format, name='res' + str(i+11))
+
+            route2 = inputs
+            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 1024], 
+                            name = 'main_input_conv6', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding='VALID', 
+                            strides=[1, 2, 2, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+
+            for i in range(4):
+                inputs = darknet53_residual_block(inputs, filters=512,
+                                                training=training,
+                                                data_format=data_format, name='res' + str(i+19))
+
+            return route1, route2, inputs
+        
+        #-------------------------------------------------------------------------#
+        def yolo_convolution_block(inputs, filters, training, data_format):
+            """[summary]
+            
+            Arguments:
+                inputs {[type]} -- [description]
+                filters {[type]} -- [description]
+                training {[type]} -- [description]
+                data_format {[type]} -- [description]
+            
+            Returns:
+                [type] -- [description]
+            """
+            
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
+                            name = 'main_input_conv7', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU,
+                            padding='SAME', 
+                            strides=[1, 1, 1, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+        
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
+                            name = 'main_input_conv8', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU,
+                            padding='SAME', 
+                            strides=[1, 1, 1, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+            
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
+                            name = 'main_input_conv9', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU,
+                            padding='SAME', 
+                            strides=[1, 1, 1, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+            
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
+                            name = 'main_input_conv10', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding='SAME', 
+                            strides=[1, 1, 1, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+            
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
+                            name = 'main_input_conv11', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding='SAME', 
+                            strides=[1, 1, 1, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+
+            route = inputs
+            inputs, _ = new_conv2d_layer(input=inputs, 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
+                            name = 'main_input_conv12', 
+                            dropout_val= 1.0, 
+                            activation = 'LRELU',
+                            lrelu_alpha=_LEAKY_RELU, 
+                            padding='SAME', 
+                            strides=[1, 1, 1, 1],
+                            data_type=tf.float32,  
+                            is_training=training,
+                            use_bias=False,
+                            use_batchnorm=True)
+
+            return route, inputs
+        
+        #-------------------------------------------------------------------------#
+        def yolo_layer(inputs, n_classes, anchors, img_size, data_format):
+            """Creates Yolo final detection layer.
+
+            Detects boxes with respect to anchors.
+
+            Args:
+                inputs: Tensor input.
+                n_classes: Number of labels.
+                anchors: A list of anchor sizes.
+                img_size: The input size of the model.
+                data_format: The input format.
+
+            Returns:
+                Tensor output.
+            """
+            n_anchors = len(anchors)
+            inputs = tf.layers.conv2d(inputs, filters=n_anchors * (5 + n_classes),
+                                    kernel_size=1, strides=1, use_bias=True,
+                                    data_format=data_format)
+            
+            print ("=====", inputs)
+            shape = inputs.get_shape().as_list()
+            grid_shape = shape[2:4] if data_format == 'channels_first' else shape[1:3]
+            if data_format == 'channels_first':
+                inputs = tf.transpose(inputs, [0, 2, 3, 1])
+            inputs = tf.reshape(inputs, [-1, n_anchors * grid_shape[0] * grid_shape[1],
+                                        5 + n_classes])
+
+            strides = (img_size[0] // grid_shape[0], img_size[1] // grid_shape[1])
+
+            box_centers, box_shapes, confidence, classes = \
+                tf.split(inputs, [2, 2, 1, n_classes], axis=-1)
+
+            x = tf.range(grid_shape[0], dtype=tf.float32)
+            y = tf.range(grid_shape[1], dtype=tf.float32)
+            x_offset, y_offset = tf.meshgrid(x, y)
+            x_offset = tf.reshape(x_offset, (-1, 1))
+            y_offset = tf.reshape(y_offset, (-1, 1))
+            x_y_offset = tf.concat([x_offset, y_offset], axis=-1)
+            x_y_offset = tf.tile(x_y_offset, [1, n_anchors])
+            x_y_offset = tf.reshape(x_y_offset, [1, -1, 2])
+            box_centers = tf.nn.sigmoid(box_centers)
+            box_centers = (box_centers + x_y_offset) * strides
+
+            anchors = tf.tile(anchors, [grid_shape[0] * grid_shape[1], 1])
+            box_shapes = tf.exp(box_shapes) * tf.to_float(anchors)
+            confidence = tf.nn.sigmoid(confidence)
+            classes = tf.nn.sigmoid(classes)
+            inputs = tf.concat([box_centers, box_shapes,
+                                confidence, classes], axis=-1)
+            return inputs
+
+        #-------------------------------------------------------------------------#
+        def upsample(inputs, out_shape, data_format):
+            """Upsamples to `out_shape` using nearest neighbor interpolation.
+            
+            Arguments:
+                inputs {[type]} -- [description]
+                out_shape {[type]} -- [description]
+                data_format {[type]} -- [description]
+            
+            Returns:
+                [type] -- [description]
+            """
+            if data_format == 'channels_first':
+                inputs = tf.transpose(inputs, [0, 2, 3, 1])
+                new_height = out_shape[3]
+                new_width = out_shape[2]
+            else:
+                new_height = out_shape[2]
+                new_width = out_shape[1]
+
+            inputs = tf.image.resize_nearest_neighbor(inputs, (new_height, new_width))
+            if data_format == 'channels_first':
+                inputs = tf.transpose(inputs, [0, 3, 1, 2])
+
+            return inputs
+        
+        #-------------------------------------------------------------------------#
+        def build_boxes(inputs):
+            """Computes top left and bottom right points of the boxes."""
+            center_x, center_y, width, height, confidence, classes = \
+                tf.split(inputs, [1, 1, 1, 1, 1, -1], axis=-1)
+
+            top_left_x = center_x - width / 2
+            top_left_y = center_y - height / 2
+            bottom_right_x = center_x + width / 2
+            bottom_right_y = center_y + height / 2
+
+            boxes = tf.concat([top_left_x, top_left_y,
+                            bottom_right_x, bottom_right_y,
+                            confidence, classes], axis=-1)
+
+            return boxes
+
+        def non_max_suppression(inputs, n_classes, max_output_size, iou_threshold,
+                        confidence_threshold):
+            """Performs non-max suppression separately for each class.
+
+            Args:
+                inputs: Tensor input.
+                n_classes: Number of classes.
+                max_output_size: Max number of boxes to be selected for each class.
+                iou_threshold: Threshold for the IOU.
+                confidence_threshold: Threshold for the confidence score.
+            Returns:
+                A list containing class-to-boxes dictionaries
+                    for each sample in the batch.
+            """
+            batch = tf.unstack(inputs)
+            boxes_dicts = []
+            for boxes in batch:
+                boxes = tf.boolean_mask(boxes, boxes[:, 4] > confidence_threshold)
+                classes = tf.argmax(boxes[:, 5:], axis=-1)
+                classes = tf.expand_dims(tf.to_float(classes), axis=-1)
+                boxes = tf.concat([boxes[:, :5], classes], axis=-1)
+
+                boxes_dict = dict()
+                for cls in range(n_classes):
+                    mask = tf.equal(boxes[:, 5], cls)
+                    mask_shape = mask.get_shape()
+                    if mask_shape.ndims != 0:
+                        class_boxes = tf.boolean_mask(boxes, mask)
+                        boxes_coords, boxes_conf_scores, _ = tf.split(class_boxes,
+                                                                    [4, 1, -1],
+                                                                    axis=-1)
+                        boxes_conf_scores = tf.reshape(boxes_conf_scores, [-1])
+                        indices = tf.image.non_max_suppression(boxes_coords,
+                                                            boxes_conf_scores,
+                                                            max_output_size,
+                                                            iou_threshold)
+                        class_boxes = tf.gather(class_boxes, indices)
+                        boxes_dict[cls] = class_boxes[:, :5]
+
+                boxes_dicts.append(boxes_dict)
+
+            return boxes_dicts
+
+
 
 
 
