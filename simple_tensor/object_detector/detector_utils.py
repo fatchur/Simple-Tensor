@@ -264,47 +264,51 @@ class ObjectDetector(object):
 
         label_dict = {}
 
-        for idx, i in enumerate(label_file_list):
-            tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid, 5 * len(self.anchor) + 1))
-            tmp[:, :, :] = 0.0
-            #----------------------------------------------------------------#
-            # this part is reading the label in a .txt file for single image #
-            #----------------------------------------------------------------#
-            file_name = folder_path + i
-            file = open(file_name, "r") 
-            data = file.read()
-            data = data.split()
-            length = len(data)
-            line_num = int(length/5)
+        for idx, val in enumerate(label_file_list):
+            tmps = []
+            for i in range(3):
+                tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid,  len(self.anchor) * (5+self.num_class)))
+                tmp[:, :, :] = 0.0
+                #----------------------------------------------------------------#
+                # this part is reading the label in a .txt file for single image #
+                #----------------------------------------------------------------#
+                file_name = folder_path + val
+                file = open(file_name, "r") 
+                data = file.read()
+                data = data.split()
+                length = len(data)
+                line_num = int(length/5)
 
-            #----------------------------------------------------------------#
-            #    this part is getting the x, y, w, h values for each line    #
-            #----------------------------------------------------------------#
-            x = []
-            y = []
-            w = []
-            h = []
-            for j in range (line_num):
-                x.append(float(data[j*5 + 1]))
-                y.append(float(data[j*5 + 2]))
-                w.append(float(data[j*5 + 3]))
-                h.append(float(data[j*5 + 4]))
+                #----------------------------------------------------------------#
+                #    this part is getting the x, y, w, h values for each line    #
+                #----------------------------------------------------------------#
+                x = []
+                y = []
+                w = []
+                h = []
+                for j in range (line_num):
+                    x.append(float(data[j*5 + 1]))
+                    y.append(float(data[j*5 + 2]))
+                    w.append(float(data[j*5 + 3]))
+                    h.append(float(data[j*5 + 4]))
                 
-            #----------------------------------------------------------------#
-            #   this part is getting the position of object in certain grid  #
-            #----------------------------------------------------------------#
-            for idx_anchor, j in enumerate(self.anchor):
-                for k, l, m, n in zip(x, y, w, h):
-                    cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid)))
-                    cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid)))
-                    tmp [cell_y, cell_x, 5 * idx_anchor + 0] = 1.0																				# add objectness score
-                    tmp [cell_y, cell_x, 5 * idx_anchor + 1] = (k - (cell_x * self.grid_relatif_width)) / self.grid_relatif_width  				# add x center values
-                    tmp [cell_y, cell_x, 5 * idx_anchor + 2] = (l - (cell_y * self.grid_relatif_height)) / self.grid_relatif_height				# add y center values
-                    tmp [cell_y, cell_x, 5 * idx_anchor + 3] = math.log(m/j[1] + 0.0001)														# add width width value
-                    tmp [cell_y, cell_x, 5 * idx_anchor + 4] = math.log(n/j[0] + 0.0001)														# add height value
+                #----------------------------------------------------------------#
+                #   this part is getting the position of object in certain grid  #
+                #----------------------------------------------------------------#
+                for idx_anchor, j in enumerate(self.anchor):
+                    base = (5+self.num_class) * idx_anchor
 
-            tmp [cell_y, cell_x, -1] = 0.0
-            label_dict[i] = tmp    
+                    for k, l, m, n in zip(x, y, w, h):
+                        cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid[i])))
+                        cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
+                        tmp [cell_y, cell_x, base + 0] = 1.0																				# add objectness score
+                        tmp [cell_y, cell_x, base + 1] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
+                        tmp [cell_y, cell_x, base + 2] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
+                        tmp [cell_y, cell_x, base + 3] = math.log(m/j[1] + 0.0001)														    # add width width value
+                        tmp [cell_y, cell_x, base + 4] = math.log(n/j[0] + 0.0001)														    # add height value
+
+                tmps.append(tmp)
+            label_dict[val] = tmps
 
         return label_dict
 
