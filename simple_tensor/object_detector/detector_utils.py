@@ -81,6 +81,8 @@ class ObjectDetector(object):
 
 
     def grid_mask(self):
+        """[summary]
+        """
         self.grid_position_mask_onx_np = []
         self.grid_position_mask_ony_np = []
         self.grid_position_mask_onx = []
@@ -138,13 +140,14 @@ class ObjectDetector(object):
 
 
     def mse_loss(self, output_tensor, label):
-        """
-        A method for calculating the confidence_loss
-        Args:
-            output_tensor   :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-            label           :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-        Return:
-            a tensor of center_loss with shape [?, grid width, grid height, 1]
+        """"[summary]
+        
+        Arguments:
+            output_tensor {tensor} -- [description]
+            label {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
         """
         loss = tf.square(tf.subtract(output_tensor, label))
         loss = tf.reduce_mean(loss)
@@ -152,13 +155,14 @@ class ObjectDetector(object):
 
 
     def yolo_loss(self, outputs, labels):
-        """
-        A yolo loss main method
-        Args:
-            output        :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-            label         :    a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-        Return:
-            SILL ON PROGRESS
+        """[summary]
+        
+        Arguments:
+            outputs {[type]} -- [description]
+            labels {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
         """
 
         #------------------------------------------------------#
