@@ -441,7 +441,7 @@ class ObjectDetector(object):
                             is_training=training,
                             use_bias=False,
                             use_batchnorm=True)
-            
+
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 64], 
                             name = 'main_input_conv2', 
@@ -455,9 +455,12 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
 
-            inputs = darknet53_residual_block(inputs, filters=32, training=training,
-                                            data_format=data_format, name='res1')
-            
+            inputs = darknet53_residual_block(inputs, 
+                                              filters=32, 
+                                              training=training,
+                                              data_format=data_format, 
+                                              name='res1')
+
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 128], 
                             name = 'main_input_conv3', 
@@ -472,9 +475,11 @@ class ObjectDetector(object):
                             use_batchnorm=True)
 
             for i in range(2):
-                inputs = darknet53_residual_block(inputs, filters=64,
-                                                training=training,
-                                                data_format=data_format, name='res' + str(i+1))
+                inputs = darknet53_residual_block(inputs, 
+                                                  filters=64,
+                                                  training=training,
+                                                  data_format=data_format, 
+                                                  name='res' + str(i+1))
                 
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 256], 
@@ -490,12 +495,13 @@ class ObjectDetector(object):
                             use_batchnorm=True)
         
             for i in range(8):
-                inputs = darknet53_residual_block(inputs, filters=128,
-                                                training=training,
-                                                data_format=data_format, name='res' + str(i+3))
+                inputs = darknet53_residual_block(inputs, 
+                                                  filters=128,
+                                                  training=training,
+                                                  data_format=data_format, 
+                                                  name='res' + str(i+3))
 
             route1 = inputs
-            
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 512], 
                             name = 'main_input_conv5', 
@@ -510,9 +516,11 @@ class ObjectDetector(object):
                             use_batchnorm=True)
             
             for i in range(8):
-                inputs = darknet53_residual_block(inputs, filters=256,
-                                                training=training,
-                                                data_format=data_format, name='res' + str(i+11))
+                inputs = darknet53_residual_block(inputs, 
+                                                  filters=256,
+                                                  training=training,
+                                                  data_format=data_format, 
+                                                  name='res' + str(i+11))
 
             route2 = inputs
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
@@ -532,7 +540,6 @@ class ObjectDetector(object):
                 inputs = darknet53_residual_block(inputs, filters=512,
                                                 training=training,
                                                 data_format=data_format, name='res' + str(i+19))
-
             return route1, route2, inputs
         
         #-------------------------------------------------------------------------#
@@ -548,7 +555,6 @@ class ObjectDetector(object):
             Returns:
                 [type] -- [description]
             """
-            
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = 'main_input_conv7', 
@@ -627,7 +633,6 @@ class ObjectDetector(object):
                             is_training=training,
                             use_bias=False,
                             use_batchnorm=True)
-
             return route, inputs
         
         #-------------------------------------------------------------------------#
@@ -706,12 +711,18 @@ class ObjectDetector(object):
             inputs = tf.image.resize_nearest_neighbor(inputs, (new_height, new_width))
             if data_format == 'channels_first':
                 inputs = tf.transpose(inputs, [0, 3, 1, 2])
-
             return inputs
         
         #-------------------------------------------------------------------------#
         def build_boxes(inputs):
-            """Computes top left and bottom right points of the boxes."""
+            """Computes top left and bottom right points of the boxes.
+            
+            Arguments:
+                inputs {[type]} -- [description]
+            
+            Returns:
+                [type] -- [description]
+            """
             center_x, center_y, width, height, confidence, classes = \
                 tf.split(inputs, [1, 1, 1, 1, 1, -1], axis=-1)
 
@@ -723,9 +734,9 @@ class ObjectDetector(object):
             boxes = tf.concat([top_left_x, top_left_y,
                             bottom_right_x, bottom_right_y,
                             confidence, classes], axis=-1)
-
             return boxes
-
+        
+        #------------------------------------------------------------------------#
         def non_max_suppression(inputs, n_classes, max_output_size, iou_threshold,
                         confidence_threshold):
             """Performs non-max suppression separately for each class.
@@ -764,9 +775,7 @@ class ObjectDetector(object):
                                                             iou_threshold)
                         class_boxes = tf.gather(class_boxes, indices)
                         boxes_dict[cls] = class_boxes[:, :5]
-
                 boxes_dicts.append(boxes_dict)
-
             return boxes_dicts
 
 
