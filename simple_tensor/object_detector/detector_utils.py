@@ -21,27 +21,34 @@ class ObjectDetector(object):
                        noobjectness_loss_alpha=1., 
                        center_loss_alpha=1., 
                        size_loss_alpha=1., 
-                       class_loss_alpha=1., 
-                       anchor = [(10, 13), (16, 30), (33, 23), 
-                                  (30, 61), (62, 45), (59, 119), 
-                                  (116, 90), (156, 198), (373, 326)]:
-        """[summary]
+                       class_loss_alpha=1.,
+                       anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]):
+    """[summary]
+    
+    Arguments:
+        num_of_class {[type]} -- [description]
+    
+    Keyword Arguments:
+        input_height {int} -- [description] (default: {416})
+        input_width {int} -- [description] (default: {416})
+        grid_height1 {int} -- [description] (default: {32})
+        grid_width1 {int} -- [description] (default: {32})
+        grid_height2 {int} -- [description] (default: {16})
+        grid_width2 {int} -- [description] (default: {16})
+        grid_height3 {int} -- [description] (default: {8})
+        grid_width3 {int} -- [description] (default: {8})
+        objectness_loss_alpha {[type]} -- [description] (default: {2.})
+        noobjectness_loss_alpha {[type]} -- [description] (default: {1.})
+        center_loss_alpha {[type]} -- [description] (default: {1.})
+        size_loss_alpha {[type]} -- [description] (default: {1.})
+        class_loss_alpha {[type]} -- [description] (default: {1.})
+        anchor {list} -- [description] (default: {[(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]})
+    
+    Returns:
+        [type] -- [description]
+    """
+                           
         
-        Arguments:
-            input_height {[type]} -- [description]
-            input_width {[type]} -- [description]
-            grid_height {[type]} -- [description]
-            grid_width {[type]} -- [description]
-            output_depth {[type]} -- [description]
-            objectness_loss_alpha {[type]} -- [description]
-            noobjectness_loss_alpha {[type]} -- [description]
-            center_loss_alpha {[type]} -- [description]
-            size_loss_alpha {[type]} -- [description]
-            class_loss_alpha {[type]} -- [description]
-        
-        Keyword Arguments:
-            anchor {[type]} -- [description [(height, width), (height, width)]] (default: [(0.5, 0.5)) 
-        """
         self.input_height = input_height
         self.input_width = input_width
         
