@@ -22,7 +22,9 @@ class ObjectDetector(object):
                        center_loss_alpha=1., 
                        size_loss_alpha=1., 
                        class_loss_alpha=1., 
-                       anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]:
+                       anchor = [(10, 13), (16, 30), (33, 23), 
+                                  (30, 61), (62, 45), (59, 119), 
+                                  (116, 90), (156, 198), (373, 326)]:
         """[summary]
         
         Arguments:
@@ -43,39 +45,32 @@ class ObjectDetector(object):
         self.input_height = input_height
         self.input_width = input_width
         
-        self.grid_height1 = grid_height1
-        self.grid_width1 = grid_width1
-        self.grid_height2 = grid_height2
-        self.grid_width2 = grid_width2
-        self.grid_height3 = grid_height3
-        self.grid_width3 = grid_width3
+        self.grid_height = []
+        self.grid_height[1] = grid_height1
+        self.grid_height[2] = grid_height2
+        self.grid_height[3] = grid_height3
 
-        self.grid_relatif_width1 = self.grid_width1 / self.input_width
-        self.grid_relatif_height1 = self.grid_height1 / self.input_height
-        self.grid_relatif_width2 = self.grid_width2 / self.input_width
-        self.grid_relatif_height2 = self.grid_height2 / self.input_height
-        self.grid_relatif_width3 = self.grid_width3 / self.input_width
-        self.grid_relatif_height3 = self.grid_height3 / self.input_height
+        self.grid_width = []
+        self.grid_width[1] = grid_width1
+        self.grid_width[2] = grid_width2
+        self.grid_width[3] = grid_width3
+        
+        self.grid_relatif_width = []
+        self.grid_relatif_height = []
+        for i in range (3):
+            self.grid_relatif_width[i] = self.grid_width[i] / self.input_width
+            self.grid_relatif_height[i] = self.grid_height[i] / self.input_height
 
-        self.num_vertical_grid1 = int(math.floor(input_height/grid_height1))
-        self.num_horizontal_grid1 = int(math.floor(input_width/grid_width1))
-        self.num_vertical_grid2 = int(math.floor(input_height/grid_height2))
-        self.num_horizontal_grid2 = int(math.floor(input_width/grid_width2))
-        self.num_vertical_grid3 = int(math.floor(input_height/grid_height3))
-        self.num_horizontal_grid3 = int(math.floor(input_width/grid_width3))
+        self.num_vertical_grid = []
+        self.num_horizontal_grid = []
+        for i in range(3):
+            self.num_vertical_grid[i] = int(math.floor(input_height/grid_height[i]))
+            self.num_horizontal_grid[i] = int(math.floor(input_width/grid_width[i]))
 
-        self.grid_position_mask_onx_np1 = np.zeros((1, self.num_vertical_grid1 , self.num_horizontal_grid1 , 1))
-        self.grid_position_mask_ony_np1 = np.zeros((1, self.num_vertical_grid1 , self.num_horizontal_grid1 , 1))
-
-        for i in range(self.num_vertical_grid1):
-            for j in range(self.num_horizontal_grid1):
-                self.grid_position_mask_onx_np1[:, i, j, :] = j
-                self.grid_position_mask_ony_np1[:, i, j, :] = i
-
-        self.grid_position_mask_onx1 = tf.convert_to_tensor(self.grid_position_mask_onx_np1, dtype=tf.float32)
-        self.grid_position_mask_ony1 = tf.convert_to_tensor(self.grid_position_mask_ony_np1, dtype=tf.float32)
+        self.grid_mask()
 
         self.anchor = anchor
+        self.num_class = num_class
         self.output_depth = len(anchor) * (5 + num_of_class)
 
         self.objectness_loss_alpha = objectness_loss_alpha
@@ -85,6 +80,24 @@ class ObjectDetector(object):
         self.class_loss_alpha = class_loss_alpha
 
 
+    def grid_mask(self):
+        self.grid_position_mask_onx_np = []
+        self.grid_position_mask_ony_np = []
+        self.grid_position_mask_onx = []
+        self.grid_position_mask_ony = []
+
+        for i in range(3):
+            self.grid_position_mask_onx_np[i] = np.zeros((1, self.num_vertical_grid[i] , self.num_horizontal_grid[i] , 1))
+            self.grid_position_mask_ony_np[i] = np.zeros((1, self.num_vertical_grid[i] , self.num_horizontal_grid[i] , 1))
+
+            for j in range(self.num_vertical_grid[i]):
+                for k in range(self.num_horizontal_grid[i]):
+                    self.grid_position_mask_onx_np[i][:, j, k, :] = k
+                    self.grid_position_mask_ony_np[i][:, j, k, :] = j
+
+            self.grid_position_mask_onx[i] = tf.convert_to_tensor(self.grid_position_mask_onx_np[i], dtype=tf.float32)
+            self.grid_position_mask_ony[i] = tf.convert_to_tensor(self.grid_position_mask_ony_np[i], dtype=tf.float32)
+        
 
     def iou(self, bbox_pred, bbox_label):
         """[summary]
@@ -138,7 +151,7 @@ class ObjectDetector(object):
         return loss
 
 
-    def yolo_loss(self, output, label):
+    def yolo_loss(self, outputs, labels):
         """
         A yolo loss main method
         Args:
@@ -157,160 +170,85 @@ class ObjectDetector(object):
         noobjectness_losses = 0.0
         center_losses = 0.0
         size_losses = 0.0
+        
+        for i in range(3):
 
-        for idx, i in enumerate(self.anchor):
-            base = idx * 5
-            # get objectness confidence
-            objectness_pred = tf.nn.sigmoid(output[:, :, :, (base + 0):(base + 1)])
-            objectness_label = label[:, :, :, (base + 0):(base + 1)]
-            objectness_pred = tf.multiply(objectness_pred, objectness_label)
+            for idx, val in enumerate(self.anchor):
+                base = idx * (5+self.num_of_class)
+                output = outputs[i]
+                label = labels[i]
 
-            # get noobjectness confidence
-            noobjectness_pred = 1.0 - tf.nn.sigmoid(output[:, :, :, (base + 0):(base + 1)])
-            noobjectness_label = 1.0 - objectness_label 
-            noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
+                # get objectness confidence
+                objectness_pred = tf.nn.sigmoid(output[:, :, :, base:(base + 1)])
+                objectness_label = label[:, :, :, base:(base + 1)]
+                objectness_pred = tf.multiply(objectness_pred, objectness_label)
 
-            # get x values
-            x_pred = tf.nn.sigmoid(output[:, :, :, (base + 1):(base + 2)])
-            x_label = label[:, :, :, (base + 1):(base + 2)]
-            x_pred = tf.multiply(x_pred, objectness_label)
+                # get noobjectness confidence
+                noobjectness_pred = 1.0 - tf.nn.sigmoid(output[:, :, :, base:(base + 1)])
+                noobjectness_label = 1.0 - objectness_label 
+                noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
 
-            # get y value
-            y_pred = tf.nn.sigmoid(output[:, :, :, (base + 2):(base + 3)])
-            y_label = label[:, :, :, (base + 2):(base + 3)]
-            y_pred = tf.multiply(y_pred, objectness_label)
+                # get x values
+                x_pred = tf.nn.sigmoid(output[:, :, :, (base + 1):(base + 2)])
+                x_label = label[:, :, :, (base + 1):(base + 2)]
+                x_pred = tf.multiply(x_pred, objectness_label)
+
+                # get y value
+                y_pred = tf.nn.sigmoid(output[:, :, :, (base + 2):(base + 3)])
+                y_label = label[:, :, :, (base + 2):(base + 3)]
+                y_pred = tf.multiply(y_pred, objectness_label)
             
-
-            # get width values
-            w_pred = output[:, :, :, (base + 3):(base + 4)]
-            w_label = label[:, :, :, (base + 3):(base + 4)]
-            w_pred = tf.multiply(w_pred, objectness_label)
+                # get width values
+                w_pred = output[:, :, :, (base + 3):(base + 4)]
+                w_label = label[:, :, :, (base + 3):(base + 4)]
+                w_pred = tf.multiply(w_pred, objectness_label)
             
+                # get height values
+                h_pred = output[:, :, :, (base + 4):(base + 5)]
+                h_label = label[:, :, :, (base + 4):(base + 5)]
+                h_pred = tf.multiply(h_pred, objectness_label)
 
-            # get height values
-            h_pred = output[:, :, :, (base + 4):(base + 5)]
-            h_label = label[:, :, :, (base + 4):(base + 5)]
-            h_pred = tf.multiply(h_pred, objectness_label)
+                #----------------------------------------------#
+                #              calculate the iou               #
+                # 1. calculate pred bbox based on real ordinat #
+                # 2. calculate the iou                         #
+                #----------------------------------------------#
+                x_pred_real = tf.multiply(self.grid_width[i] * (self.grid_position_mask_onx[i] + x_pred), objectness_label)
+                y_pred_real = tf.multiply(self.grid_height[i] * (self.grid_position_mask_ony[i] + y_pred), objectness_label)
+                w_pred_real = tf.multiply(val[1] * tf.math.exp(w_pred), objectness_label)
+                h_pred_real = tf.multiply(val[0] * tf.math.exp(h_pred), objectness_label)
+                pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
 
-            #----------------------------------------------#
-            #              calculate the iou               #
-            # 1. calculate pred bbox based on real ordinat #
-            # 2. calculate the iou                         #
-            #----------------------------------------------#
-            x_pred_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_pred), objectness_label)
-            y_pred_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_pred), objectness_label)
-            w_pred_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_pred), objectness_label)
-            h_pred_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_pred), objectness_label)
-            pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
+                x_label_real = tf.multiply(self.grid_width[i] * (self.grid_position_mask_onx[i] + x_label), objectness_label)
+                y_label_real = tf.multiply(self.grid_height[i] * (self.grid_position_mask_ony[i] + y_label), objectness_label)
+                w_label_real = tf.multiply(val[1] * tf.math.exp(w_label), objectness_label)
+                h_label_real = tf.multiply(val[0] * tf.math.exp(h_label), objectness_label)
+                label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
-            x_label_real = tf.multiply(self.grid_width * (self.grid_position_mask_onx + x_label), objectness_label)
-            y_label_real = tf.multiply(self.grid_height * (self.grid_position_mask_ony + y_label), objectness_label)
-            w_label_real = tf.multiply(self.input_width * i[1] * tf.math.exp(w_label), objectness_label)
-            h_label_real = tf.multiply(self.input_height * i[0] * tf.math.exp(h_label), objectness_label)
-            label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
+                iou_map = self.iou(pred_bbox, label_bbox)
 
-            iou_map = self.iou(pred_bbox, label_bbox)
-
-            #----------------------------------------------#
-            #            calculate the losses              #
-            # objectness, noobjectness, center & size loss #
-            #----------------------------------------------#
-            objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, iou_map)
-            noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
-            ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred, x_label) + self.mse_loss(y_pred, y_label_real))
-            sz_loss =  self.size_loss_alpha * (self.mse_loss(tf.sqrt(w_pred_real/self.input_width), tf.sqrt(w_label_real/self.input_width)) + 
-                        self.mse_loss(tf.sqrt(h_pred_real/self.input_height), tf.sqrt(h_label_real/self.input_height)))
+                #----------------------------------------------#
+                #            calculate the losses              #
+                # objectness, noobjectness, center & size loss #
+                #----------------------------------------------#
+                objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, iou_map)
+                noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
+                ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real, x_label_real) + self.mse_loss(y_pred_real, y_label_real))
+                sz_loss =  self.size_loss_alpha * (self.mse_loss(tf.sqrt(w_pred_real), tf.sqrt(w_label_real)) + 
+                           self.mse_loss(tf.sqrt(h_pred_real), tf.sqrt(h_label_real)))
             
-            total_loss = objectness_loss + \
-                         noobjectness_loss + \
-                         ctr_loss + sz_loss
+                total_loss = objectness_loss + \
+                             noobjectness_loss + \
+                             ctr_loss + \
+                             sz_loss
     
-            all_losses = all_losses + total_loss
-            objectness_losses = objectness_losses + objectness_loss
-            noobjectness_losses = noobjectness_losses + noobjectness_loss
-            center_losses = center_losses + ctr_loss
-            size_losses = size_losses + sz_loss
-
-        self.a = w_pred_real
-        self.b = h_pred_real
-        self.c = w_label_real
-        self.d = h_label_real
+                all_losses = all_losses + total_loss
+                objectness_losses = objectness_losses + objectness_loss
+                noobjectness_losses = noobjectness_losses + noobjectness_loss
+                center_losses = center_losses + ctr_loss
+                size_losses = size_losses + sz_loss
 
         return all_losses, objectness_losses, noobjectness_losses, center_losses, size_losses
-
-
-    def four_points_landmark_loss(self, output, label):
-        """
-        A four point landmark loss
-        Args:
-            output			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-            label 			:		a tensor with shape [?, grid width, grid height, 2], 2 has mean width and height
-        Return:
-            a float tensor
-        """
-        # get point location
-        point_grid_label = label[:, :, :, 0]
-        point_grid_pred = output[:, :, :, 0]
-        point_grid_pred = tf.multiply(point_grid_pred, point_grid_label)
-
-        # get no point location
-        #nopoint_grid_label = tf.math.logical_not(tf.cast(point_grid_label, tf.bool))
-        #nopoint_grid_label = tf.cast(nopoint_grid_label, tf.float32)
-        nopoint_grid_label = 1.0 - point_grid_label
-        nopoint_grid_pred = 1.0 - output[:, :, :, 0]
-        nopoint_grid_pred = tf.multiply(nopoint_grid_pred, nopoint_grid_label)
-
-        # get x values
-        x_pred = output[:, :, :, 1]
-        x_pred = tf.multiply(x_pred, point_grid_label)
-        x_label = label[:, :, :, 1]
-
-        # get y value
-        y_pred = output[:, :, :, 2]
-        y_pred = tf.multiply(y_pred, point_grid_label)
-        y_label = label[:, :, :, 2]
-
-        # point grid loss 
-        point_loss = self.mse_loss(point_grid_pred, point_grid_label)
-        # no point grid loss
-        nopoint_loss = self.mse_loss(nopoint_grid_pred, nopoint_grid_label)
-        # center loss 
-        center_x_loss = self.mse_loss(x_pred, x_label)
-        center_y_loss = self.mse_loss(y_pred, y_label)
-        center_loss = (center_x_loss + center_y_loss) / 2.0
-
-        total_loss = self.objectness_loss_alpha * point_loss + \
-                     self.noobjectness_loss_alpha * nopoint_loss + \
-                     self.center_loss_alpha * center_loss
-        return total_loss 
-
-    
-    def read_landmark_labels(self, image_name, label):
-        """[summary]
-        
-        Arguments:
-            image_name {[type]} -- [description]
-            label {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        tmp = np.zeros((self.num_vertical_grid , self.num_horizontal_grid , 4))
-        tmp[:, :, :] = 0.
-
-        # get the list
-        for j in range(4):
-            x = label[image_name][j][0]
-            y = label[image_name][j][1]
-            # the x and y value is relative,
-            # so it should be devided by relative too
-            x_cell = int(math.floor(x / float(self.grid_width/self.input_width)))
-            y_cell = int(math.floor(y / float(self.grid_height/self.input_height)))
-            #print (x_cell, y_cell, x, y, float(self.grid_width/self.input_width), float(self.grid_height/self.input_height))
-            tmp[y_cell, x_cell, 0] = 1.0
-
-        tmp = np.array(tmp)
-        return tmp
 
 
     def read_yolo_labels(self, folder_path, label_file_list):
