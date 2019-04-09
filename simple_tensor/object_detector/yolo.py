@@ -12,7 +12,7 @@ from comdutils.file_utils import *
 # in simple_tensor.object_detector.detector_utils #
 # =============================================== #
 class YoloTrain(ObjectDetector):
-    def __init__(self, 
+    def __init__(self,  
                  label_folder_path, 
                  dataset_folder_path, 
                  num_of_class,
@@ -29,7 +29,7 @@ class YoloTrain(ObjectDetector):
                  center_loss_alpha=1., 
                  size_loss_alpha=1., 
                  class_loss_alpha=1.,
-                 anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)])):
+                 anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]):
         """[summary]
         
         Arguments:
@@ -63,7 +63,7 @@ class YoloTrain(ObjectDetector):
                                         center_loss_alpha=1., 
                                         size_loss_alpha=1., 
                                         class_loss_alpha=1.,
-                                        anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]))
+                                        anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)])
 
         self.label_folder_path = label_folder_path
         self.dataset_folder_path = dataset_folder_path
@@ -73,7 +73,9 @@ class YoloTrain(ObjectDetector):
         self.all_label_target_np = None
 
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, 3))
-        self.output_placeholder = tf.placeholder(tf.float32, shape=(None,self.num_vertical_grid, self.num_horizontal_grid, len(anchor)*5 + 1))
+        self.output_placeholder1 = tf.placeholder(tf.float32, shape=(None, 13, 13, 3*(5 + num_of_class)))
+        self.output_placeholder2 = tf.placeholder(tf.float32, shape=(None, 26, 26, 3*(5 + num_of_class)))
+        self.output_placeholder3 = tf.placeholder(tf.float32, shape=(None, 52, 52, 3*(5 + num_of_class)))
 
     
     def read_target(self):
@@ -83,7 +85,7 @@ class YoloTrain(ObjectDetector):
 
 
     def build_net(self):
-        
+        self.build_yolov3_net(inputs=self.input_placeholder, is_training=False)
 
 
     def train_batch_generator(self, batch_size):

@@ -23,61 +23,60 @@ class ObjectDetector(object):
                        size_loss_alpha=1., 
                        class_loss_alpha=1.,
                        anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]):
-    """[summary]
-    
-    Arguments:
-        num_of_class {[type]} -- [description]
-    
-    Keyword Arguments:
-        input_height {int} -- [description] (default: {416})
-        input_width {int} -- [description] (default: {416})
-        grid_height1 {int} -- [description] (default: {32})
-        grid_width1 {int} -- [description] (default: {32})
-        grid_height2 {int} -- [description] (default: {16})
-        grid_width2 {int} -- [description] (default: {16})
-        grid_height3 {int} -- [description] (default: {8})
-        grid_width3 {int} -- [description] (default: {8})
-        objectness_loss_alpha {[type]} -- [description] (default: {2.})
-        noobjectness_loss_alpha {[type]} -- [description] (default: {1.})
-        center_loss_alpha {[type]} -- [description] (default: {1.})
-        size_loss_alpha {[type]} -- [description] (default: {1.})
-        class_loss_alpha {[type]} -- [description] (default: {1.})
-        anchor {list} -- [description] (default: {[(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]})
-    
-    Returns:
-        [type] -- [description]
-    """
-                           
+        """[summary]
+        
+        Arguments:
+            num_of_class {[type]} -- [description]
+        
+        Keyword Arguments:
+            input_height {int} -- [description] (default: {416})
+            input_width {int} -- [description] (default: {416})
+            grid_height1 {int} -- [description] (default: {32})
+            grid_width1 {int} -- [description] (default: {32})
+            grid_height2 {int} -- [description] (default: {16})
+            grid_width2 {int} -- [description] (default: {16})
+            grid_height3 {int} -- [description] (default: {8})
+            grid_width3 {int} -- [description] (default: {8})
+            objectness_loss_alpha {[type]} -- [description] (default: {2.})
+            noobjectness_loss_alpha {[type]} -- [description] (default: {1.})
+            center_loss_alpha {[type]} -- [description] (default: {1.})
+            size_loss_alpha {[type]} -- [description] (default: {1.})
+            class_loss_alpha {[type]} -- [description] (default: {1.})
+            anchor {list} -- [description] (default: {[(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]})
+        
+        Returns:
+            [type] -- [description]
+        """          
         
         self.input_height = input_height
         self.input_width = input_width
         
         self.grid_height = []
-        self.grid_height[1] = grid_height1
-        self.grid_height[2] = grid_height2
-        self.grid_height[3] = grid_height3
+        self.grid_height.append(grid_height1)
+        self.grid_height.append(grid_height2)
+        self.grid_height.append(grid_height3)
 
         self.grid_width = []
-        self.grid_width[1] = grid_width1
-        self.grid_width[2] = grid_width2
-        self.grid_width[3] = grid_width3
+        self.grid_width.append(grid_width1)
+        self.grid_width.append(grid_width2)
+        self.grid_width.append(grid_width3)
         
         self.grid_relatif_width = []
         self.grid_relatif_height = []
         for i in range (3):
-            self.grid_relatif_width[i] = self.grid_width[i] / self.input_width
-            self.grid_relatif_height[i] = self.grid_height[i] / self.input_height
+            self.grid_relatif_width.append(self.grid_width[i] / self.input_width)
+            self.grid_relatif_height.append(self.grid_height[i] / self.input_height)
 
         self.num_vertical_grid = []
         self.num_horizontal_grid = []
         for i in range(3):
-            self.num_vertical_grid[i] = int(math.floor(input_height/grid_height[i]))
-            self.num_horizontal_grid[i] = int(math.floor(input_width/grid_width[i]))
+            self.num_vertical_grid.append(int(math.floor(self.input_height/self.grid_height[i])))
+            self.num_horizontal_grid.append(int(math.floor(self.input_width/self.grid_width[i])))
 
         self.grid_mask()
 
         self.anchor = anchor
-        self.num_class = num_class
+        self.num_class = num_of_class
         self.output_depth = len(anchor) * (5 + num_of_class)
 
         self.objectness_loss_alpha = objectness_loss_alpha
@@ -96,16 +95,16 @@ class ObjectDetector(object):
         self.grid_position_mask_ony = []
 
         for i in range(3):
-            self.grid_position_mask_onx_np[i] = np.zeros((1, self.num_vertical_grid[i] , self.num_horizontal_grid[i] , 1))
-            self.grid_position_mask_ony_np[i] = np.zeros((1, self.num_vertical_grid[i] , self.num_horizontal_grid[i] , 1))
+            self.grid_position_mask_onx_np.append(np.zeros((1, self.num_vertical_grid[i] , self.num_horizontal_grid[i] , 1)))
+            self.grid_position_mask_ony_np.append(np.zeros((1, self.num_vertical_grid[i] , self.num_horizontal_grid[i] , 1)))
 
             for j in range(self.num_vertical_grid[i]):
                 for k in range(self.num_horizontal_grid[i]):
                     self.grid_position_mask_onx_np[i][:, j, k, :] = k
                     self.grid_position_mask_ony_np[i][:, j, k, :] = j
 
-            self.grid_position_mask_onx[i] = tf.convert_to_tensor(self.grid_position_mask_onx_np[i], dtype=tf.float32)
-            self.grid_position_mask_ony[i] = tf.convert_to_tensor(self.grid_position_mask_ony_np[i], dtype=tf.float32)
+            self.grid_position_mask_onx.append(tf.convert_to_tensor(self.grid_position_mask_onx_np[i], dtype=tf.float32))
+            self.grid_position_mask_ony.append(tf.convert_to_tensor(self.grid_position_mask_ony_np[i], dtype=tf.float32))
         
 
     def iou(self, bbox_pred, bbox_label):
@@ -325,7 +324,7 @@ class ObjectDetector(object):
         return label_dict
 
 
-    def build_yolov3_net(self):
+    def build_yolov3_net(self, inputs, is_training):
         """[summary]
         
         Returns:
@@ -334,10 +333,12 @@ class ObjectDetector(object):
         _BATCH_NORM_DECAY = 0.9
         _BATCH_NORM_EPSILON = 1e-05
         _LEAKY_RELU = 0.1
-        _ANCHORS = [(10, 13), (16, 30), (33, 23),
-                    (30, 61), (62, 45), (59, 119),
-                    (116, 90), (156, 198), (373, 326)]
-        _MODEL_SIZE = (416, 416)
+
+        model_size = (416, 416)
+        max_output_size = 10
+        iou_threshold = 0.5
+        confidence_threshold = 0.5
+        data_format = 'channels_last'
 
         #-------------------------------------------------------------------------#
         def fixed_padding(inputs, 
@@ -777,6 +778,93 @@ class ObjectDetector(object):
                         boxes_dict[cls] = class_boxes[:, :5]
                 boxes_dicts.append(boxes_dict)
             return boxes_dicts
+        #------------------------------------------------------------------------#
+
+        with tf.variable_scope('yolo_v3_model'):
+            inputs = inputs / 255
+            route1, route2, inputs = darknet53(inputs, 
+                                               training=is_training,
+                                               data_format=data_format)
+
+            route, inputs = yolo_convolution_block(inputs, 
+                                                   filters=512, 
+                                                   training=is_training,
+                                                   data_format=data_format)
+
+            self.detect1 = yolo_layer(inputs, 
+                                 n_classes=self.num_class,
+                                 anchors=self.anchor[6:9],
+                                 img_size=model_size,
+                                 data_format=data_format)
+
+            print ('detect1-', self.detect1)
+            inputs, _ = new_conv2d_layer(input=route, 
+                     filter_shape=[1, 1, route.get_shape().as_list()[-1], 256], 
+                     name = 'main_input_conv13', 
+                     dropout_val= 1.0, 
+                     activation = 'LRELU',
+                     lrelu_alpha=_LEAKY_RELU,
+                     padding='SAME', 
+                     strides=[1, 1, 1, 1],
+                     data_type=tf.float32,  
+                     is_training=is_training,
+                     use_bias=False,
+                     use_batchnorm=True)
+
+            upsample_size = route2.get_shape().as_list()
+            inputs = upsample(inputs, 
+                              out_shape=upsample_size,
+                              data_format=data_format)
+            axis = 3
+            inputs = tf.concat([inputs, route2], axis=axis)
+            route, inputs = yolo_convolution_block(inputs, 
+                                                   filters=256,  
+                                                   training=is_training,
+                                                   data_format=data_format)
+            self.detect2 = yolo_layer(inputs, 
+                                      n_classes=self.num_class,
+                                      anchors=self.anchor[3:6],
+                                      img_size=model_size,
+                                      data_format=data_format)
+
+            print ('----', self.detect2)
+            inputs, _ = new_conv2d_layer(input=route, 
+                     filter_shape=[1, 1, route.get_shape().as_list()[-1], 128], 
+                     name = 'main_input_conv14', 
+                     dropout_val= 1.0, 
+                     activation = 'LRELU',
+                     lrelu_alpha=_LEAKY_RELU,
+                     padding='SAME', 
+                     strides=[1, 1, 1, 1],
+                     data_type=tf.float32,  
+                     is_training=is_training,
+                     use_bias=False,
+                     use_batchnorm=True)
+            
+            upsample_size = route1.get_shape().as_list()
+            inputs = upsample(inputs, 
+                              out_shape=upsample_size,
+                              data_format=data_format)
+            inputs = tf.concat([inputs, route1], axis=axis)
+            route, inputs = yolo_convolution_block(inputs, 
+                                                   filters=128, 
+                                                   training=is_training,
+                                                   data_format=data_format)
+            self.detect3 = yolo_layer(inputs, 
+                                 n_classes=self.num_class,
+                                 anchors=self.anchor[0:3],
+                                 img_size=model_size,
+                                 data_format=data_format)
+
+            inputs = tf.concat([self.detect1, self.detect2, self.detect3], axis=1)
+            inputs = build_boxes(inputs)
+            self.boxes_dicts = non_max_suppression(inputs, 
+                                                   n_classes=self.num_class,
+                                                   max_output_size=max_output_size,
+                                                   iou_threshold=iou_threshold,
+                                                   confidence_threshold=confidence_threshold)
+
+
 
 
 
