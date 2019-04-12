@@ -7,16 +7,17 @@
 |           | yolo v3 model available: big only (medium, & small) will be supported in the future version ||
 
 
+### Model Info
 
-| lib         |     Model                                                             |     Size          | Version |
+| Lib         |     Model                                                             |     Size          | Version |
 | ----------- | --------------------------------------------------------------------- | ----------------- | --------------|
 |  darknet    | yolo v3 .weigth original (BIG) [Download]()                           |      200 MB       |
 V0.5.0 |
 |  tensorflow | yolo v3 (.data, .index, .meta) (BIG) [Download]()                     |      400 MB       |
 V0.5.0 |
-|  tensorflow | yolo v3 (.data, .index, .meta) (MEDIUM) [future version]              | target: 200 MB    |
-|  tensorflow | yolo v3 (.data, .index, .meta) (SMALL) [future version]               |target: 100-150 MB |
-|  tensorflow | yolo v3 (.data, .index, .meta) (SUPER SMALL) [future version]         | target: 50-80 MB  |
+|  tensorflow | yolo v3 (.data, .index, .meta) (MEDIUM) [future version]              | target: 200 MB    ||
+|  tensorflow | yolo v3 (.data, .index, .meta) (SMALL) [future version]               |target: 100-150 MB ||
+|  tensorflow | yolo v3 (.data, .index, .meta) (SUPER SMALL) [future version]         | target: 50-80 MB  ||
 
 
 ### Example
