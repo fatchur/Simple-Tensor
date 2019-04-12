@@ -17,13 +17,9 @@ from simple_tensor.object_detector.yolo import *
 import matplotlib.pyplot as plt
 ```
 
-- Create simple_yolo object
+- Create simple_yolo object & Build architecture
 ```python
 simple_yolo = YoloTrain(label_folder_path ='images/', dataset_folder_path='labels/', num_of_class=80) 
-```
-
-- Build yolov3 architecture
-```python
 simple_yolo.build_net()
 ```
 
@@ -41,7 +37,7 @@ img_ori = cv2.resize(img_ori, (416, 416))
 img = img_ori.reshape((1, 416, 416, 3))
 
 detection_result = sess.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
-bboxes = c.nms(detection_result) #[[x1, y1, w, h], [...]]
+bboxes = simple_yolo.nms(detection_result) #[[x1, y1, w, h], [...]]
 ```
 
 
