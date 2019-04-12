@@ -324,7 +324,7 @@ class ObjectDetector(object):
         return label_dict
 
 
-    def nms(self.batch, confidence_threshold=0.5, overlap_threshold=0.5):
+    def nms(self, batch, confidence_threshold=0.5, overlap_threshold=0.5):
         """[summary]
         
         Arguments:
@@ -377,7 +377,6 @@ class ObjectDetector(object):
             width = box[2]
             height = box[3]
             final_box.append([left, top, width, height])
-                
         return final_box
     
 
