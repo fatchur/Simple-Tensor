@@ -10,11 +10,9 @@
 ### Example
 - Import packages
 ```python
-import tensorflow as tf
-import numpy as np
 import cv2
+import tensorflow as tf
 from simple_tensor.object_detector.yolo import *
-import matplotlib.pyplot as plt
 ```
 
 - Create simple_yolo object & Build architecture
@@ -32,9 +30,8 @@ saver.restore(sess, 'models/yolov3')
 
 - Predict
 ```python
-img_ori = cv2.imread('sample_image/dog.jpg')
-img_ori = cv2.resize(img_ori, (416, 416))
-img = img_ori.reshape((1, 416, 416, 3))
+img = cv2.imread('sample_image/dog.jpg')
+img = cv2.resize(img, (416, 416)).reshape((1, 416, 416, 3))
 
 detection_result = sess.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
 bboxes = simple_yolo.nms(detection_result) #[[x1, y1, w, h], [...]]
