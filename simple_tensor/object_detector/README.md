@@ -41,29 +41,7 @@ img_ori = cv2.resize(img_ori, (416, 416))
 img = img_ori.reshape((1, 416, 416, 3))
 
 detection_result = sess.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
-bboxes = c.nms(detection_result)
-```
-
-- Show result
-```pyrhon
-def draw_rect(bbox, img):
-"""function for drawing object bboxes over image
-
-Arguments:
-    bbox {list} -- list of [x1, y1, w, h]
-    img {numpy array} -- predicted image
-
-Returns:
-    [numpy array] -- result image
-"""
-    for i in bbox:
-        print (i)
-        img = cv2.rectangle(img, (i[0], i[1]), (i[2] + i[0], i[3]+i[1]), (255,0,0), 2)
-    return img
-
-img = draw_rect(nms_, img)
-plt.imshow(img)
-plt.show()
+bboxes = c.nms(detection_result) #[[x1, y1, w, h], [...]]
 ```
 
 
