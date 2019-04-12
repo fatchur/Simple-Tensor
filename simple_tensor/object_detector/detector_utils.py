@@ -324,15 +324,30 @@ class ObjectDetector(object):
         return label_dict
 
 
-    def nms(self, batch, confidence_threshold=0.5):
+    def nms(self.batch, confidence_threshold=0.5, overlap_threshold=0.5):
+        """[summary]
+        
+        Arguments:
+            self {[type]} -- [description]
+        
+        Keyword Arguments:
+            confidence_threshold {float} -- [description] (default: {0.5})
+            overlap_threshold {float} -- [description] (default: {0.5})
+        
+        Returns:
+            [type] -- [description]
+        """
 
+        result_box = []
+        result_conf = []
+        final_box = []
+        
         for boxes in batch:
             mask = boxes[:, 4] > confidence_threshold
-            print (mask.shape)
-            boxes = boxes[:, mask] 
+            boxes = boxes[mask, :] 
 
-            classes = np.max(boxes[:, 5:], axis=-1)
-            classes = classes.astype(np.float32)
+            classes = np.argmax(boxes[:, 5:], axis=-1)
+            classes = classes.astype(np.float32).reshape((classes.shape[0], 1))
             boxes = np.concatenate((boxes[:, :5], classes), axis=-1)
 
             boxes_dict = dict()
@@ -340,23 +355,31 @@ class ObjectDetector(object):
                 mask = (boxes[:, 5] == cls)
                 mask_shape = mask.shape
                 
-                if mask_shape.ndims != 0:
-                    class_boxes = boxes[:, mask, :]
-                    boxes_coords = class_boxes[:, :, 1:4]
-                    boxes_conf_scores = class_boxes[:, :, :1]
-                    print (boxes.shape)
-                    #idxs = cv2.dnn.NMSBoxes(boxes, confidences, args["confidence"], args["threshold"])
-                    '''
-                    indices = tf.image.non_max_suppression(boxes_coords,
-                                                        boxes_conf_scores,
-                                                        max_output_size,
-                                                        iou_threshold)
-                    class_boxes = tf.gather(class_boxes, indices)
-                    '''
-                    #boxes_dict[cls] = class_boxes[:, :5]
-            #boxes_dicts.append(boxes_dict)
-        return boxes_dicts
-
+                if np.sum(mask.astype(np.int)) != 0:
+                    class_boxes = boxes[mask, :]
+                    boxes_coords = class_boxes[:, :4]
+                    boxes_ = boxes_coords.copy()
+                    boxes_[:, 2] = (boxes_coords[:, 2] - boxes_coords[:, 0])
+                    boxes_[:, 3] = (boxes_coords[:, 3] - boxes_coords[:, 1])
+                    boxes_ = boxes_.astype(np.int)
+                    
+                    boxes_conf_scores = class_boxes[:, 4:5]
+                    boxes_conf_scores = boxes_conf_scores.reshape((len(boxes_conf_scores)))
+                    result_box.extend(boxes_.tolist())
+                    result_conf.extend(boxes_conf_scores.tolist())
+                    
+        indices = cv2.dnn.NMSBoxes(result_box, result_conf, confidence_threshold, overlap_threshold)
+        for i in indices:
+            i = i[0]
+            box = result_box[i]
+            left = box[0]
+            top = box[1]
+            width = box[2]
+            height = box[3]
+            final_box.append([left, top, width, height])
+                
+        return final_box
+    
 
     def build_yolov3_net(self, inputs, is_training):
         """[summary]
@@ -772,56 +795,6 @@ class ObjectDetector(object):
             return boxes
         
         #------------------------------------------------------------------------#
-        def non_max_suppression(inputs, n_classes, max_output_size, iou_threshold,
-                        confidence_threshold):
-            """Performs non-max suppression separately for each class.
-
-            Args:
-                inputs: Tensor input.
-                n_classes: Number of classes.
-                max_output_size: Max number of boxes to be selected for each class.
-                iou_threshold: Threshold for the IOU.
-                confidence_threshold: Threshold for the confidence score.
-            Returns:
-                A list containing class-to-boxes dictionaries
-                    for each sample in the batch.
-            """
-            #batch = tf.unstack(inputs)
-            
-            max_batch_size = 2
-            partitions = tf.range(max_batch_size)
-            num_partitions = max_batch_size
-            batch = tf.dynamic_partition(inputs, partitions, num_partitions, name='dynamic_unstack')
-            
-            print (batch)
-
-            boxes_dicts = []
-            for boxes in batch:
-                print (boxes, boxes[:, :, 4])
-                boxes = tf.boolean_mask(boxes, boxes[:, :, 4] > confidence_threshold)
-                classes = tf.argmax(boxes[:, 5:], axis=-1)
-                classes = tf.expand_dims(tf.to_float(classes), axis=-1)
-                boxes = tf.concat([boxes[:, :5], classes], axis=-1)
-
-                boxes_dict = dict()
-                for cls in range(n_classes):
-                    mask = tf.equal(boxes[:, 5], cls)
-                    mask_shape = mask.get_shape()
-                    if mask_shape.ndims != 0:
-                        class_boxes = tf.boolean_mask(boxes, mask)
-                        boxes_coords, boxes_conf_scores, _ = tf.split(class_boxes,
-                                                                    [4, 1, -1],
-                                                                    axis=-1)
-                        boxes_conf_scores = tf.reshape(boxes_conf_scores, [-1])
-                        indices = tf.image.non_max_suppression(boxes_coords,
-                                                            boxes_conf_scores,
-                                                            max_output_size,
-                                                            iou_threshold)
-                        class_boxes = tf.gather(class_boxes, indices)
-                        boxes_dict[cls] = class_boxes[:, :5]
-                boxes_dicts.append(boxes_dict)
-            return boxes_dicts
-        #------------------------------------------------------------------------#
 
         with tf.variable_scope('yolo_v3_model'):
             inputs = inputs / 255
@@ -902,13 +875,6 @@ class ObjectDetector(object):
             inputs = tf.concat([self.detect1, self.detect2, self.detect3], axis=1)
             self.output_list = [self.detect1, self.detect2, self.detect3]
             self.boxes_dicts = build_boxes(inputs)
-            '''
-            self.boxes_dicts = non_max_suppression(inputs, 
-                                                   n_classes=self.num_class,
-                                                   max_output_size=max_output_size,
-                                                   iou_threshold=iou_threshold,
-                                                   confidence_threshold=confidence_threshold)
-            '''
 
 
 
