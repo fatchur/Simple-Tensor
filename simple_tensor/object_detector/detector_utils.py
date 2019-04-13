@@ -183,11 +183,20 @@ class ObjectDetector(object):
         class_losses = 0.0
         
         for i in range(3):
+            output = outputs[i]
+            label = labels[i]
 
-            for idx, val in enumerate(self.anchor):
+            border_a = 0
+            border_b = 3
+            if i == 0:
+                border_a = 6
+                border_b = 9
+            elif i == 1:
+                border_a = 3
+                border_b = 6
+
+            for idx, val in enumerate(self.anchor[border_a:border_b]):
                 base = idx * (5+self.num_of_class)
-                output = outputs[i]
-                label = labels[i]
 
                 # get objectness confidence
                 objectness_pred = tf.nn.sigmoid(output[:, :, :, base:(base + 1)])
@@ -226,14 +235,14 @@ class ObjectDetector(object):
                 #----------------------------------------------#
                 x_pred_real = tf.multiply(self.grid_width[i] * (self.grid_position_mask_onx[i] + x_pred), objectness_label)
                 y_pred_real = tf.multiply(self.grid_height[i] * (self.grid_position_mask_ony[i] + y_pred), objectness_label)
-                w_pred_real = tf.multiply(val[1] * tf.math.exp(w_pred), objectness_label)
-                h_pred_real = tf.multiply(val[0] * tf.math.exp(h_pred), objectness_label)
+                w_pred_real = tf.multiply(val[0] * tf.math.exp(w_pred), objectness_label)
+                h_pred_real = tf.multiply(val[1] * tf.math.exp(h_pred), objectness_label)
                 pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
 
                 x_label_real = tf.multiply(self.grid_width[i] * (self.grid_position_mask_onx[i] + x_label), objectness_label)
                 y_label_real = tf.multiply(self.grid_height[i] * (self.grid_position_mask_ony[i] + y_label), objectness_label)
-                w_label_real = tf.multiply(val[1] * tf.math.exp(w_label), objectness_label)
-                h_label_real = tf.multiply(val[0] * tf.math.exp(h_label), objectness_label)
+                w_label_real = tf.multiply(val[0] * tf.math.exp(w_label), objectness_label)
+                h_label_real = tf.multiply(val[1] * tf.math.exp(h_label), objectness_label)
                 label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
                 iou_map = self.iou(pred_bbox, label_bbox)
@@ -262,7 +271,7 @@ class ObjectDetector(object):
         return all_losses, objectness_losses, noobjectness_losses, center_losses, size_losses
 
 
-    def read_yolo_labels(self, folder_path, label_file_list):
+    def read_yolo_labels(self, file_name):
         """[summary]
         
         Arguments:
@@ -273,55 +282,63 @@ class ObjectDetector(object):
             [type] -- [description]
         """
 
-        label_dict = {}
+        tmps = []
+        for i in range(3):
+            tmp = np.zeros((self.num_vertical_grid[i], self.num_horizontal_grid[i],  int(len(self.anchor)/3) * (5+self.num_class)))
+            tmp[:, :, :] = 0.0
+            #----------------------------------------------------------------#
+            # this part is reading the label in a .txt file for single image #
+            #----------------------------------------------------------------#
+            file = open(file_name, "r") 
+            data = file.read()
+            data = data.split()
+            length = len(data)
+            line_num = int(length/5)
 
-        for idx, val in enumerate(label_file_list):
-            tmps = []
-            for i in range(3):
-                tmp = np.zeros((self.num_vertical_grid, self.num_horizontal_grid,  len(self.anchor) * (5+self.num_class)))
-                tmp[:, :, :] = 0.0
-                #----------------------------------------------------------------#
-                # this part is reading the label in a .txt file for single image #
-                #----------------------------------------------------------------#
-                file_name = folder_path + val
-                file = open(file_name, "r") 
-                data = file.read()
-                data = data.split()
-                length = len(data)
-                line_num = int(length/5)
+            #----------------------------------------------------------------#
+            #    this part is getting the x, y, w, h values for each line    #
+            #----------------------------------------------------------------#
+            x = []
+            y = []
+            w = []
+            h = []
+            for j in range (line_num):
+                x.append(float(data[j*5 + 1]))
+                y.append(float(data[j*5 + 2]))
+                w.append(float(data[j*5 + 3]))
+                h.append(float(data[j*5 + 4]))
+            print (x, y, w, h)
+            file.close()
+            
+            #----------------------------------------------------------------#
+            #   this part is getting the position of object in certain grid  #
+            #----------------------------------------------------------------#
+            border_a = 0
+            border_b = 3
+            if i == 0:
+                border_a = 6
+                border_b = 9
+            elif i == 1:
+                border_a = 3
+                border_b = 6
 
-                #----------------------------------------------------------------#
-                #    this part is getting the x, y, w, h values for each line    #
-                #----------------------------------------------------------------#
-                x = []
-                y = []
-                w = []
-                h = []
-                for j in range (line_num):
-                    x.append(float(data[j*5 + 1]))
-                    y.append(float(data[j*5 + 2]))
-                    w.append(float(data[j*5 + 3]))
-                    h.append(float(data[j*5 + 4]))
-                
-                #----------------------------------------------------------------#
-                #   this part is getting the position of object in certain grid  #
-                #----------------------------------------------------------------#
-                for idx_anchor, j in enumerate(self.anchor):
-                    base = (5+self.num_class) * idx_anchor
+            for idx_anchor, j in enumerate(self.anchor[border_a: border_b]):
+                base = (5+self.num_class) * idx_anchor
 
-                    for k, l, m, n in zip(x, y, w, h):
-                        cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid[i])))
-                        cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
-                        tmp [cell_y, cell_x, base + 0] = 1.0																				    # add objectness score
-                        tmp [cell_y, cell_x, base + 1] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
-                        tmp [cell_y, cell_x, base + 2] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
-                        tmp [cell_y, cell_x, base + 3] = math.log(m/j[1] + 0.0001)														        # add width width value
-                        tmp [cell_y, cell_x, base + 4] = math.log(n/j[0] + 0.0001)														        # add height value
+                for k, l, m, n in zip(x, y, w, h):
+                    cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid[i])))
+                    cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
+                    tmp [cell_y, cell_x, base + 0] = 1.0																				    # add objectness score
+                    tmp [cell_y, cell_x, base + 1] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
+                    tmp [cell_y, cell_x, base + 2] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
+                    tmp [cell_y, cell_x, base + 3] = math.log(m * self.input_width/j[0] + 0.0001)										    # add width width value
+                    tmp [cell_y, cell_x, base + 4] = math.log(n * self.input_height/j[1] + 0.0001)								            # add height value
+                    print (cell_y, cell_x)
+                    print (tmp [cell_y, cell_x, :])
+            
+            tmps.append(tmp)
 
-                tmps.append(tmp)
-            label_dict[val] = tmps
-
-        return label_dict
+        return tmps
 
 
     def nms(self, batch, confidence_threshold=0.5, overlap_threshold=0.5):
@@ -805,14 +822,8 @@ class ObjectDetector(object):
                                                    filters=512, 
                                                    training=is_training,
                                                    data_format=data_format)
+            inputs_detect1 = inputs
 
-            self.detect1 = yolo_layer(inputs, 
-                                 n_classes=self.num_class,
-                                 anchors=self.anchor[6:9],
-                                 img_size=model_size,
-                                 data_format=data_format)
-
-            print ('detect1-', self.detect1)
             inputs, _ = new_conv2d_layer(input=route, 
                      filter_shape=[1, 1, route.get_shape().as_list()[-1], 256], 
                      name = 'main_input_conv13', 
@@ -836,13 +847,8 @@ class ObjectDetector(object):
                                                    filters=256,  
                                                    training=is_training,
                                                    data_format=data_format)
-            self.detect2 = yolo_layer(inputs, 
-                                      n_classes=self.num_class,
-                                      anchors=self.anchor[3:6],
-                                      img_size=model_size,
-                                      data_format=data_format)
-
-            print ('----', self.detect2)
+            inputs_detect2 = inputs
+            
             inputs, _ = new_conv2d_layer(input=route, 
                      filter_shape=[1, 1, route.get_shape().as_list()[-1], 128], 
                      name = 'main_input_conv14', 
@@ -865,11 +871,26 @@ class ObjectDetector(object):
                                                    filters=128, 
                                                    training=is_training,
                                                    data_format=data_format)
-            self.detect3 = yolo_layer(inputs, 
-                                 n_classes=self.num_class,
-                                 anchors=self.anchor[0:3],
-                                 img_size=model_size,
-                                 data_format=data_format)
+            inputs_detect3 = inputs
+
+            # get yolo base variables
+            self.yolo_vars = tf.global_variables(scope='yolo_v3_model')
+
+            self.detect1 = yolo_layer(inputs_detect1, 
+                                    n_classes=self.num_class,
+                                    anchors=self.anchor[6:9],
+                                    img_size=model_size,
+                                    data_format=data_format)
+            self.detect2 = yolo_layer(inputs_detect2, 
+                                        n_classes=self.num_class,
+                                        anchors=self.anchor[3:6],
+                                        img_size=model_size,
+                                        data_format=data_format)
+            self.detect3 = yolo_layer(inputs_detect3, 
+                                    n_classes=self.num_class,
+                                    anchors=self.anchor[0:3],
+                                    img_size=model_size,
+                                    data_format=data_format)
 
             inputs = tf.concat([self.detect1, self.detect2, self.detect3], axis=1)
             self.output_list = [self.detect1, self.detect2, self.detect3]

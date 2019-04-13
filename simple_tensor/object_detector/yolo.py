@@ -12,9 +12,9 @@ from comdutils.file_utils import *
 # in simple_tensor.object_detector.detector_utils #
 # =============================================== #
 class YoloTrain(ObjectDetector):
-    def __init__(self,  
-                 label_folder_path, 
-                 dataset_folder_path, 
+    def __init__(self,
+                 dataset_folder_path,
+                 label_folder_path,  
                  num_of_class,
                  input_height=416, 
                  input_width=416, 
@@ -78,10 +78,11 @@ class YoloTrain(ObjectDetector):
         self.output_placeholder3 = tf.placeholder(tf.float32, shape=(None, 52, 52, 3*(5 + num_of_class)))
 
     
-    def read_target(self):
+    def read_target(self, file_path):
         """Function for reading json label
         """
-        self.all_label_target_np = self.read_yolo_labels(self.label_folder_path, self.label_file_list)
+        target = self.read_yolo_labels(file_path)
+        return target
 
 
     def build_net(self):
@@ -108,7 +109,8 @@ class YoloTrain(ObjectDetector):
                 try:
                     tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
                     tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-                    tmp_y = self.all_label_target_np[self.dataset_file_list[idx][:-3] + "txt"]
+                    #tmp_x = tmp_x.astype(np.float32) / 255.
+                    tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
                     x_batch.append(tmp_x)
                     y_batch.append(tmp_y)
 
