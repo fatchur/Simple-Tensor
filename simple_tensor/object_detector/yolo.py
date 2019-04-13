@@ -109,7 +109,7 @@ class YoloTrain(ObjectDetector):
                 try:
                     tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
                     tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-                    #tmp_x = tmp_x.astype(np.float32) / 255.
+                    tmp_x = tmp_x.astype(np.float32) / 255.
                     tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
                     x_batch.append(tmp_x)
                     y_batch.append(tmp_y)
