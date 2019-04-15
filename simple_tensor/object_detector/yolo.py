@@ -100,7 +100,10 @@ class YoloTrain(ObjectDetector):
         idx = 0
         while True:
             x_batch = []
-            y_batch = []
+            y_pred1 = []
+            y_pred2 = []
+            y_pred3 = []
+
 
             for i in range(batch_size):
                 if idx >= len(self.dataset_file_list):
@@ -112,13 +115,16 @@ class YoloTrain(ObjectDetector):
                     tmp_x = tmp_x.astype(np.float32) / 255.
                     tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
                     x_batch.append(tmp_x)
-                    y_batch.append(tmp_y)
+                    y_pred1.append(tmp_y[0])
+                    y_pred2.append(tmp_y[1])
+                    y_pred3.append(tmp_y[2])
+
 
                 except:
                     print ('the image or txt file not found')
 
                 idx += 1
 
-            yield (np.array(x_batch), np.array(y_batch))
+            yield (np.array(x_batch), [np.array(y_pred1), np.array(y_pred2), np.array(y_pred3)])
     
     

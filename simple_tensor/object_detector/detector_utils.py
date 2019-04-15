@@ -175,12 +175,12 @@ class ObjectDetector(object):
         # For each anchor,                                     #
         # get the output results (objectness, x, y, w, h)      #
         #------------------------------------------------------#
-        all_losses = 0.0
-        objectness_losses = 0.0
-        noobjectness_losses = 0.0
-        center_losses = 0.0
-        size_losses = 0.0
-        class_losses = 0.0
+        self.all_losses = 0.0
+        self.objectness_losses = 0.0
+        self.noobjectness_losses = 0.0
+        self.center_losses = 0.0
+        self.size_losses = 0.0
+        self.class_losses = 0.0
         
         for i in range(3):
             output = outputs[i]
@@ -196,8 +196,7 @@ class ObjectDetector(object):
                 border_b = 6
 
             for idx, val in enumerate(self.anchor[border_a:border_b]):
-                base = idx * (5+self.num_of_class)
-
+                base = idx * (5+self.num_class)
                 # get objectness confidence
                 objectness_pred = tf.nn.sigmoid(output[:, :, :, base:(base + 1)])
                 objectness_label = label[:, :, :, base:(base + 1)]
@@ -254,21 +253,28 @@ class ObjectDetector(object):
                 objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, iou_map)
                 noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
                 ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real, x_label_real) + self.mse_loss(y_pred_real, y_label_real))
-                sz_loss =  self.size_loss_alpha * (self.mse_loss(tf.sqrt(w_pred_real), tf.sqrt(w_label_real)) + 
-                           self.mse_loss(tf.sqrt(h_pred_real), tf.sqrt(h_label_real)))
+                a = tf.sqrt(w_pred_real)
+                b = tf.sqrt(w_label_real)
+                c = tf.sqrt(h_label_real)
+                d = tf.sqrt(h_label_real)
+                sz_loss =  self.size_loss_alpha * (self.mse_loss(w_pred_real, w_label_real) + self.mse_loss(h_pred_real, h_label_real))
             
                 total_loss = objectness_loss + \
                              noobjectness_loss + \
                              ctr_loss + \
                              sz_loss
-    
-                all_losses = all_losses + total_loss
-                objectness_losses = objectness_losses + objectness_loss
-                noobjectness_losses = noobjectness_losses + noobjectness_loss
-                center_losses = center_losses + ctr_loss
-                size_losses = size_losses + sz_loss
+                self.coba1 = w_pred_real
+                self.coba1b = a
+                self.coba2 = b
+                self.coba3 = c
+                self.coba4 = d
+                self.all_losses = self.all_losses + total_loss
+                self.objectness_losses = self.objectness_losses + objectness_loss
+                self.noobjectness_losses = self.noobjectness_losses + noobjectness_loss
+                self.center_losses = self.center_losses + ctr_loss
+                self.size_losses = self.size_losses + sz_loss
 
-        return all_losses, objectness_losses, noobjectness_losses, center_losses, size_losses
+        return self.all_losses
 
 
     def read_yolo_labels(self, file_name):
@@ -307,7 +313,6 @@ class ObjectDetector(object):
                 y.append(float(data[j*5 + 2]))
                 w.append(float(data[j*5 + 3]))
                 h.append(float(data[j*5 + 4]))
-            print (x, y, w, h)
             file.close()
             
             #----------------------------------------------------------------#
@@ -333,9 +338,7 @@ class ObjectDetector(object):
                     tmp [cell_y, cell_x, base + 2] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
                     tmp [cell_y, cell_x, base + 3] = math.log(m * self.input_width/j[0] + 0.0001)										    # add width width value
                     tmp [cell_y, cell_x, base + 4] = math.log(n * self.input_height/j[1] + 0.0001)								            # add height value
-                    print (cell_y, cell_x)
-                    print (tmp [cell_y, cell_x, :])
-            
+                    #print (cell_x, cell_y)
             tmps.append(tmp)
 
         return tmps
@@ -707,6 +710,7 @@ class ObjectDetector(object):
                             is_training=training,
                             use_bias=False,
                             use_batchnorm=True)
+                        
             return route, inputs
         
         #-------------------------------------------------------------------------#
@@ -725,12 +729,9 @@ class ObjectDetector(object):
             Returns:
                 Tensor output.
             """
-            n_anchors = len(anchors)
-            inputs = tf.layers.conv2d(inputs, filters=n_anchors * (5 + n_classes),
-                                    kernel_size=1, strides=1, use_bias=True,
-                                    data_format=data_format)
             
-            print ("=====", inputs)
+            n_anchors = len(anchors)
+            print ("~~~~~~>>", inputs)
             shape = inputs.get_shape().as_list()
             grid_shape = shape[2:4] if data_format == 'channels_first' else shape[1:3]
             if data_format == 'channels_first':
@@ -813,7 +814,7 @@ class ObjectDetector(object):
         #------------------------------------------------------------------------#
 
         with tf.variable_scope('yolo_v3_model'):
-            inputs = inputs / 255
+
             route1, route2, inputs = darknet53(inputs, 
                                                training=is_training,
                                                data_format=data_format)
@@ -876,24 +877,45 @@ class ObjectDetector(object):
             # get yolo base variables
             self.yolo_vars = tf.global_variables(scope='yolo_v3_model')
 
-            self.detect1 = yolo_layer(inputs_detect1, 
+            self.detect1 = tf.layers.conv2d(inputs_detect1, 
+                                      filters=len(self.anchor)/3 * (5 + self.num_class),
+                                      kernel_size=1, 
+                                      strides=1, 
+                                      use_bias=True,
+                                      data_format=data_format)
+
+            self.detect2 = tf.layers.conv2d(inputs_detect2, 
+                                      filters=len(self.anchor)/3 * (5 + self.num_class),
+                                      kernel_size=1, 
+                                      strides=1, 
+                                      use_bias=True,
+                                      data_format=data_format)
+
+            self.detect3 = tf.layers.conv2d(inputs_detect3, 
+                                      filters=len(self.anchor)/3 * (5 + self.num_class),
+                                      kernel_size=1, 
+                                      strides=1, 
+                                      use_bias=True,
+                                      data_format=data_format)
+            self.output_list = [self.detect1, self.detect2, self.detect3]
+
+            combine_box1 = yolo_layer(self.detect1, 
                                     n_classes=self.num_class,
                                     anchors=self.anchor[6:9],
                                     img_size=model_size,
                                     data_format=data_format)
-            self.detect2 = yolo_layer(inputs_detect2, 
-                                        n_classes=self.num_class,
-                                        anchors=self.anchor[3:6],
-                                        img_size=model_size,
-                                        data_format=data_format)
-            self.detect3 = yolo_layer(inputs_detect3, 
+            combine_box2 = yolo_layer(self.detect2, 
+                                    n_classes=self.num_class,
+                                    anchors=self.anchor[3:6],
+                                    img_size=model_size,
+                                    data_format=data_format)
+            combine_box3 = yolo_layer(self.detect3, 
                                     n_classes=self.num_class,
                                     anchors=self.anchor[0:3],
                                     img_size=model_size,
                                     data_format=data_format)
 
-            inputs = tf.concat([self.detect1, self.detect2, self.detect3], axis=1)
-            self.output_list = [self.detect1, self.detect2, self.detect3]
+            inputs = tf.concat([combine_box1, combine_box2, combine_box3], axis=1)
             self.boxes_dicts = build_boxes(inputs)
 
 
