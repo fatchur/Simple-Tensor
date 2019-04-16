@@ -50,20 +50,20 @@ class YoloTrain(ObjectDetector):
         """
 
         super(YoloTrain, self).__init__(num_of_class=num_of_class,
-                                        input_height=416, 
-                                        input_width=416, 
-                                        grid_height1=32, 
-                                        grid_width1=32, 
-                                        grid_height2=16, 
-                                        grid_width2=16, 
-                                        grid_height3=8, 
-                                        grid_width3=8,
-                                        objectness_loss_alpha=2., 
-                                        noobjectness_loss_alpha=1., 
-                                        center_loss_alpha=1., 
-                                        size_loss_alpha=1., 
-                                        class_loss_alpha=1.,
-                                        anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)])
+                                        input_height=input_height, 
+                                        input_width=input_width, 
+                                        grid_height1=grid_height1, 
+                                        grid_width1=grid_width1, 
+                                        grid_height2=grid_height2, 
+                                        grid_width2=grid_width2, 
+                                        grid_height3=grid_height3, 
+                                        grid_width3=grid_height3,
+                                        objectness_loss_alpha=objectness_loss_alpha, 
+                                        noobjectness_loss_alpha=noobjectness_loss_alpha, 
+                                        center_loss_alpha=center_loss_alpha, 
+                                        size_loss_alpha=size_loss_alpha, 
+                                        class_loss_alpha=class_loss_alpha,
+                                        anchor = anchor)
 
         self.label_folder_path = label_folder_path
         self.dataset_folder_path = dataset_folder_path

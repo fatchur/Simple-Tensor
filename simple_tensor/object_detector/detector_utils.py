@@ -160,6 +160,21 @@ class ObjectDetector(object):
         return loss
 
 
+    def mse_loss_sum(self, output_tensor, label):
+        """"[summary]
+        
+        Arguments:
+            output_tensor {tensor} -- [description]
+            label {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        loss = tf.square(tf.subtract(output_tensor, label))
+        loss = tf.reduce_sum(loss)
+        return loss
+
+
     def yolo_loss(self, outputs, labels):
         """[summary]
         
@@ -218,12 +233,15 @@ class ObjectDetector(object):
                 y_pred = tf.multiply(y_pred, objectness_label)
             
                 # get width values
+                #---(belum) yolo modification (10 / (1+e^{-0.1x}} - 5)
                 w_pred = output[:, :, :, (base + 3):(base + 4)]
+                w_pred = 6 /(1 + tf.exp(-0.2 * w_pred)) - 3
                 w_label = label[:, :, :, (base + 3):(base + 4)]
                 w_pred = tf.multiply(w_pred, objectness_label)
             
                 # get height values
                 h_pred = output[:, :, :, (base + 4):(base + 5)]
+                h_pred = 6 /(1 + tf.exp(-0.2 * h_pred)) - 3
                 h_label = label[:, :, :, (base + 4):(base + 5)]
                 h_pred = tf.multiply(h_pred, objectness_label)
 
@@ -250,24 +268,15 @@ class ObjectDetector(object):
                 #            calculate the losses              #
                 # objectness, noobjectness, center & size loss #
                 #----------------------------------------------#
-                objectness_loss = self.objectness_loss_alpha * self.mse_loss(objectness_pred, iou_map)
-                noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss(noobjectness_pred, noobjectness_label)
+                objectness_loss = self.objectness_loss_alpha * self.mse_loss_sum(objectness_pred, iou_map)
+                noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss_sum(noobjectness_pred, noobjectness_label)
                 ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real, x_label_real) + self.mse_loss(y_pred_real, y_label_real))
-                a = tf.sqrt(w_pred_real)
-                b = tf.sqrt(w_label_real)
-                c = tf.sqrt(h_label_real)
-                d = tf.sqrt(h_label_real)
                 sz_loss =  self.size_loss_alpha * (self.mse_loss(w_pred_real, w_label_real) + self.mse_loss(h_pred_real, h_label_real))
             
                 total_loss = objectness_loss + \
                              noobjectness_loss + \
                              ctr_loss + \
                              sz_loss
-                self.coba1 = w_pred_real
-                self.coba1b = a
-                self.coba2 = b
-                self.coba3 = c
-                self.coba4 = d
                 self.all_losses = self.all_losses + total_loss
                 self.objectness_losses = self.objectness_losses + objectness_loss
                 self.noobjectness_losses = self.noobjectness_losses + noobjectness_loss
