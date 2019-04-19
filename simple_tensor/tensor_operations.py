@@ -380,7 +380,6 @@ def batch_norm(inputs,
     Returns:
         [type] -- [description]
     """
-
     return tf.layers.batch_normalization(
         inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
         momentum=momentum, epsilon=epsilon,

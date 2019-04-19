@@ -22,7 +22,10 @@ class ObjectDetector(object):
                        center_loss_alpha=1., 
                        size_loss_alpha=1., 
                        class_loss_alpha=1.,
-                       anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]):
+                       add_modsig_toshape=False,
+                       anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)],
+                       dropout_rate = 0.0,
+                       leaky_relu_alpha = 0.1):
         """[summary]
         
         Arguments:
@@ -84,6 +87,10 @@ class ObjectDetector(object):
         self.center_loss_alpha = center_loss_alpha
         self.size_loss_alpha = size_loss_alpha
         self.class_loss_alpha = class_loss_alpha
+
+        self.add_modsig_toshape = add_modsig_toshape
+        self.dropout_val = 1 - dropout_rate
+        self.leaky_relu_alpha = leaky_relu_alpha
 
 
     def grid_mask(self):
@@ -212,37 +219,45 @@ class ObjectDetector(object):
 
             for idx, val in enumerate(self.anchor[border_a:border_b]):
                 base = idx * (5+self.num_class)
+
                 # get objectness confidence
-                objectness_pred = tf.nn.sigmoid(output[:, :, :, base:(base + 1)])
-                objectness_label = label[:, :, :, base:(base + 1)]
+                objectness_pred = tf.nn.sigmoid(output[:, :, :, (base + 4):(base + 5)])
+                objectness_label = label[:, :, :, (base + 4):(base + 5)]
                 objectness_pred = tf.multiply(objectness_pred, objectness_label)
 
                 # get noobjectness confidence
-                noobjectness_pred = 1.0 - tf.nn.sigmoid(output[:, :, :, base:(base + 1)])
+                noobjectness_pred = 1.0 - tf.nn.sigmoid(output[:, :, :, (base + 4):(base + 5)])
                 noobjectness_label = 1.0 - objectness_label 
                 noobjectness_pred = tf.multiply(noobjectness_pred, noobjectness_label)
-
+                
                 # get x values
-                x_pred = tf.nn.sigmoid(output[:, :, :, (base + 1):(base + 2)])
-                x_label = label[:, :, :, (base + 1):(base + 2)]
+                x_pred = tf.nn.sigmoid(output[:, :, :, (base + 0):(base + 1)])
                 x_pred = tf.multiply(x_pred, objectness_label)
+                x_pred = self.grid_position_mask_onx[i] + x_pred
+                x_label = label[:, :, :, (base + 0):(base + 1)]
+                x_label = self.grid_position_mask_onx[i] + x_label
 
                 # get y value
-                y_pred = tf.nn.sigmoid(output[:, :, :, (base + 2):(base + 3)])
-                y_label = label[:, :, :, (base + 2):(base + 3)]
+                y_pred = tf.nn.sigmoid(output[:, :, :, (base + 1):(base + 2)])
                 y_pred = tf.multiply(y_pred, objectness_label)
-            
+                y_pred = self.grid_position_mask_ony[i] + y_pred
+                y_label = label[:, :, :, (base + 1):(base + 2)]
+                y_label = self.grid_position_mask_ony[i] + y_label
+
                 # get width values
-                #---(belum) yolo modification (10 / (1+e^{-0.1x}} - 5)
-                w_pred = output[:, :, :, (base + 3):(base + 4)]
-                w_pred = 6 /(1 + tf.exp(-0.2 * w_pred)) - 3
-                w_label = label[:, :, :, (base + 3):(base + 4)]
+                #--- yolo modification (10 / (1+e^{-0.1x}} - 5)
+                w_pred = output[:, :, :, (base + 2):(base + 3)]
+                if self.add_modsig_toshape:
+                    w_pred = 6 /(1 + tf.exp(-0.2 * w_pred)) - 3
+                w_label = label[:, :, :, (base + 2):(base + 3)]
                 w_pred = tf.multiply(w_pred, objectness_label)
             
                 # get height values
-                h_pred = output[:, :, :, (base + 4):(base + 5)]
-                h_pred = 6 /(1 + tf.exp(-0.2 * h_pred)) - 3
-                h_label = label[:, :, :, (base + 4):(base + 5)]
+                #--- yolo modification (10 / (1+e^{-0.1x}} - 5)
+                h_pred = output[:, :, :, (base + 3):(base + 4)]
+                if self.add_modsig_toshape:
+                    h_pred = 6 /(1 + tf.exp(-0.2 * h_pred)) - 3
+                h_label = label[:, :, :, (base + 3):(base + 4)]
                 h_pred = tf.multiply(h_pred, objectness_label)
 
                 #----------------------------------------------#
@@ -250,14 +265,14 @@ class ObjectDetector(object):
                 # 1. calculate pred bbox based on real ordinat #
                 # 2. calculate the iou                         #
                 #----------------------------------------------#
-                x_pred_real = tf.multiply(self.grid_width[i] * (self.grid_position_mask_onx[i] + x_pred), objectness_label)
-                y_pred_real = tf.multiply(self.grid_height[i] * (self.grid_position_mask_ony[i] + y_pred), objectness_label)
+                x_pred_real = tf.multiply(self.grid_width[i] * x_pred, objectness_label)
+                y_pred_real = tf.multiply(self.grid_height[i] * y_pred, objectness_label)
                 w_pred_real = tf.multiply(val[0] * tf.math.exp(w_pred), objectness_label)
                 h_pred_real = tf.multiply(val[1] * tf.math.exp(h_pred), objectness_label)
                 pred_bbox = tf.concat([x_pred_real, y_pred_real, w_pred_real, h_pred_real], 3)
 
-                x_label_real = tf.multiply(self.grid_width[i] * (self.grid_position_mask_onx[i] + x_label), objectness_label)
-                y_label_real = tf.multiply(self.grid_height[i] * (self.grid_position_mask_ony[i] + y_label), objectness_label)
+                x_label_real = tf.multiply(self.grid_width[i] * x_label, objectness_label)
+                y_label_real = tf.multiply(self.grid_height[i] * y_label, objectness_label)
                 w_label_real = tf.multiply(val[0] * tf.math.exp(w_label), objectness_label)
                 h_label_real = tf.multiply(val[1] * tf.math.exp(h_label), objectness_label)
                 label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
@@ -270,8 +285,12 @@ class ObjectDetector(object):
                 #----------------------------------------------#
                 objectness_loss = self.objectness_loss_alpha * self.mse_loss_sum(objectness_pred, iou_map)
                 noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss_sum(noobjectness_pred, noobjectness_label)
-                ctr_loss = self.center_loss_alpha * (self.mse_loss(x_pred_real, x_label_real) + self.mse_loss(y_pred_real, y_label_real))
-                sz_loss =  self.size_loss_alpha * (self.mse_loss(w_pred_real, w_label_real) + self.mse_loss(h_pred_real, h_label_real))
+                ctr_loss = self.center_loss_alpha * (self.mse_loss_sum(x_pred, x_label) + self.mse_loss_sum(y_pred, y_label))
+                a = w_pred_real / self.grid_width[i]
+                b = w_label_real / self.grid_width[i]
+                c = h_pred_real / self.grid_height[i]
+                d = h_label_real / self.grid_height[i]
+                sz_loss =  self.size_loss_alpha * tf.sqrt(self.mse_loss_sum(a, b) + self.mse_loss_sum(c, d))
             
                 total_loss = objectness_loss + \
                              noobjectness_loss + \
@@ -342,11 +361,11 @@ class ObjectDetector(object):
                 for k, l, m, n in zip(x, y, w, h):
                     cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid[i])))
                     cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
-                    tmp [cell_y, cell_x, base + 0] = 1.0																				    # add objectness score
-                    tmp [cell_y, cell_x, base + 1] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
-                    tmp [cell_y, cell_x, base + 2] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
-                    tmp [cell_y, cell_x, base + 3] = math.log(m * self.input_width/j[0] + 0.0001)										    # add width width value
-                    tmp [cell_y, cell_x, base + 4] = math.log(n * self.input_height/j[1] + 0.0001)								            # add height value
+                    tmp [cell_y, cell_x, base + 0] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
+                    tmp [cell_y, cell_x, base + 1] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
+                    tmp [cell_y, cell_x, base + 2] = math.log(m * self.input_width/j[0] + 0.0001)										    # add width width value
+                    tmp [cell_y, cell_x, base + 3] = math.log(n * self.input_height/j[1] + 0.0001)								            # add height value
+                    tmp [cell_y, cell_x, base + 4] = 1.0																				    # add objectness score
                     #print (cell_x, cell_y)
             tmps.append(tmp)
 
@@ -415,15 +434,11 @@ class ObjectDetector(object):
         Returns:
             [type] -- [description]
         """
-        _BATCH_NORM_DECAY = 0.9
-        _BATCH_NORM_EPSILON = 1e-05
-        _LEAKY_RELU = 0.1
-
+        
         model_size = (416, 416)
         max_output_size = 10
-        iou_threshold = 0.5
-        confidence_threshold = 0.5
         data_format = 'channels_last'
+
 
         #-------------------------------------------------------------------------#
         def fixed_padding(inputs, 
@@ -478,9 +493,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = name + '_input_conv1', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU', 
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha= self.leaky_relu_alpha, 
                             padding=('SAME' if stride == 1 else 'VALID'), 
                             strides=[1, stride, stride, 1],  
                             is_training=training,
@@ -490,9 +505,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=(inputs if stride == 1 else fixed_padding(inputs, 3, 'channels_last')), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
                             name = name + '_input_conv2', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha=self.leaky_relu_alpha, 
                             padding=('SAME' if stride == 1 else 'VALID'), 
                             strides=[1, stride, stride, 1],
                             data_type=tf.float32,  
@@ -518,9 +533,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 32], 
                             name = 'main_input_conv1', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU,  
+                            lrelu_alpha=self.leaky_relu_alpha,  
                             padding='SAME', 
                             strides=[1, 1, 1, 1],
                             data_type=tf.float32,  
@@ -531,9 +546,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 64], 
                             name = 'main_input_conv2', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU,  
+                            lrelu_alpha=self.leaky_relu_alpha,  
                             padding='VALID', 
                             strides=[1, 2, 2, 1],
                             data_type=tf.float32,  
@@ -550,9 +565,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 128], 
                             name = 'main_input_conv3', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha=self.leaky_relu_alpha, 
                             padding='VALID', 
                             strides=[1, 2, 2, 1],
                             data_type=tf.float32,  
@@ -570,9 +585,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 256], 
                             name = 'main_input_conv4', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha=self.leaky_relu_alpha, 
                             padding='VALID', 
                             strides=[1, 2, 2, 1],
                             data_type=tf.float32,  
@@ -591,9 +606,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 512], 
                             name = 'main_input_conv5', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU,
+                            lrelu_alpha=self.leaky_relu_alpha,
                             padding='VALID', 
                             strides=[1, 2, 2, 1],
                             data_type=tf.float32,  
@@ -612,9 +627,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 1024], 
                             name = 'main_input_conv6', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha=self.leaky_relu_alpha, 
                             padding='VALID', 
                             strides=[1, 2, 2, 1],
                             data_type=tf.float32,  
@@ -644,9 +659,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = 'main_input_conv7', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU,
+                            lrelu_alpha=self.leaky_relu_alpha,
                             padding='SAME', 
                             strides=[1, 1, 1, 1],
                             data_type=tf.float32,  
@@ -657,9 +672,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
                             name = 'main_input_conv8', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU,
+                            lrelu_alpha=self.leaky_relu_alpha,
                             padding='SAME', 
                             strides=[1, 1, 1, 1],
                             data_type=tf.float32,  
@@ -670,9 +685,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = 'main_input_conv9', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU,
+                            lrelu_alpha=self.leaky_relu_alpha,
                             padding='SAME', 
                             strides=[1, 1, 1, 1],
                             data_type=tf.float32,  
@@ -683,9 +698,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
                             name = 'main_input_conv10', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha=self.leaky_relu_alpha, 
                             padding='SAME', 
                             strides=[1, 1, 1, 1],
                             data_type=tf.float32,  
@@ -696,9 +711,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = 'main_input_conv11', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha=self.leaky_relu_alpha, 
                             padding='SAME', 
                             strides=[1, 1, 1, 1],
                             data_type=tf.float32,  
@@ -710,9 +725,9 @@ class ObjectDetector(object):
             inputs, _ = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
                             name = 'main_input_conv12', 
-                            dropout_val= 1.0, 
+                            dropout_val= self.dropout_val, 
                             activation = 'LRELU',
-                            lrelu_alpha=_LEAKY_RELU, 
+                            lrelu_alpha=self.leaky_relu_alpha, 
                             padding='SAME', 
                             strides=[1, 1, 1, 1],
                             data_type=tf.float32,  
@@ -765,6 +780,8 @@ class ObjectDetector(object):
             box_centers = (box_centers + x_y_offset) * strides
 
             anchors = tf.tile(anchors, [grid_shape[0] * grid_shape[1], 1])
+            if self.add_modsig_toshape:
+                box_shapes = 6 /(1 + tf.exp(-0.2 * box_shapes)) - 3
             box_shapes = tf.exp(box_shapes) * tf.to_float(anchors)
             confidence = tf.nn.sigmoid(confidence)
             classes = tf.nn.sigmoid(classes)
@@ -822,110 +839,109 @@ class ObjectDetector(object):
         
         #------------------------------------------------------------------------#
 
-        with tf.variable_scope('yolo_v3_model'):
+        #with tf.variable_scope('yolo_v3_model'):
+        route1, route2, inputs = darknet53(inputs, 
+                                            training=is_training,
+                                            data_format=data_format)
 
-            route1, route2, inputs = darknet53(inputs, 
-                                               training=is_training,
-                                               data_format=data_format)
+        route, inputs = yolo_convolution_block(inputs, 
+                                                filters=512, 
+                                                training=is_training,
+                                                data_format=data_format)
+        inputs_detect1 = inputs
 
-            route, inputs = yolo_convolution_block(inputs, 
-                                                   filters=512, 
-                                                   training=is_training,
-                                                   data_format=data_format)
-            inputs_detect1 = inputs
+        inputs, _ = new_conv2d_layer(input=route, 
+                    filter_shape=[1, 1, route.get_shape().as_list()[-1], 256], 
+                    name = 'main_input_conv13', 
+                    dropout_val= self.dropout_val, 
+                    activation = 'LRELU',
+                    lrelu_alpha=self.leaky_relu_alpha,
+                    padding='SAME', 
+                    strides=[1, 1, 1, 1],
+                    data_type=tf.float32,  
+                    is_training=is_training,
+                    use_bias=False,
+                    use_batchnorm=True)
 
-            inputs, _ = new_conv2d_layer(input=route, 
-                     filter_shape=[1, 1, route.get_shape().as_list()[-1], 256], 
-                     name = 'main_input_conv13', 
-                     dropout_val= 1.0, 
-                     activation = 'LRELU',
-                     lrelu_alpha=_LEAKY_RELU,
-                     padding='SAME', 
-                     strides=[1, 1, 1, 1],
-                     data_type=tf.float32,  
-                     is_training=is_training,
-                     use_bias=False,
-                     use_batchnorm=True)
+        upsample_size = route2.get_shape().as_list()
+        inputs = upsample(inputs, 
+                            out_shape=upsample_size,
+                            data_format=data_format)
+        axis = 3
+        inputs = tf.concat([inputs, route2], axis=axis)
+        route, inputs = yolo_convolution_block(inputs, 
+                                                filters=256,  
+                                                training=is_training,
+                                                data_format=data_format)
+        inputs_detect2 = inputs
+        
+        inputs, _ = new_conv2d_layer(input=route, 
+                    filter_shape=[1, 1, route.get_shape().as_list()[-1], 128], 
+                    name = 'main_input_conv14', 
+                    dropout_val= self.dropout_val, 
+                    activation = 'LRELU',
+                    lrelu_alpha=self.leaky_relu_alpha,
+                    padding='SAME', 
+                    strides=[1, 1, 1, 1],
+                    data_type=tf.float32,  
+                    is_training=is_training,
+                    use_bias=False,
+                    use_batchnorm=True)
+        
+        upsample_size = route1.get_shape().as_list()
+        inputs = upsample(inputs, 
+                            out_shape=upsample_size,
+                            data_format=data_format)
+        inputs = tf.concat([inputs, route1], axis=axis)
+        route, inputs = yolo_convolution_block(inputs, 
+                                                filters=128, 
+                                                training=is_training,
+                                                data_format=data_format)
+        inputs_detect3 = inputs
 
-            upsample_size = route2.get_shape().as_list()
-            inputs = upsample(inputs, 
-                              out_shape=upsample_size,
-                              data_format=data_format)
-            axis = 3
-            inputs = tf.concat([inputs, route2], axis=axis)
-            route, inputs = yolo_convolution_block(inputs, 
-                                                   filters=256,  
-                                                   training=is_training,
-                                                   data_format=data_format)
-            inputs_detect2 = inputs
-            
-            inputs, _ = new_conv2d_layer(input=route, 
-                     filter_shape=[1, 1, route.get_shape().as_list()[-1], 128], 
-                     name = 'main_input_conv14', 
-                     dropout_val= 1.0, 
-                     activation = 'LRELU',
-                     lrelu_alpha=_LEAKY_RELU,
-                     padding='SAME', 
-                     strides=[1, 1, 1, 1],
-                     data_type=tf.float32,  
-                     is_training=is_training,
-                     use_bias=False,
-                     use_batchnorm=True)
-            
-            upsample_size = route1.get_shape().as_list()
-            inputs = upsample(inputs, 
-                              out_shape=upsample_size,
-                              data_format=data_format)
-            inputs = tf.concat([inputs, route1], axis=axis)
-            route, inputs = yolo_convolution_block(inputs, 
-                                                   filters=128, 
-                                                   training=is_training,
-                                                   data_format=data_format)
-            inputs_detect3 = inputs
+        # get yolo base variables
+        self.yolo_vars = tf.global_variables(scope='yolo_v3_model')
 
-            # get yolo base variables
-            self.yolo_vars = tf.global_variables(scope='yolo_v3_model')
-
-            self.detect1 = tf.layers.conv2d(inputs_detect1, 
-                                      filters=len(self.anchor)/3 * (5 + self.num_class),
-                                      kernel_size=1, 
-                                      strides=1, 
-                                      use_bias=True,
-                                      data_format=data_format)
-
-            self.detect2 = tf.layers.conv2d(inputs_detect2, 
-                                      filters=len(self.anchor)/3 * (5 + self.num_class),
-                                      kernel_size=1, 
-                                      strides=1, 
-                                      use_bias=True,
-                                      data_format=data_format)
-
-            self.detect3 = tf.layers.conv2d(inputs_detect3, 
-                                      filters=len(self.anchor)/3 * (5 + self.num_class),
-                                      kernel_size=1, 
-                                      strides=1, 
-                                      use_bias=True,
-                                      data_format=data_format)
-            self.output_list = [self.detect1, self.detect2, self.detect3]
-
-            combine_box1 = yolo_layer(self.detect1, 
-                                    n_classes=self.num_class,
-                                    anchors=self.anchor[6:9],
-                                    img_size=model_size,
-                                    data_format=data_format)
-            combine_box2 = yolo_layer(self.detect2, 
-                                    n_classes=self.num_class,
-                                    anchors=self.anchor[3:6],
-                                    img_size=model_size,
-                                    data_format=data_format)
-            combine_box3 = yolo_layer(self.detect3, 
-                                    n_classes=self.num_class,
-                                    anchors=self.anchor[0:3],
-                                    img_size=model_size,
+        self.detect1 = tf.layers.conv2d(inputs_detect1, 
+                                    filters=len(self.anchor)/3 * (5 + self.num_class),
+                                    kernel_size=1, 
+                                    strides=1, 
+                                    use_bias=True,
                                     data_format=data_format)
 
-            inputs = tf.concat([combine_box1, combine_box2, combine_box3], axis=1)
-            self.boxes_dicts = build_boxes(inputs)
+        self.detect2 = tf.layers.conv2d(inputs_detect2, 
+                                    filters=len(self.anchor)/3 * (5 + self.num_class),
+                                    kernel_size=1, 
+                                    strides=1, 
+                                    use_bias=True,
+                                    data_format=data_format)
+
+        self.detect3 = tf.layers.conv2d(inputs_detect3, 
+                                    filters=len(self.anchor)/3 * (5 + self.num_class),
+                                    kernel_size=1, 
+                                    strides=1, 
+                                    use_bias=True,
+                                    data_format=data_format)
+        self.output_list = [self.detect1, self.detect2, self.detect3]
+
+        combine_box1 = yolo_layer(self.detect1, 
+                                n_classes=self.num_class,
+                                anchors=self.anchor[6:9],
+                                img_size=model_size,
+                                data_format=data_format)
+        combine_box2 = yolo_layer(self.detect2, 
+                                n_classes=self.num_class,
+                                anchors=self.anchor[3:6],
+                                img_size=model_size,
+                                data_format=data_format)
+        combine_box3 = yolo_layer(self.detect3, 
+                                n_classes=self.num_class,
+                                anchors=self.anchor[0:3],
+                                img_size=model_size,
+                                data_format=data_format)
+
+        inputs = tf.concat([combine_box1, combine_box2, combine_box3], axis=1)
+        self.boxes_dicts = build_boxes(inputs)
 
 
 

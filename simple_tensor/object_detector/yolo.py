@@ -29,7 +29,10 @@ class YoloTrain(ObjectDetector):
                  center_loss_alpha=1., 
                  size_loss_alpha=1., 
                  class_loss_alpha=1.,
-                 anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]):
+                 add_modsig_toshape=False,
+                 anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)],
+                 dropout_rate = 0.0,
+                 leaky_relu_alpha = 0.1):
         """[summary]
         
         Arguments:
@@ -63,7 +66,10 @@ class YoloTrain(ObjectDetector):
                                         center_loss_alpha=center_loss_alpha, 
                                         size_loss_alpha=size_loss_alpha, 
                                         class_loss_alpha=class_loss_alpha,
-                                        anchor = anchor)
+                                        add_modsig_toshape=add_modsig_toshape,
+                                        anchor = anchor,
+                                        dropout_rate = dropout_rate,
+                                        leaky_relu_alpha = leaky_relu_alpha)
 
         self.label_folder_path = label_folder_path
         self.dataset_folder_path = dataset_folder_path
@@ -85,8 +91,9 @@ class YoloTrain(ObjectDetector):
         return target
 
 
-    def build_net(self):
-        self.build_yolov3_net(inputs=self.input_placeholder, is_training=False)
+    def build_net(self, is_training=False):
+        with tf.variable_scope('yolo_v3_model'):
+            self.build_yolov3_net(inputs=self.input_placeholder, is_training=is_training)
 
 
     def train_batch_generator(self, batch_size):
@@ -119,9 +126,8 @@ class YoloTrain(ObjectDetector):
                     y_pred2.append(tmp_y[1])
                     y_pred3.append(tmp_y[2])
 
-
                 except:
-                    print ('the image or txt file not found')
+                    pass
 
                 idx += 1
 
