@@ -296,12 +296,11 @@ def new_deconv_layer(input,
     Return:
         a result of deconvolution operation, its weights, and biases
     """
-    weights = tf.Variable(tf.truncated_normal([filter_shape[0], filter_shape[1], filter_shape[3], filter_shape[2]], 
-                                              stddev=0.05), 
-                                              name='weight_' + name,
-                                              data_type=data_type)
+    weights = tf.Variable(tf.truncated_normal(shape=[filter_shape[0], filter_shape[1], filter_shape[3], filter_shape[2]], stddev=0.05), 
+                          name='weight_' + name,
+                          dtype=data_type)
     deconv_shape = tf.stack(output_shape)
-    deconv = tf.nn.conv2d_transpose(input=input, 
+    deconv = tf.nn.conv2d_transpose(value=input, 
                                     filter = weights, 
                                     output_shape = deconv_shape,
                                     strides = strides,

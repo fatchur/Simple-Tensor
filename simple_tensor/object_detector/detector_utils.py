@@ -91,6 +91,7 @@ class ObjectDetector(object):
         self.add_modsig_toshape = add_modsig_toshape
         self.dropout_val = 1 - dropout_rate
         self.leaky_relu_alpha = leaky_relu_alpha
+        self.threshold = 0.15
 
 
     def grid_mask(self):
@@ -150,6 +151,45 @@ class ObjectDetector(object):
         the_iou = overlap / (union + 0.0001)
 
         return the_iou
+    
+
+    def average_iou(self, iou_map, objecness_label):
+        """[summary]
+        
+        Arguments:
+            iou_map {[type]} -- [description]
+            objecness_label {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        iou = iou_map * objecness_label
+        iou = tf.reduce_sum(iou)
+        total_predictor = tf.reduce_sum(objecness_label)
+        iou = iou / (total_predictor + 0.0001)
+        return iou
+
+
+    def object_accuracy(self, objectness_pred, objectness_label, noobjectness_label):
+        """[summary]
+        
+        Arguments:
+            objectness_pred {[type]} -- [description]
+            objectness_label {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        objectness_mask = tf.math.greater(objectness_pred, tf.convert_to_tensor(np.array(self.threshold), tf.float32))
+        objectness_mask = tf.cast(objectness_mask, tf.float32)
+        delta = (objectness_label - objectness_mask) * objectness_label
+        obj_acc = 1. - tf.reduce_sum(delta) / (tf.reduce_sum(objectness_label) + 0.0001)
+
+        noobjecteness_mask = 1. - objectness_mask
+        delta = (noobjectness_label - noobjecteness_mask) * noobjectness_label
+        noobj_acc = 1. - tf.reduce_sum(delta) / (tf.reduce_sum(noobjectness_label) + 0.0001)
+        return obj_acc, noobj_acc
+        
 
 
     def mse_loss(self, output_tensor, label):
@@ -203,6 +243,12 @@ class ObjectDetector(object):
         self.center_losses = 0.0
         self.size_losses = 0.0
         self.class_losses = 0.0
+        
+        iou_total = 0.0
+        obj_acc_total = 0.0
+        noobj_acc_total = 0.0
+
+        self.a = []
         
         for i in range(3):
             output = outputs[i]
@@ -278,6 +324,7 @@ class ObjectDetector(object):
                 label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
                 iou_map = self.iou(pred_bbox, label_bbox)
+                self.a.append(iou_map)
 
                 #----------------------------------------------#
                 #            calculate the losses              #
@@ -301,6 +348,16 @@ class ObjectDetector(object):
                 self.noobjectness_losses = self.noobjectness_losses + noobjectness_loss
                 self.center_losses = self.center_losses + ctr_loss
                 self.size_losses = self.size_losses + sz_loss
+
+                avg_iou = self.average_iou(iou_map, objectness_label)
+                obj_acc, noobj_acc = self.object_accuracy(objectness_pred, objectness_label, noobjectness_label)
+                iou_total = iou_total + avg_iou
+                obj_acc_total = obj_acc_total + obj_acc
+                noobj_acc_total = noobj_acc_total + noobj_acc
+        
+        self.iou_avg = iou_total / 9.
+        self.obj_acc_avg = obj_acc_total / 9.
+        self.noobj_acc_avg = noobj_acc_total / 9.
 
         return self.all_losses
 
@@ -363,8 +420,8 @@ class ObjectDetector(object):
                     cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
                     tmp [cell_y, cell_x, base + 0] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
                     tmp [cell_y, cell_x, base + 1] = (l - (cell_y * self.grid_relatif_height[i])) / self.grid_relatif_height[i]				# add y center values
-                    tmp [cell_y, cell_x, base + 2] = math.log(m * self.input_width/j[0] + 0.0001)										    # add width width value
-                    tmp [cell_y, cell_x, base + 3] = math.log(n * self.input_height/j[1] + 0.0001)								            # add height value
+                    tmp [cell_y, cell_x, base + 2] = math.log(m * self.input_width/j[0])										    # add width width value
+                    tmp [cell_y, cell_x, base + 3] = math.log(n * self.input_height/j[1])								            # add height value
                     tmp [cell_y, cell_x, base + 4] = 1.0																				    # add objectness score
                     #print (cell_x, cell_y)
             tmps.append(tmp)
@@ -428,7 +485,7 @@ class ObjectDetector(object):
         return final_box
     
 
-    def build_yolov3_net(self, inputs, is_training):
+    def build_yolov3_net(self, inputs, network_type, is_training):
         """[summary]
         
         Returns:
@@ -755,8 +812,9 @@ class ObjectDetector(object):
             """
             
             n_anchors = len(anchors)
-            print ("~~~~~~>>", inputs)
+            print ("----->>", inputs)
             shape = inputs.get_shape().as_list()
+            print (shape)
             grid_shape = shape[2:4] if data_format == 'channels_first' else shape[1:3]
             if data_format == 'channels_first':
                 inputs = tf.transpose(inputs, [0, 2, 3, 1])

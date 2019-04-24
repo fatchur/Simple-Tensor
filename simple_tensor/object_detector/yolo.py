@@ -91,9 +91,9 @@ class YoloTrain(ObjectDetector):
         return target
 
 
-    def build_net(self, is_training=False):
+    def build_net(self, network_type='big', is_training=False):
         with tf.variable_scope('yolo_v3_model'):
-            self.build_yolov3_net(inputs=self.input_placeholder, is_training=is_training)
+            self.build_yolov3_net(inputs=self.input_placeholder, network_type=network_type, is_training=is_training)
 
 
     def train_batch_generator(self, batch_size):
