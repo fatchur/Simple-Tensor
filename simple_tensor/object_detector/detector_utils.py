@@ -147,10 +147,10 @@ class ObjectDetector(object):
 
         rect_area_pred = tf.abs(x_bottomright_pred - x_topleft_pred) * tf.abs(y_bottomright_pred - y_topleft_pred)
         rect_area_label = tf.abs(x_bottomright_label - x_topleft_label) * tf.abs(y_bottomright_label - y_topleft_label)
-        union = rect_area_pred + rect_area_label - 2 * overlap
+        union = rect_area_pred + rect_area_label - overlap
         the_iou = overlap / (union + 0.0001)
 
-        return the_iou
+        return the_iou, overlap, union
     
 
     def average_iou(self, iou_map, objecness_label):
@@ -247,8 +247,6 @@ class ObjectDetector(object):
         iou_total = 0.0
         obj_acc_total = 0.0
         noobj_acc_total = 0.0
-
-        self.a = []
         
         for i in range(3):
             output = outputs[i]
@@ -323,8 +321,20 @@ class ObjectDetector(object):
                 h_label_real = tf.multiply(val[1] * tf.math.exp(h_label), objectness_label)
                 label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
-                iou_map = self.iou(pred_bbox, label_bbox)
-                self.a.append(iou_map)
+                iou_map, overlap, union = self.iou(pred_bbox, label_bbox)
+                self.a = iou_map
+                self.b = overlap
+                self.d = union
+
+                self.e = x_pred_real
+                self.f = y_pred_real
+                self.g = w_pred_real
+                self.h = h_pred_real
+
+                self.i = x_label_real
+                self.j = y_label_real
+                self.k = w_label_real
+                self.l = h_label_real
 
                 #----------------------------------------------#
                 #            calculate the losses              #
