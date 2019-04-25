@@ -26,8 +26,8 @@ class UNet():
         self.input_channel = input_channel
         self.is_training = is_training
 
-        self.input_tensor = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_height, self.input_channel))
-        self.output_tensor = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_height, 1))
+        self.input_tensor = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, self.input_channel))
+        self.output_tensor = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, 1))
 
     
     def mse_loss(self, prediction, label):
@@ -110,7 +110,6 @@ class UNet():
                                         use_bias=True,
                                         use_batchnorm=True)
             self.reducer_out_list.append(out)
-            print ('====>>', out)
         return self.reducer_out_list[3]
 
     
@@ -148,7 +147,6 @@ class UNet():
                                         name = str(i) + "-",
                                         strides = [1, std, std, 1],
                                         use_bias=True)
-            print (out, "--------------")
             if i != 0:
                 out = tf.concat([out, self.reducer_out_list[3-i]], axis=3)
 
@@ -214,10 +212,9 @@ class UNet():
             output_folder_path {[type]} -- [description]
         """
         input_file_list = get_filenames(input_folder_path)
-        input_file_list = random.shuffle(input_file_list)
-        train_file_list = input_file_list[: 0.85*len(input_file_list)]
-        val_file_list = input_file_list[0.85*len(input_file_list):]
-
+        random.shuffle(input_file_list)
+        train_file_list = input_file_list[: int(0.85*len(input_file_list))]
+        val_file_list = input_file_list[int(0.85*len(input_file_list)):]
 
         # Infinite loop.
         idx_train = 0
@@ -244,7 +241,7 @@ class UNet():
                 # output
                 tmp_y = cv2.imread(output_folder_path + train_file_list[index_t])
                 tmp_y = cv2.resize(tmp_y, (self.input_width, self.input_height))
-                tmp_y = cv2.cvtColor(tmp_y, cv2.COLOR_BGR2GRAY)
+                tmp_y = cv2.cvtColor(tmp_y, cv2.COLOR_BGR2GRAY).reshape(self.input_height, self.input_width, 1)
                 tmp_y = tmp_y.astype(np.float32)/255.
                 y_batch.append(tmp_y)
                 idx_train += 1
@@ -264,12 +261,13 @@ class UNet():
                 # output
                 tmp_y = cv2.imread(output_folder_path + val_file_list[index_v])
                 tmp_y = cv2.resize(tmp_y, (self.input_width, self.input_height))
-                tmp_y = cv2.cvtColor(tmp_y, cv2.COLOR_BGR2GRAY)
+                tmp_y = cv2.cvtColor(tmp_y, cv2.COLOR_BGR2GRAY).reshape(self.input_height, self.input_width, 1)
                 tmp_y = tmp_y.astype(np.float32)/255.
                 y_batch_val.append(tmp_y)
                 idx_val += 1
 
             yield (np.array(x_batch), np.array(y_batch), np.array(x_batch_val), np.array(y_batch_val))
+
 
 
 
