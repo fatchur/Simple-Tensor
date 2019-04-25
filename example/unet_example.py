@@ -11,8 +11,8 @@ with tf.control_dependencies(update_ops):
 
 generator = u.batch_generator(batch_size=2, 
                 batch_size_val=3, 
-                input_folder_path='../../office_jobs/qoala/satellite/dstl-satellite-imagery-feature-detection/crops_dataset_clean/inputs/',
-                output_folder_path='../../office_jobs/qoala/satellite/dstl-satellite-imagery-feature-detection/crops_dataset_clean/labels/')
+                input_folder_path='path to your input image folder/',
+                output_folder_path='path to your mask folder/')
 
 session = tf.Session()
 session.run(tf.global_variables_initializer())
