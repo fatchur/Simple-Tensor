@@ -265,9 +265,9 @@ class ObjectDetector(object):
                 base = idx * (5+self.num_class)
 
                 # get objectness confidence
-                objectness_pred = tf.nn.sigmoid(output[:, :, :, (base + 4):(base + 5)])
+                objectness_pred_initial = tf.nn.sigmoid(output[:, :, :, (base + 4):(base + 5)])
                 objectness_label = label[:, :, :, (base + 4):(base + 5)]
-                objectness_pred = tf.multiply(objectness_pred, objectness_label)
+                objectness_pred = tf.multiply(objectness_pred_initial, objectness_label)
 
                 # get noobjectness confidence
                 noobjectness_pred = 1.0 - tf.nn.sigmoid(output[:, :, :, (base + 4):(base + 5)])
@@ -360,7 +360,7 @@ class ObjectDetector(object):
                 self.size_losses = self.size_losses + sz_loss
 
                 avg_iou = self.average_iou(iou_map, objectness_label)
-                obj_acc, noobj_acc = self.object_accuracy(objectness_pred, objectness_label, noobjectness_label)
+                obj_acc, noobj_acc = self.object_accuracy(objectness_pred_initial, objectness_label, noobjectness_label)
                 iou_total = iou_total + avg_iou
                 obj_acc_total = obj_acc_total + obj_acc
                 noobj_acc_total = noobj_acc_total + noobj_acc
