@@ -18,5 +18,5 @@ setup(
               "simple_tensor.transfer_learning", 
               "simple_tensor.object_detector", 
               "simple_tensor.segmentation",
-              "rnn_packs"],  # Required
+              "simple_tensor.rnn_packs"],  # Required
 )
