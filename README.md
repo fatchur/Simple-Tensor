@@ -7,8 +7,8 @@
 |March 2019    | Add Inceptionv4 and Densenet for transfer-learning package                                                                     |      v0.4.3       |
 |29th March 2019    | Simple tensor for Tensorflow 1.13.1 is available on pypi                                                                  |      v0.4.3       |
 |              | **n**                                                                               |                   |
-|April 2019    | yolov3 (preview version) |      v0.4.17       |
-|April 2019    | Unet-segmentation (preview version) |      v0.4.17       |
+|April 2019    | yolov3 (preview version) |      v0.4.18       |
+|April 2019    | Unet-segmentation (preview version) |      v0.4.18      |
 
 
 

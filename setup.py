@@ -14,5 +14,9 @@ setup(
     long_description_content_type='text/markdown',
     author='fatchur_rahman',  # Optional
     author_email='fatchur.rahman1@gmail.com', #optional
-    packages=["simple_tensor", "simple_tensor.transfer_learning", "simple_tensor.object_detector", "simple_tensor.segmentation"],  # Required
+    packages=["simple_tensor", 
+              "simple_tensor.transfer_learning", 
+              "simple_tensor.object_detector", 
+              "simple_tensor.segmentation",
+              "rnn_packs"],  # Required
 )
