@@ -91,7 +91,7 @@ class ObjectDetector(object):
         self.add_modsig_toshape = add_modsig_toshape
         self.dropout_val = 1 - dropout_rate
         self.leaky_relu_alpha = leaky_relu_alpha
-        self.threshold = 0.15
+        self.threshold = 0.5
 
 
     def grid_mask(self):
@@ -322,19 +322,6 @@ class ObjectDetector(object):
                 label_bbox = tf.concat([x_label_real, y_label_real, w_label_real, h_label_real], 3)
 
                 iou_map, overlap, union = self.iou(pred_bbox, label_bbox)
-                self.a = iou_map
-                self.b = overlap
-                self.d = union
-
-                self.e = x_pred_real
-                self.f = y_pred_real
-                self.g = w_pred_real
-                self.h = h_pred_real
-
-                self.i = x_label_real
-                self.j = y_label_real
-                self.k = w_label_real
-                self.l = h_label_real
 
                 #----------------------------------------------#
                 #            calculate the losses              #
