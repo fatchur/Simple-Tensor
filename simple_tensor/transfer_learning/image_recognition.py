@@ -164,7 +164,9 @@ class ImageRecognition(object):
                         tmp_x = tmp_x.reshape((self.input_height, self.input_width, 1))
                     tmp_x = tmp_x.astype(np.float32)/255.
                     x_batch.append(tmp_x)
-                    y_batch.append([self.classes.index(j)])
+                    tmp_y = np.zeros(len(self.classes)).astype(np.float32)
+                    tmp_y[self.classes.index(j)] = 1.
+                    y_batch.append(tmp_y)
 
                 idx_train += 1
 
@@ -180,7 +182,9 @@ class ImageRecognition(object):
                         tmp_x = tmp_x.reshape((self.input_height, self.input_width, 1))
                     tmp_x = tmp_x.astype(np.float32)/255.
                     x_batch_val.append(tmp_x)
-                    y_batch_val.append([self.classes.index(j)])
+                    tmp_y = np.zeros(len(self.classes)).astype(np.float32)
+                    tmp_y[self.classes.index(j)] = 1.
+                    y_batch_val.append(tmp_y)
 
                 idx_val += 1
 
@@ -198,6 +202,21 @@ class ImageRecognition(object):
             [type] -- [description]
         """
         cost = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=predicted )
+        cost = tf.reduce_mean(cost)
+        return cost
+
+
+    def calculate_softmaxcrosentropy_loss(self, predicted, labels):
+        """[summary]
+        
+        Arguments:
+            predicted {[type]} -- [description]
+            labels {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        cost = tf.nn.softmax_cross_entropy_with_logits_v2(labels=labels, logits=predicted )
         cost = tf.reduce_mean(cost)
         return cost
 
