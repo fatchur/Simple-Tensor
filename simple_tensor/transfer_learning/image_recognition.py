@@ -140,7 +140,8 @@ class ImageRecognition(object):
             out = tf.nn.sigmoid(out)
         else:
             out = tf.nn.softmax(out)
-
+        
+        self.out = out
         return out, base_var_list
 
 
@@ -251,5 +252,78 @@ class ImageRecognition(object):
             cost = tf.math.square(predicted - labels)
             cost = tf.reduce_mean(cost)
             return cost
+    
+
+    def optimize(self, 
+                 iteration, 
+                 subdivition,
+                 cost_tensor,
+                 optimizer_tensor,
+                 out_tensor, 
+                 train_batch_size=32, 
+                 val_batch_size=50,
+                 path_tosave_model='model/model1'):
+        """[summary]
+        
+        Arguments:
+            iteration {[type]} -- [description]
+            subdivition {[type]} -- [description]
+            cost_tensor {[type]} -- [description]
+            optimizer_tensor {[type]} -- [description]
+            out_tensor {[type]} -- [description]
+        
+        Keyword Arguments:
+            train_batch_size {int} -- [description] (default: {32})
+            val_batch_size {int} -- [description] (default: {50})
+            path_tosave_model {str} -- [description] (default: {'model/model1'})
+        """
+        gen = self.batch_generator(batch_size=train_batch_size, 
+                                    batch_size_val=val_batch_size)
+        self.train_loss = []
+        self.val_loss = []
+        self.train_acc = []
+        self.val_acc = []
+
+        best_loss = 1000
+        
+        for i in range(iteration):
+            sign = "-"
+            t_losses = []
+            losses = []
+            accs = []
+
+            for j in range(subdivition):
+                x_train, y_train, x_val, y_val = next(gen)
+                feed_dict = {}
+                feed_dict[.input_placeholder] = x_train
+                feed_dict[self.output_placeholder] = y_train
+                session.run(optimizer_tensor, feed_dict)
+                loss = session.run(cost_tensor, feed_dict)
+                t_losses.append(loss)
+                
+                feed_dict = {}
+                feed_dict[self.input_placeholder] = x_val
+                feed_dict[self.output_placeholder] = y_val
+                loss = session.run(cost_tensor, feed_dict)
+                losses.append(loss)
+                val_out = session.run(out_tensor, feed_dict)
+                val_out = np.argmax(val_out, axis=1)
+                y_val =  np.argmax(y_val, axis=1)
+                val_acc = accuracy_score(val_out, y_val)
+                accs.append(val_acc)
+            
+            t_loss = sum(t_losses) / (len(t_losses) + 0.0001)
+            loss = sum(losses) / (len(losses) + 0.0001)
+            acc = sum(accs) / (len(accs) + 0.0001)
+            
+            train_loss.append(t_loss)
+            val_loss.append(loss)
+                
+            if best_loss > loss:
+                best_loss = loss
+                sign = "****************"
+                saver.save(session, path_tosave_model)
+        
+            print (i, t_loss, loss, acc, sign)
 
     
