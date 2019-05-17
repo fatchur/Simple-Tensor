@@ -111,18 +111,35 @@ class ImageRecognition(object):
                 break
 
             out, _ = new_conv2d_layer(out, 
-                     filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
-                     name='cv1', 
-                     dropout_val=0.85, 
-                     activation = 'LRELU', 
-                     lrelu_alpha=0.2,
-                     padding='SAME', 
-                     strides=[1, 2, 2, 1],
-                     data_type=tf.float32,  
-                     is_training=is_training,
-                     use_bias=True,
-                     use_batchnorm=True) 
+                                      filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
+                                      name='cv1', 
+                                      dropout_val=0.85, 
+                                      activation = 'LRELU', 
+                                      lrelu_alpha=0.2,
+                                      padding='SAME', 
+                                      strides=[1, 2, 2, 1],
+                                      data_type=tf.float32,  
+                                      is_training=is_training,
+                                      use_bias=True,
+                                      use_batchnorm=True) 
             size = out.get_shape().as_list()[1]
+
+        out = tf.reshape(out, [tf.shape(out)[0], -1])
+        out, _ = new_fc_layer(out, 
+                              num_inputs = depth, 
+                              num_outputs = len(self.classes), 
+                              name = 'fc1', 
+                              dropout_val=1, 
+                              activation="NONE",
+                              lrelu_alpha=0.2, 
+                              data_type=tf.float32,
+                              is_training=is_training,
+                              use_bias=False)
+
+        if len(self.classes) == 1:
+            out = tf.nn.sigmoid(out)
+        else:
+            out = tf.nn.softmax(out)
 
         return out, base_var_list
 
