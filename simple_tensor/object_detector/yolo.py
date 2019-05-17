@@ -31,7 +31,7 @@ class YoloTrain(ObjectDetector):
                  class_loss_alpha=1.,
                  add_modsig_toshape=False,
                  anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)],
-                 dropout_rate = 0.0,
+                 dropout_rate = 0.8,
                  leaky_relu_alpha = 0.1):
         """[summary]
         

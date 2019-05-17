@@ -809,9 +809,7 @@ class ObjectDetector(object):
             """
             
             n_anchors = len(anchors)
-            print ("----->>", inputs)
             shape = inputs.get_shape().as_list()
-            print (shape)
             grid_shape = shape[2:4] if data_format == 'channels_first' else shape[1:3]
             if data_format == 'channels_first':
                 inputs = tf.transpose(inputs, [0, 2, 3, 1])
@@ -894,13 +892,40 @@ class ObjectDetector(object):
         
         #------------------------------------------------------------------------#
 
-        #with tf.variable_scope('yolo_v3_model'):
+        #----------------------------------#
+        #     Network Type Choiches        #
+        #----------------------------------#
+        filters = {}
+        if network_type == 'big':
+            filters['a'] = 512
+            filters['b'] = 256
+            filters['c'] = 128
+        elif network_type == 'medium':
+            filters['a'] = 512
+            filters['b'] = 128
+            filters['c'] = 128
+        elif network_type == 'small':
+            filters['a'] = 256
+            filters['b'] = 128
+            filters['c'] = 128
+        elif network_type == 'very_small':
+            filters['a'] = 128
+            filters['b'] = 128
+            filters['c'] = 128
+        #---------------------------------#
+
         route1, route2, inputs = darknet53(inputs, 
                                             training=is_training,
                                             data_format=data_format)
 
+        #-------------------------------------#
+        #     get yolo small variables        #
+        #  get yolo veyi_small variables      #
+        #-------------------------------------#
+        self.yolo_small_vars = tf.global_variables(scope='yolo_v3_model')
+        self.yolo_very_small_vars = tf.global_variables(scope='yolo_v3_model')
         route, inputs = yolo_convolution_block(inputs, 
-                                                filters=512, 
+                                                filters=filters['a'], 
                                                 training=is_training,
                                                 data_format=data_format)
         inputs_detect1 = inputs
@@ -924,8 +949,13 @@ class ObjectDetector(object):
                             data_format=data_format)
         axis = 3
         inputs = tf.concat([inputs, route2], axis=axis)
+
+        #-------------------------------------#
+        #     get yolo medium variables       #
+        #-------------------------------------#
+        self.yolo_medium_vars = tf.global_variables(scope='yolo_v3_model')
         route, inputs = yolo_convolution_block(inputs, 
-                                                filters=256,  
+                                                filters=filters['b'],  
                                                 training=is_training,
                                                 data_format=data_format)
         inputs_detect2 = inputs
@@ -949,12 +979,16 @@ class ObjectDetector(object):
                             data_format=data_format)
         inputs = tf.concat([inputs, route1], axis=axis)
         route, inputs = yolo_convolution_block(inputs, 
-                                                filters=128, 
+                                                filters=filters['c'], 
                                                 training=is_training,
                                                 data_format=data_format)
         inputs_detect3 = inputs
 
-        # get yolo base variables
+        #-------------------------------------#
+        #       get yolo big variables        #
+        #       get yolo all variables        #
+        #-------------------------------------#
+        self.yolo_big_vars = tf.global_variables(scope='yolo_v3_model')
         self.yolo_vars = tf.global_variables(scope='yolo_v3_model')
 
         self.detect1 = tf.layers.conv2d(inputs_detect1, 
@@ -963,7 +997,7 @@ class ObjectDetector(object):
                                     strides=1, 
                                     use_bias=True,
                                     data_format=data_format)
-
+     
         self.detect2 = tf.layers.conv2d(inputs_detect2, 
                                     filters=len(self.anchor)/3 * (5 + self.num_class),
                                     kernel_size=1, 
