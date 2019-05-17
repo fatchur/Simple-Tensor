@@ -295,7 +295,7 @@ class ImageRecognition(object):
             for j in range(subdivition):
                 x_train, y_train, x_val, y_val = next(gen)
                 feed_dict = {}
-                feed_dict[.input_placeholder] = x_train
+                feed_dict[self.input_placeholder] = x_train
                 feed_dict[self.output_placeholder] = y_train
                 session.run(optimizer_tensor, feed_dict)
                 loss = session.run(cost_tensor, feed_dict)
