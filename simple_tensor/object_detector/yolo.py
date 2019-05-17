@@ -11,7 +11,7 @@ from comdutils.file_utils import *
 # This class is the child of ObjectDetector class #
 # in simple_tensor.object_detector.detector_utils #
 # =============================================== #
-class YoloTrain(ObjectDetector):
+class Yolo(ObjectDetector):
     def __init__(self,
                  dataset_folder_path,
                  label_folder_path,  
@@ -52,7 +52,7 @@ class YoloTrain(ObjectDetector):
             class_loss_alpha {[type]} -- [description] (default: {0.})
         """
 
-        super(YoloTrain, self).__init__(num_of_class=num_of_class,
+        super(Yolo, self).__init__(num_of_class=num_of_class,
                                         input_height=input_height, 
                                         input_width=input_width, 
                                         grid_height1=grid_height1, 
