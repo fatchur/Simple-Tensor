@@ -57,13 +57,14 @@ session = tf.Session()
 session.run(tf.global_variables_initializer())
 saver.restore(sess=session, save_path='your model path')
 
-optimize(iteration=2000, 
+imrec.optimize(iteration=2000, 
          subdivition=1,
          cost_tensor=cost,
          optimizer_tensor=optimizer,
-         out_tensor = out, 
-         train_batch_size=32, 
-         val_batch_size=50,
+         out_tensor = out,
+         session = session, 
+         train_batch_size=2, 
+         val_batch_size=10,
          path_tosave_model='model/model1')
 
 ```
