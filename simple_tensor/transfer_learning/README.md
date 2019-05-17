@@ -33,33 +33,7 @@ This is a project for tensorflow transfer learning simplification
 ###### Inception V4 transfer learning example:
 ```python
 import tensorflow as tf
-from simple_tensor.transfer_learning.inception_utils import *
-from simple_tensor.transfer_learning.inception_v4 import *
-
-# get all params
-inception_v4_arg_scope = inception_arg_scope
-arg_scope = inception_v4_arg_scope()
-
-# create input placeholder
-input_tensor = tf.placeholder(tf.float32, (None, 107, 299, 3))
-var_list = None
-
-# build inception v4 base graph
-with slim.arg_scope(arg_scope):
-  # get output (logits)
-  logits, end_points = inception_v4(input_tensor, num_classes=3, is_training=True)
-  # get inception variable name
-  var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+from simple_tensor.transfer_learning.image_recognition import *
 
 
-# Next of your code
-from simple_tensor.tensor_operations import *
-# Add your layer here
-# ....
-# ....
-base_inceptionv4_saver = tf.train.Saver(var_list)
-all_tensor_saver = tf.train.Saver()
-sess = tf.Session()
-sess.run(tf.global_variables_initializer())
-inceptionv4_saver.restore(sess, 'path to your model')
 ```

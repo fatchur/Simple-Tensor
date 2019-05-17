@@ -304,6 +304,15 @@ class ObjectDetector(object):
                 h_label = label[:, :, :, (base + 3):(base + 4)]
                 h_pred = tf.multiply(h_pred, objectness_label)
 
+                # get class value
+                class_pred = output[:, :, :, (base + 4):(base + 4 + self.num_class)]
+                if self.num_class > 1:
+                    class_pred = tf.nn.softmax(class_pred)
+                else:
+                    class_pred = tf.nn.sigmoid(class_pred)
+                class_pred = tf.multiply(class_pred, objectness_label)
+                class_labels = label[:, :, :, (base + 4):(base + 4 + self.num_class)]
+
                 #----------------------------------------------#
                 #              calculate the iou               #
                 # 1. calculate pred bbox based on real ordinat #
@@ -335,16 +344,19 @@ class ObjectDetector(object):
                 c = h_pred_real / self.grid_height[i]
                 d = h_label_real / self.grid_height[i]
                 sz_loss =  self.size_loss_alpha * tf.sqrt(self.mse_loss_sum(a, b) + self.mse_loss_sum(c, d))
-            
+                class_loss = self.class_loss_alpha * self.mse_loss_sum(class_pred, class_labels)
+
                 total_loss = objectness_loss + \
                              noobjectness_loss + \
                              ctr_loss + \
-                             sz_loss
+                             sz_loss + \
+                             class_loss
                 self.all_losses = self.all_losses + total_loss
                 self.objectness_losses = self.objectness_losses + objectness_loss
                 self.noobjectness_losses = self.noobjectness_losses + noobjectness_loss
                 self.center_losses = self.center_losses + ctr_loss
                 self.size_losses = self.size_losses + sz_loss
+                self.class_losses = self.class_losses + class_loss
 
                 avg_iou = self.average_iou(iou_map, objectness_label)
                 obj_acc, noobj_acc = self.object_accuracy(objectness_pred_initial, objectness_label, noobjectness_label)
@@ -352,7 +364,7 @@ class ObjectDetector(object):
                 obj_acc_total = obj_acc_total + obj_acc
                 noobj_acc_total = noobj_acc_total + noobj_acc
         
-        self.iou_avg = iou_total / 9.
+        self.iou_avg = iou_total / 9.  # 9==> num of anchors
         self.obj_acc_avg = obj_acc_total / 9.
         self.noobj_acc_avg = noobj_acc_total / 9.
 
