@@ -75,7 +75,7 @@ update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
     optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cost)
 
-saver = tf.train.Saver(var_list=c.yolo_vars) 
+saver = tf.train.Saver(var_list=c.yolo_vars) #c.yolo_vars, c.yolo_big_vars, c.yolo_medium_vars, c.yolo_small_vars, c.yolo_very_small_vars
 saver_all = tf.train.Saver()
 session = tf.Session()
 session.run(tf.global_variables_initializer())

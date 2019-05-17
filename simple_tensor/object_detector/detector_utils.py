@@ -398,11 +398,13 @@ class ObjectDetector(object):
             #----------------------------------------------------------------#
             #    this part is getting the x, y, w, h values for each line    #
             #----------------------------------------------------------------#
+            c = []
             x = []
             y = []
             w = []
             h = []
             for j in range (line_num):
+                c.append(int(data[j*5 + 0]))
                 x.append(float(data[j*5 + 1]))
                 y.append(float(data[j*5 + 2]))
                 w.append(float(data[j*5 + 3]))
@@ -424,7 +426,7 @@ class ObjectDetector(object):
             for idx_anchor, j in enumerate(self.anchor[border_a: border_b]):
                 base = (5+self.num_class) * idx_anchor
 
-                for k, l, m, n in zip(x, y, w, h):
+                for k, l, m, n, o in zip(x, y, w, h, c):
                     cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid[i])))
                     cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
                     tmp [cell_y, cell_x, base + 0] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
@@ -432,7 +434,11 @@ class ObjectDetector(object):
                     tmp [cell_y, cell_x, base + 2] = math.log(m * self.input_width/j[0])										    # add width width value
                     tmp [cell_y, cell_x, base + 3] = math.log(n * self.input_height/j[1])								            # add height value
                     tmp [cell_y, cell_x, base + 4] = 1.0																				    # add objectness score
-                    #print (cell_x, cell_y)
+                    for p in range(self.num_class):
+                        if p == o:
+                            tmp [cell_y, cell_x, base + 5 + p] = 1.0
+                            break
+                    
             tmps.append(tmp)
 
         return tmps
