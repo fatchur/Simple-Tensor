@@ -36,15 +36,15 @@ import tensorflow as tf
 from simple_tensor.transfer_learning.image_recognition import *
 
 imrec = ImageRecognition(classes=['...', '..'],
-		                 dataset_folder_path = 'path to your dataset/', 
-		                 input_height = 300,
-		                 input_width = 300, 
-		                 input_channel = 3)
+                         dataset_folder_path = 'path to your dataset/', 
+                         input_height = 300,
+                         input_width = 300, 
+                         input_channel = 3)
 
 is_training = False # always set it to false during training or inferencing (bug in inceptionv4 base tf slim)
 out, var_list = imrec.build_inceptionv4_basenet(imrec.input_placeholder, 
-					                            is_training = is_training, 
-					                            final_endpoint='Mixed_6a', # 'Mixed_6a, Mixed_5a, Mixed_7a
+                                                is_training = is_training, 
+                                                final_endpoint='Mixed_6a', # 'Mixed_6a, Mixed_5a, Mixed_7a
                                                 top_layer_depth = 256)
 
 cost = imrec.calculate_softmaxcrosentropy_loss(out, imrec.output_placeholder)
