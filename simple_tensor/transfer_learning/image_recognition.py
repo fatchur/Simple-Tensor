@@ -123,7 +123,8 @@ class ImageRecognition(object):
                                       use_bias=True,
                                       use_batchnorm=True) 
             size = out.get_shape().as_list()[1]
-
+        
+        depth = out.get_shape().as_list()[-1]
         out = tf.reshape(out, [tf.shape(out)[0], -1])
         out, _ = new_fc_layer(out, 
                               num_inputs = depth, 
@@ -260,6 +261,7 @@ class ImageRecognition(object):
                  cost_tensor,
                  optimizer_tensor,
                  out_tensor, 
+                 session,
                  train_batch_size=32, 
                  val_batch_size=50,
                  path_tosave_model='model/model1'):
@@ -277,6 +279,7 @@ class ImageRecognition(object):
             val_batch_size {int} -- [description] (default: {50})
             path_tosave_model {str} -- [description] (default: {'model/model1'})
         """
+        from sklearn.metrics import accuracy_score
         gen = self.batch_generator(batch_size=train_batch_size, 
                                     batch_size_val=val_batch_size)
         self.train_loss = []
