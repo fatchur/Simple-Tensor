@@ -57,55 +57,13 @@ session = tf.Session()
 session.run(tf.global_variables_initializer())
 saver.restore(sess=session, save_path='your model path')
 
-gen = imrec.batch_generator(batch_size=32, batch_size_val=50)
-train_loss = []
-val_loss = []
-train_acc = []
-val_acc = []
-
-def optimize(iteration, subdivition):
-    best_loss = 1000
-    
-    for i in range(iteration):
-        sign = "-"
-        
-        t_losses = []
-        losses = []
-        accs = []
-        for j in range(subdivition):
-            x_train, y_train, x_val, y_val = next(gen)
-            feed_dict = {}
-            feed_dict[imrec.input_placeholder] = x_train
-            feed_dict[imrec.output_placeholder] = y_train
-            session.run(optimizer, feed_dict)
-            loss = session.run(cost, feed_dict)
-            t_losses.append(loss)
-            
-            feed_dict = {}
-            feed_dict[imrec.input_placeholder] = x_val
-            feed_dict[imrec.output_placeholder] = y_val
-            loss = session.run(cost, feed_dict)
-            losses.append(loss)
-            val_out = session.run(out, feed_dict)
-            val_out = np.argmax(val_out, axis=1)
-            y_val =  np.argmax(y_val, axis=1)
-            val_acc = accuracy_score(val_out, y_val)
-            accs.append(val_acc)
-           
-        t_loss = sum(t_losses) / (len(t_losses) + 0.0001)
-        loss = sum(losses) / (len(losses) + 0.0001)
-        acc = sum(accs) / (len(accs) + 0.0001)
-        
-        train_loss.append(t_loss)
-        val_loss.append(loss)
-            
-        if best_loss > loss:
-            best_loss = loss
-            sign = "****************"
-            saver.save(session, 'model_path')
-    
-        print (i, t_loss, loss, acc, sign)
-
-optimize(2000, 1)
+optimize(iteration=2000, 
+         subdivition=1,
+         cost_tensor=cost,
+         optimizer_tensor=optimizer,
+         out_tensor = out, 
+         train_batch_size=32, 
+         val_batch_size=50,
+         path_tosave_model='model/model1')
 
 ```
