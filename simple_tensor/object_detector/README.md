@@ -124,7 +124,7 @@ def optimize(subdivisions, iterations):
             tmp_ctr.append(ctr)
             tmp_sz.append(size)
             
-            print (">>>>", iou_avg, obj_acc, noobj_acc)
+            print (">>>>", 'iou: ', iou_avg, 'obj acc: ', obj_acc, 'noobj acc: ', noobj_acc)
         
         total = sum(tmp_all)/len(tmp_all)
         obj =  sum(tmp_obj)/len(tmp_obj)
@@ -142,7 +142,7 @@ def optimize(subdivisions, iterations):
             sign = "*****************"
             saver_all.save(session, 'gdrive/My Drive/model/model_plate1/yolov3_phone')
           
-        print (i, total, obj, noobj, ctr, size, sign)
+        print ('epoch: ', i, 'total loss: ', total, 'obj loss: ', obj, 'noobj loss: ', noobj, 'ctr loss: ', ctr, 'size loss: ', size, sign)
 
 optimize(1, 100000)
 
