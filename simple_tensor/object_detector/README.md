@@ -90,7 +90,7 @@ ct = []
 sz = []
 
 def optimize(subdivisions, iterations):
-    best_loss = 10000 #151.82950592041016
+    best_loss = 10000 
     
     for i in range(iterations):
         sign = '-'
@@ -123,7 +123,6 @@ def optimize(subdivisions, iterations):
             tmp_noobj.append(noobj)
             tmp_ctr.append(ctr)
             tmp_sz.append(size)
-            
             print (">>>>", 'iou: ', iou_avg, 'obj acc: ', obj_acc, 'noobj acc: ', noobj_acc)
         
         total = sum(tmp_all)/len(tmp_all)
@@ -140,9 +139,10 @@ def optimize(subdivisions, iterations):
         if best_loss > total:
             best_loss = total
             sign = "*****************"
-            saver_all.save(session, 'gdrive/My Drive/model/model_plate1/yolov3_phone')
+            saver_all.save(session, 'model_path/model_name')
           
-        print ('epoch: ', i, 'total loss: ', total, 'obj loss: ', obj, 'noobj loss: ', noobj, 'ctr loss: ', ctr, 'size loss: ', size, sign)
+        print ('epoch: ', i, 'total loss: ', total, 'obj loss: ', obj, \
+               'noobj loss: ', noobj, 'ctr loss: ', ctr, 'size loss: ', size, sign)
 
 optimize(1, 100000)
 
@@ -162,7 +162,7 @@ def draw_rect(bbox, img):
 x_train, y_train = next(train_generator)
 detection_result = session.run(c.boxes_dicts, feed_dict={c.input_placeholder: x_train})
 
-i = 12
+i = 1
 nms_ = c.nms(detection_result[i:i+1], 0.3, 0.1)
 img = draw_rect(nms_, (x_train[i]*255).astype(np.uint8))
 plt.imshow(img)
