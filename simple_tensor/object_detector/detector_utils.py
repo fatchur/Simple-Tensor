@@ -331,7 +331,7 @@ class ObjectDetector(object):
 
                 avg_iou = self.average_iou(iou_map, objectness_label)
                 obj_acc, noobj_acc = self.object_accuracy(objectness_pred_initial, objectness_label, noobjectness_label)
-                class_acc = class_acc(tf.nn.softmax(class_pred), class_labels)
+                class_acc = calculate_acc(tf.nn.softmax(class_pred), class_labels)
                 iou_total = iou_total + avg_iou
                 obj_acc_total = obj_acc_total + obj_acc
                 noobj_acc_total = noobj_acc_total + noobj_acc
