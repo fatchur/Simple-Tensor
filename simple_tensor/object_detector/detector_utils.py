@@ -434,6 +434,7 @@ class ObjectDetector(object):
 
         result_box = []
         result_conf = []
+        result_class = []
         final_box = []
         
         for boxes in batch:
@@ -461,6 +462,7 @@ class ObjectDetector(object):
                     boxes_conf_scores = boxes_conf_scores.reshape((len(boxes_conf_scores)))
                     result_box.extend(boxes_.tolist())
                     result_conf.extend(boxes_conf_scores.tolist())
+                    result_class.extend(classes.tolist())
                     
         indices = cv2.dnn.NMSBoxes(result_box, result_conf, confidence_threshold, overlap_threshold)
         for i in indices:
@@ -470,7 +472,9 @@ class ObjectDetector(object):
             top = box[1]
             width = box[2]
             height = box[3]
-            final_box.append([left, top, width, height])
+            conf = result_conf[i]
+            the_class = result_class[i]
+            final_box.append([left, top, width, height, conf, the_class])
         return final_box
     
 
