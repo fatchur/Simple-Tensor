@@ -1,4 +1,5 @@
 import tensorflow as tf 
+import numpy as np
 
 
 def calculate_acc(input_tensor, label, threshold=0.5):
