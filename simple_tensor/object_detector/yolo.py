@@ -74,11 +74,12 @@ class Yolo(ObjectDetector):
 
         self.label_folder_path = label_folder_path
         self.dataset_folder_path = dataset_folder_path
-        self.dataset_file_list = random.shuffle(get_filenames(self.dataset_folder_path))
+        self.dataset_file_list = get_filenames(self.dataset_folder_path)
+        random.shuffle(self.dataset_file_list)
         
         print ("------------------------INFO-------------------")
         print ("Image Folder: " + self.dataset_folder_path)
-        print ("Number of Image: " + len(self.dataset_file_list))
+        print ("Number of Image: " + str(len(self.dataset_file_list)))
         print ("-----------------------------------------------")
 
         self.all_label_target_np = None
