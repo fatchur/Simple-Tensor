@@ -1,4 +1,5 @@
 import json
+import random
 import tensorflow as tf
 from simple_tensor.tensor_operations import *
 from simple_tensor.object_detector.detector_utils import *
@@ -73,8 +74,12 @@ class Yolo(ObjectDetector):
 
         self.label_folder_path = label_folder_path
         self.dataset_folder_path = dataset_folder_path
-        self.label_file_list = get_filenames(self.label_folder_path)
-        self.dataset_file_list = get_filenames(self.dataset_folder_path)
+        self.dataset_file_list = random.shuffle(get_filenames(self.dataset_folder_path))
+        
+        print ("------------------------INFO-------------------")
+        print ("Image Folder: " + self.dataset_folder_path)
+        print ("Number of Image: " + len(self.dataset_file_list))
+        print ("-----------------------------------------------")
 
         self.all_label_target_np = None
 
