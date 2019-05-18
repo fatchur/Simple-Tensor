@@ -5,6 +5,7 @@ import numpy as np
 from os import walk
 import tensorflow as tf 
 from simple_tensor.tensor_operations import *
+from simple_tensor.tensor_metrics import calculate_acc
 from simple_tensor.tensor_losses import softmax_crosentropy_sum, sigmoid_crossentropy_sum, mse_loss_sum
 
 
@@ -330,13 +331,16 @@ class ObjectDetector(object):
 
                 avg_iou = self.average_iou(iou_map, objectness_label)
                 obj_acc, noobj_acc = self.object_accuracy(objectness_pred_initial, objectness_label, noobjectness_label)
+                class_acc = class_acc(tf.nn.softmax(class_pred), class_labels)
                 iou_total = iou_total + avg_iou
                 obj_acc_total = obj_acc_total + obj_acc
                 noobj_acc_total = noobj_acc_total + noobj_acc
+                class_acc_total = class_acc_total + class_acc
         
         self.iou_avg = iou_total / 9.  # 9==> num of anchors
         self.obj_acc_avg = obj_acc_total / 9.
         self.noobj_acc_avg = noobj_acc_total / 9.
+        self.class_acc_avg = class_acc_total / 9.
 
         return self.all_losses
 
@@ -867,6 +871,11 @@ class ObjectDetector(object):
             """
             center_x, center_y, width, height, confidence, classes = \
                 tf.split(inputs, [1, 1, 1, 1, 1, -1], axis=-1)
+
+            if self.num_class == 1:
+                classes = tf.nn.sigmoid(classes)
+            else:
+                classes = tf.nn.softmax(classes)
 
             top_left_x = center_x - width / 2
             top_left_y = center_y - height / 2

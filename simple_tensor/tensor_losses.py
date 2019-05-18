@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-def mse_loss_mean(self, output_tensor, label):
+def mse_loss_mean(output_tensor, label):
     """"[summary]
     
     Arguments:
@@ -16,7 +16,7 @@ def mse_loss_mean(self, output_tensor, label):
     return loss
 
 
-def mse_loss_sum(self, output_tensor, label):
+def mse_loss_sum(output_tensor, label):
     """"[summary]
     
     Arguments:
@@ -31,7 +31,7 @@ def mse_loss_sum(self, output_tensor, label):
     return loss
 
 
-def softmax_crosentropy_mean(self, output_tensor, label):
+def softmax_crosentropy_mean(output_tensor, label):
     """[summary]
     
     Arguments:
@@ -46,7 +46,7 @@ def softmax_crosentropy_mean(self, output_tensor, label):
     return loss
 
 
-def softmax_crosentropy_sum(self, output_tensor, label):
+def softmax_crosentropy_sum(output_tensor, label):
     """[summary]
     
     Arguments:
@@ -61,7 +61,7 @@ def softmax_crosentropy_sum(self, output_tensor, label):
     return loss
 
 
-def sigmoid_crossentropy_mean(self, output_tensor, label):
+def sigmoid_crossentropy_mean(output_tensor, label):
     """[summary]
     
     Arguments:
@@ -76,7 +76,7 @@ def sigmoid_crossentropy_mean(self, output_tensor, label):
     return loss
 
 
-def sigmoid_crossentropy_sum(self, output_tensor, label):
+def sigmoid_crossentropy_sum(output_tensor, label):
     """[summary]
     
     Arguments:
