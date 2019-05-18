@@ -85,15 +85,32 @@ class Yolo(ObjectDetector):
 
     
     def read_target(self, file_path):
-        """Function for reading json label
+        """[summary]
+        
+        Arguments:
+            file_path {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
         """
         target = self.read_yolo_labels(file_path)
         return target
 
 
-    def build_net(self, network_type='big', is_training=False):
+    def build_net(self, input_tensor, 
+                  network_type='big', 
+                  is_training=False):
+        """[summary]
+        
+        Arguments:
+            input_tensor {[type]} -- [description]
+        
+        Keyword Arguments:
+            network_type {str} -- [description] (default: {'big'})
+            is_training {bool} -- [description] (default: {False})
+        """
         with tf.variable_scope('yolo_v3_model'):
-            self.build_yolov3_net(inputs=self.input_placeholder, network_type=network_type, is_training=is_training)
+            self.build_yolov3_net(inputs=input_tensor, network_type=network_type, is_training=is_training)
 
 
     def train_batch_generator(self, batch_size):
