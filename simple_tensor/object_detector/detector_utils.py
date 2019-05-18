@@ -1,10 +1,11 @@
-import tensorflow as tf 
-import numpy as np
-from os import walk
 import os
 import cv2
 import math
+import numpy as np
+from os import walk
+import tensorflow as tf 
 from simple_tensor.tensor_operations import *
+from simple_tensor.tensor_losses import softmax_crosentropy_sum, sigmoid_crossentropy_sum, mse_loss_sum
 
 
 class ObjectDetector(object):
@@ -189,37 +190,6 @@ class ObjectDetector(object):
         delta = (noobjectness_label - noobjecteness_mask) * noobjectness_label
         noobj_acc = 1. - tf.reduce_sum(delta) / (tf.reduce_sum(noobjectness_label) + 0.0001)
         return obj_acc, noobj_acc
-        
-
-
-    def mse_loss(self, output_tensor, label):
-        """"[summary]
-        
-        Arguments:
-            output_tensor {tensor} -- [description]
-            label {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        loss = tf.square(tf.subtract(output_tensor, label))
-        loss = tf.reduce_mean(loss)
-        return loss
-
-
-    def mse_loss_sum(self, output_tensor, label):
-        """"[summary]
-        
-        Arguments:
-            output_tensor {tensor} -- [description]
-            label {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        loss = tf.square(tf.subtract(output_tensor, label))
-        loss = tf.reduce_sum(loss)
-        return loss
 
 
     def yolo_loss(self, outputs, labels):
@@ -247,6 +217,7 @@ class ObjectDetector(object):
         iou_total = 0.0
         obj_acc_total = 0.0
         noobj_acc_total = 0.0
+        class_acc_total = 0.0
         
         for i in range(3):
             output = outputs[i]
@@ -306,10 +277,6 @@ class ObjectDetector(object):
 
                 # get class value
                 class_pred = output[:, :, :, (base + 4):(base + 4 + self.num_class)]
-                if self.num_class > 1:
-                    class_pred = tf.nn.softmax(class_pred)
-                else:
-                    class_pred = tf.nn.sigmoid(class_pred)
                 class_pred = tf.multiply(class_pred, objectness_label)
                 class_labels = label[:, :, :, (base + 4):(base + 4 + self.num_class)]
 
@@ -336,15 +303,18 @@ class ObjectDetector(object):
                 #            calculate the losses              #
                 # objectness, noobjectness, center & size loss #
                 #----------------------------------------------#
-                objectness_loss = self.objectness_loss_alpha * self.mse_loss_sum(objectness_pred, iou_map)
-                noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss_sum(noobjectness_pred, noobjectness_label)
-                ctr_loss = self.center_loss_alpha * (self.mse_loss_sum(x_pred, x_label) + self.mse_loss_sum(y_pred, y_label))
+                objectness_loss = self.objectness_loss_alpha * mse_loss_sum(objectness_pred, iou_map)
+                noobjectness_loss = self.noobjectness_loss_alpha * mse_loss_sum(noobjectness_pred, noobjectness_label)
+                ctr_loss = self.center_loss_alpha * (mse_loss_sum(x_pred, x_label) + mse_loss_sum(y_pred, y_label))
                 a = w_pred_real / self.grid_width[i]
                 b = w_label_real / self.grid_width[i]
                 c = h_pred_real / self.grid_height[i]
                 d = h_label_real / self.grid_height[i]
-                sz_loss =  self.size_loss_alpha * tf.sqrt(self.mse_loss_sum(a, b) + self.mse_loss_sum(c, d))
-                class_loss = self.class_loss_alpha * self.mse_loss_sum(class_pred, class_labels)
+                sz_loss =  self.size_loss_alpha * tf.sqrt(mse_loss_sum(a, b) + mse_loss_sum(c, d))
+                if self.num_class == 1:
+                    class_loss = self.class_loss_alpha * sigmoid_crossentropy_sum(class_pred, class_labels)
+                else:
+                    class_loss = self.class_loss_alpha * softmax_crosentropy_sum(class_pred, class_labels)
 
                 total_loss = objectness_loss + \
                              noobjectness_loss + \
