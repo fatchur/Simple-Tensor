@@ -1,4 +1,5 @@
 import json
+import random
 import tensorflow as tf
 from simple_tensor.tensor_operations import *
 from simple_tensor.object_detector.detector_utils import *
@@ -11,7 +12,7 @@ from comdutils.file_utils import *
 # This class is the child of ObjectDetector class #
 # in simple_tensor.object_detector.detector_utils #
 # =============================================== #
-class YoloTrain(ObjectDetector):
+class Yolo(ObjectDetector):
     def __init__(self,
                  dataset_folder_path,
                  label_folder_path,  
@@ -31,7 +32,7 @@ class YoloTrain(ObjectDetector):
                  class_loss_alpha=1.,
                  add_modsig_toshape=False,
                  anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)],
-                 dropout_rate = 0.0,
+                 dropout_rate = 0.8,
                  leaky_relu_alpha = 0.1):
         """[summary]
         
@@ -52,7 +53,7 @@ class YoloTrain(ObjectDetector):
             class_loss_alpha {[type]} -- [description] (default: {0.})
         """
 
-        super(YoloTrain, self).__init__(num_of_class=num_of_class,
+        super(Yolo, self).__init__(num_of_class=num_of_class,
                                         input_height=input_height, 
                                         input_width=input_width, 
                                         grid_height1=grid_height1, 
@@ -73,8 +74,12 @@ class YoloTrain(ObjectDetector):
 
         self.label_folder_path = label_folder_path
         self.dataset_folder_path = dataset_folder_path
-        self.label_file_list = get_filenames(self.label_folder_path)
-        self.dataset_file_list = get_filenames(self.dataset_folder_path)
+        self.dataset_file_list = random.shuffle(get_filenames(self.dataset_folder_path))
+        
+        print ("------------------------INFO-------------------")
+        print ("Image Folder: " + self.dataset_folder_path)
+        print ("Number of Image: " + len(self.dataset_file_list))
+        print ("-----------------------------------------------")
 
         self.all_label_target_np = None
 
@@ -85,15 +90,32 @@ class YoloTrain(ObjectDetector):
 
     
     def read_target(self, file_path):
-        """Function for reading json label
+        """[summary]
+        
+        Arguments:
+            file_path {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
         """
         target = self.read_yolo_labels(file_path)
         return target
 
 
-    def build_net(self, network_type='big', is_training=False):
+    def build_net(self, input_tensor, 
+                  network_type='big', 
+                  is_training=False):
+        """[summary]
+        
+        Arguments:
+            input_tensor {[type]} -- [description]
+        
+        Keyword Arguments:
+            network_type {str} -- [description] (default: {'big'})
+            is_training {bool} -- [description] (default: {False})
+        """
         with tf.variable_scope('yolo_v3_model'):
-            self.build_yolov3_net(inputs=self.input_placeholder, network_type=network_type, is_training=is_training)
+            self.build_yolov3_net(inputs=input_tensor, network_type=network_type, is_training=is_training)
 
 
     def train_batch_generator(self, batch_size):

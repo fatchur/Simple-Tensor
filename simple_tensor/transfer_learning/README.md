@@ -33,33 +33,38 @@ This is a project for tensorflow transfer learning simplification
 ###### Inception V4 transfer learning example:
 ```python
 import tensorflow as tf
-from simple_tensor.transfer_learning.inception_utils import *
-from simple_tensor.transfer_learning.inception_v4 import *
+from simple_tensor.transfer_learning.image_recognition import *
 
-# get all params
-inception_v4_arg_scope = inception_arg_scope
-arg_scope = inception_v4_arg_scope()
+imrec = ImageRecognition(classes=['...', '..'],
+                         dataset_folder_path = 'path to your dataset/', 
+                         input_height = 300,
+                         input_width = 300, 
+                         input_channel = 3)
 
-# create input placeholder
-input_tensor = tf.placeholder(tf.float32, (None, 107, 299, 3))
-var_list = None
+is_training = False # always set it to false during training or inferencing (bug in inceptionv4 base tf slim)
+out, var_list = imrec.build_inceptionv4_basenet(imrec.input_placeholder, 
+                                                is_training = is_training, 
+                                                final_endpoint='Mixed_6a', # 'Mixed_6a, Mixed_5a, Mixed_7a
+                                                top_layer_depth = 256)
 
-# build inception v4 base graph
-with slim.arg_scope(arg_scope):
-  # get output (logits)
-  logits, end_points = inception_v4(input_tensor, num_classes=3, is_training=True)
-  # get inception variable name
-  var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+cost = imrec.calculate_softmaxcrosentropy_loss(out, imrec.output_placeholder)
+update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+with tf.control_dependencies(update_ops):
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cost)
 
+saver = tf.train.Saver()
+session = tf.Session()
+session.run(tf.global_variables_initializer())
+saver.restore(sess=session, save_path='your model path')
 
-# Next of your code
-from simple_tensor.tensor_operations import *
-# Add your layer here
-# ....
-# ....
-base_inceptionv4_saver = tf.train.Saver(var_list)
-all_tensor_saver = tf.train.Saver()
-sess = tf.Session()
-sess.run(tf.global_variables_initializer())
-inceptionv4_saver.restore(sess, 'path to your model')
+imrec.optimize(iteration=2000, 
+         subdivition=1,
+         cost_tensor=cost,
+         optimizer_tensor=optimizer,
+         out_tensor = out,
+         session = session, 
+         train_batch_size=2, 
+         val_batch_size=10,
+         path_tosave_model='model/model1')
+
 ```

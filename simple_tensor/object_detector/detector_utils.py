@@ -1,10 +1,12 @@
-import tensorflow as tf 
-import numpy as np
-from os import walk
 import os
 import cv2
 import math
+import numpy as np
+from os import walk
+import tensorflow as tf 
 from simple_tensor.tensor_operations import *
+from simple_tensor.tensor_metrics import calculate_acc
+from simple_tensor.tensor_losses import softmax_crosentropy_sum, sigmoid_crossentropy_sum, mse_loss_sum
 
 
 class ObjectDetector(object):
@@ -189,37 +191,6 @@ class ObjectDetector(object):
         delta = (noobjectness_label - noobjecteness_mask) * noobjectness_label
         noobj_acc = 1. - tf.reduce_sum(delta) / (tf.reduce_sum(noobjectness_label) + 0.0001)
         return obj_acc, noobj_acc
-        
-
-
-    def mse_loss(self, output_tensor, label):
-        """"[summary]
-        
-        Arguments:
-            output_tensor {tensor} -- [description]
-            label {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        loss = tf.square(tf.subtract(output_tensor, label))
-        loss = tf.reduce_mean(loss)
-        return loss
-
-
-    def mse_loss_sum(self, output_tensor, label):
-        """"[summary]
-        
-        Arguments:
-            output_tensor {tensor} -- [description]
-            label {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        loss = tf.square(tf.subtract(output_tensor, label))
-        loss = tf.reduce_sum(loss)
-        return loss
 
 
     def yolo_loss(self, outputs, labels):
@@ -247,6 +218,7 @@ class ObjectDetector(object):
         iou_total = 0.0
         obj_acc_total = 0.0
         noobj_acc_total = 0.0
+        class_acc_total = 0.0
         
         for i in range(3):
             output = outputs[i]
@@ -304,6 +276,11 @@ class ObjectDetector(object):
                 h_label = label[:, :, :, (base + 3):(base + 4)]
                 h_pred = tf.multiply(h_pred, objectness_label)
 
+                # get class value
+                class_pred = output[:, :, :, (base + 4):(base + 4 + self.num_class)]
+                class_pred = tf.multiply(class_pred, objectness_label)
+                class_labels = label[:, :, :, (base + 4):(base + 4 + self.num_class)]
+
                 #----------------------------------------------#
                 #              calculate the iou               #
                 # 1. calculate pred bbox based on real ordinat #
@@ -327,34 +304,43 @@ class ObjectDetector(object):
                 #            calculate the losses              #
                 # objectness, noobjectness, center & size loss #
                 #----------------------------------------------#
-                objectness_loss = self.objectness_loss_alpha * self.mse_loss_sum(objectness_pred, iou_map)
-                noobjectness_loss = self.noobjectness_loss_alpha * self.mse_loss_sum(noobjectness_pred, noobjectness_label)
-                ctr_loss = self.center_loss_alpha * (self.mse_loss_sum(x_pred, x_label) + self.mse_loss_sum(y_pred, y_label))
+                objectness_loss = self.objectness_loss_alpha * mse_loss_sum(objectness_pred, iou_map)
+                noobjectness_loss = self.noobjectness_loss_alpha * mse_loss_sum(noobjectness_pred, noobjectness_label)
+                ctr_loss = self.center_loss_alpha * (mse_loss_sum(x_pred, x_label) + mse_loss_sum(y_pred, y_label))
                 a = w_pred_real / self.grid_width[i]
                 b = w_label_real / self.grid_width[i]
                 c = h_pred_real / self.grid_height[i]
                 d = h_label_real / self.grid_height[i]
-                sz_loss =  self.size_loss_alpha * tf.sqrt(self.mse_loss_sum(a, b) + self.mse_loss_sum(c, d))
-            
+                sz_loss =  self.size_loss_alpha * tf.sqrt(mse_loss_sum(a, b) + mse_loss_sum(c, d))
+                if self.num_class == 1:
+                    class_loss = self.class_loss_alpha * sigmoid_crossentropy_sum(class_pred, class_labels)
+                else:
+                    class_loss = self.class_loss_alpha * softmax_crosentropy_sum(class_pred, class_labels)
+
                 total_loss = objectness_loss + \
                              noobjectness_loss + \
                              ctr_loss + \
-                             sz_loss
+                             sz_loss + \
+                             class_loss
                 self.all_losses = self.all_losses + total_loss
                 self.objectness_losses = self.objectness_losses + objectness_loss
                 self.noobjectness_losses = self.noobjectness_losses + noobjectness_loss
                 self.center_losses = self.center_losses + ctr_loss
                 self.size_losses = self.size_losses + sz_loss
+                self.class_losses = self.class_losses + class_loss
 
                 avg_iou = self.average_iou(iou_map, objectness_label)
                 obj_acc, noobj_acc = self.object_accuracy(objectness_pred_initial, objectness_label, noobjectness_label)
+                class_acc = calculate_acc(tf.nn.softmax(class_pred), class_labels)
                 iou_total = iou_total + avg_iou
                 obj_acc_total = obj_acc_total + obj_acc
                 noobj_acc_total = noobj_acc_total + noobj_acc
+                class_acc_total = class_acc_total + class_acc
         
-        self.iou_avg = iou_total / 9.
+        self.iou_avg = iou_total / 9.  # 9==> num of anchors
         self.obj_acc_avg = obj_acc_total / 9.
         self.noobj_acc_avg = noobj_acc_total / 9.
+        self.class_acc_avg = class_acc_total / 9.
 
         return self.all_losses
 
@@ -386,11 +372,13 @@ class ObjectDetector(object):
             #----------------------------------------------------------------#
             #    this part is getting the x, y, w, h values for each line    #
             #----------------------------------------------------------------#
+            c = []
             x = []
             y = []
             w = []
             h = []
             for j in range (line_num):
+                c.append(int(data[j*5 + 0]))
                 x.append(float(data[j*5 + 1]))
                 y.append(float(data[j*5 + 2]))
                 w.append(float(data[j*5 + 3]))
@@ -412,7 +400,7 @@ class ObjectDetector(object):
             for idx_anchor, j in enumerate(self.anchor[border_a: border_b]):
                 base = (5+self.num_class) * idx_anchor
 
-                for k, l, m, n in zip(x, y, w, h):
+                for k, l, m, n, o in zip(x, y, w, h, c):
                     cell_x = int(math.floor(k / float(1.0 / self.num_horizontal_grid[i])))
                     cell_y = int(math.floor(l / float(1.0 / self.num_vertical_grid[i])))
                     tmp [cell_y, cell_x, base + 0] = (k - (cell_x * self.grid_relatif_width[i])) / self.grid_relatif_width[i]  				# add x center values
@@ -420,7 +408,11 @@ class ObjectDetector(object):
                     tmp [cell_y, cell_x, base + 2] = math.log(m * self.input_width/j[0])										    # add width width value
                     tmp [cell_y, cell_x, base + 3] = math.log(n * self.input_height/j[1])								            # add height value
                     tmp [cell_y, cell_x, base + 4] = 1.0																				    # add objectness score
-                    #print (cell_x, cell_y)
+                    for p in range(self.num_class):
+                        if p == o:
+                            tmp [cell_y, cell_x, base + 5 + p] = 1.0
+                            break
+                    
             tmps.append(tmp)
 
         return tmps
@@ -442,6 +434,7 @@ class ObjectDetector(object):
 
         result_box = []
         result_conf = []
+        result_class = []
         final_box = []
         
         for boxes in batch:
@@ -469,6 +462,7 @@ class ObjectDetector(object):
                     boxes_conf_scores = boxes_conf_scores.reshape((len(boxes_conf_scores)))
                     result_box.extend(boxes_.tolist())
                     result_conf.extend(boxes_conf_scores.tolist())
+                    result_class.extend(classes.tolist())
                     
         indices = cv2.dnn.NMSBoxes(result_box, result_conf, confidence_threshold, overlap_threshold)
         for i in indices:
@@ -478,7 +472,9 @@ class ObjectDetector(object):
             top = box[1]
             width = box[2]
             height = box[3]
-            final_box.append([left, top, width, height])
+            conf = result_conf[i]
+            the_class = result_class[i]
+            final_box.append([left, top, width, height, conf, the_class])
         return final_box
     
 
@@ -809,9 +805,7 @@ class ObjectDetector(object):
             """
             
             n_anchors = len(anchors)
-            print ("----->>", inputs)
             shape = inputs.get_shape().as_list()
-            print (shape)
             grid_shape = shape[2:4] if data_format == 'channels_first' else shape[1:3]
             if data_format == 'channels_first':
                 inputs = tf.transpose(inputs, [0, 2, 3, 1])
@@ -882,6 +876,11 @@ class ObjectDetector(object):
             center_x, center_y, width, height, confidence, classes = \
                 tf.split(inputs, [1, 1, 1, 1, 1, -1], axis=-1)
 
+            if self.num_class == 1:
+                classes = tf.nn.sigmoid(classes)
+            else:
+                classes = tf.nn.softmax(classes)
+
             top_left_x = center_x - width / 2
             top_left_y = center_y - height / 2
             bottom_right_x = center_x + width / 2
@@ -894,13 +893,40 @@ class ObjectDetector(object):
         
         #------------------------------------------------------------------------#
 
-        #with tf.variable_scope('yolo_v3_model'):
+        #----------------------------------#
+        #     Network Type Choiches        #
+        #----------------------------------#
+        filters = {}
+        if network_type == 'big':
+            filters['a'] = 512
+            filters['b'] = 256
+            filters['c'] = 128
+        elif network_type == 'medium':
+            filters['a'] = 512
+            filters['b'] = 128
+            filters['c'] = 128
+        elif network_type == 'small':
+            filters['a'] = 256
+            filters['b'] = 128
+            filters['c'] = 128
+        elif network_type == 'very_small':
+            filters['a'] = 128
+            filters['b'] = 128
+            filters['c'] = 128
+        #---------------------------------#
+
         route1, route2, inputs = darknet53(inputs, 
                                             training=is_training,
                                             data_format=data_format)
 
+        #-------------------------------------#
+        #     get yolo small variables        #
+        #  get yolo veyi_small variables      #
+        #-------------------------------------#
+        self.yolo_small_vars = tf.global_variables(scope='yolo_v3_model')
+        self.yolo_very_small_vars = tf.global_variables(scope='yolo_v3_model')
         route, inputs = yolo_convolution_block(inputs, 
-                                                filters=512, 
+                                                filters=filters['a'], 
                                                 training=is_training,
                                                 data_format=data_format)
         inputs_detect1 = inputs
@@ -924,8 +950,13 @@ class ObjectDetector(object):
                             data_format=data_format)
         axis = 3
         inputs = tf.concat([inputs, route2], axis=axis)
+
+        #-------------------------------------#
+        #     get yolo medium variables       #
+        #-------------------------------------#
+        self.yolo_medium_vars = tf.global_variables(scope='yolo_v3_model')
         route, inputs = yolo_convolution_block(inputs, 
-                                                filters=256,  
+                                                filters=filters['b'],  
                                                 training=is_training,
                                                 data_format=data_format)
         inputs_detect2 = inputs
@@ -949,12 +980,16 @@ class ObjectDetector(object):
                             data_format=data_format)
         inputs = tf.concat([inputs, route1], axis=axis)
         route, inputs = yolo_convolution_block(inputs, 
-                                                filters=128, 
+                                                filters=filters['c'], 
                                                 training=is_training,
                                                 data_format=data_format)
         inputs_detect3 = inputs
 
-        # get yolo base variables
+        #-------------------------------------#
+        #       get yolo big variables        #
+        #       get yolo all variables        #
+        #-------------------------------------#
+        self.yolo_big_vars = tf.global_variables(scope='yolo_v3_model')
         self.yolo_vars = tf.global_variables(scope='yolo_v3_model')
 
         self.detect1 = tf.layers.conv2d(inputs_detect1, 
@@ -963,7 +998,7 @@ class ObjectDetector(object):
                                     strides=1, 
                                     use_bias=True,
                                     data_format=data_format)
-
+     
         self.detect2 = tf.layers.conv2d(inputs_detect2, 
                                     filters=len(self.anchor)/3 * (5 + self.num_class),
                                     kernel_size=1, 
