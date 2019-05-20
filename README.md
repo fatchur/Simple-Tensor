@@ -72,26 +72,38 @@ import tensorflow as tf
 from simple_tensor.transfer_learning.inception_utils import *
 from simple_tensor.transfer_learning.inception_v4 import *
 ```
-&nbsp; For more detail documentations about transfer learning package, visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor/transfer_learning)  
+This package contains a library of tensorflow implementation of Inception-v4 for image classification. Densenet, Resnet, and VGG will be added in the future version. For more detail documentations about transfer learning package, visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor/transfer_learning) 
+
+![alt text](assets/img_classification.jpeg)
+
+(img source: [link](https://medium.com/ai-saturdays/aisaturdaylagos-the-torch-panther-cdec328c125b))
 
 
 - Object Detector Package
-![alt text](assets/obj_detector.jpg)
 
 ```python
 import tensorflow as tf
 from simple_tensor.object_detector.detector_utils import *
 from simple_tensor.object_detector.yolo_v4 import *
 ```
-&nbsp; For more detail documentations about object detector package (yolov3), visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor/transfer_learning).
+This package contains a library of tensorflow implementation of Yolov3 (training and inferencing). You can customize your yolo detector with four types of network ("big", 'medium", "small", "very_small"). For more detail documentations about object detector package (yolov3), visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor/transfer_learning).
+
+![alt text](assets/obj_detector.jpg)
+
+(img source: pjreddie)
 
 - Unet Segmentation Package
-![alt text](assets/semantic_segmentation.jpg)
 
 ```python
 import tensorflow as tf
 from simple_tensor.segmentation.unet import UNet
 ```
+This package contains the tensorflow implementation of U-net for semantic segmentation. For more detail, visit [this page]()
+
+![alt text](assets/semantic_segmentation.jpg)
+
+(img source: internal)
+
 
 - LSTM Package
 ```python
