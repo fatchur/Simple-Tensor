@@ -235,7 +235,7 @@ class ObjectDetector(object):
 
             for idx, val in enumerate(self.anchor[border_a:border_b]):
                 base = idx * (5+self.num_class)
-
+                
                 # get objectness confidence
                 objectness_pred_initial = tf.nn.sigmoid(output[:, :, :, (base + 4):(base + 5)])
                 objectness_label = label[:, :, :, (base + 4):(base + 5)]
@@ -277,13 +277,14 @@ class ObjectDetector(object):
                 h_pred = tf.multiply(h_pred, objectness_label)
 
                 # get class value
-                class_pred = output[:, :, :, (base + 4):(base + 4 + self.num_class)]
+                class_pred = output[:, :, :, (base + 5):(base + 5 + self.num_class)]
                 class_pred = tf.multiply(class_pred, objectness_label)
-                class_labels = label[:, :, :, (base + 4):(base + 4 + self.num_class)]
-
+                class_label = label[:, :, :, (base + 5):(base + 5 + self.num_class)]
+                self.ccc = class_pred
+                self.ddd = class_label
                 #----------------------------------------------#
                 #              calculate the iou               #
-                # 1. calculate pred bbox based on real ordinat #
+                # 1. calculate pred bbox based on real ordinat #out = tf.nn.softmax(out
                 # 2. calculate the iou                         #
                 #----------------------------------------------#
                 x_pred_real = tf.multiply(self.grid_width[i] * x_pred, objectness_label)
@@ -313,9 +314,9 @@ class ObjectDetector(object):
                 d = h_label_real / self.grid_height[i]
                 sz_loss =  self.size_loss_alpha * tf.sqrt(mse_loss_sum(a, b) + mse_loss_sum(c, d))
                 if self.num_class == 1:
-                    class_loss = self.class_loss_alpha * sigmoid_crossentropy_sum(class_pred, class_labels)
+                    class_loss = self.class_loss_alpha * sigmoid_crossentropy_sum(class_pred, class_label)
                 else:
-                    class_loss = self.class_loss_alpha * softmax_crosentropy_sum(class_pred, class_labels)
+                    class_loss = self.class_loss_alpha * softmax_crosentropy_sum(class_pred, class_label)
 
                 total_loss = objectness_loss + \
                              noobjectness_loss + \
@@ -331,7 +332,7 @@ class ObjectDetector(object):
 
                 avg_iou = self.average_iou(iou_map, objectness_label)
                 obj_acc, noobj_acc = self.object_accuracy(objectness_pred_initial, objectness_label, noobjectness_label)
-                class_acc = calculate_acc(tf.nn.softmax(class_pred), class_labels)
+                class_acc = calculate_acc(tf.nn.softmax(class_pred), class_label)
                 iou_total = iou_total + avg_iou
                 obj_acc_total = obj_acc_total + obj_acc
                 noobj_acc_total = noobj_acc_total + noobj_acc
@@ -409,9 +410,12 @@ class ObjectDetector(object):
                     tmp [cell_y, cell_x, base + 3] = math.log(n * self.input_height/j[1])								            # add height value
                     tmp [cell_y, cell_x, base + 4] = 1.0																				    # add objectness score
                     for p in range(self.num_class):
+                        #print ("p: ", p, "o: ", 0)
+                        #print (file_name, self.num_class)
                         if p == o:
                             tmp [cell_y, cell_x, base + 5 + p] = 1.0
-                            break
+                        else:
+                            tmp [cell_y, cell_x, base + 5 + p] = 0.0
                     
             tmps.append(tmp)
 
