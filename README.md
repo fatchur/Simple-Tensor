@@ -76,16 +76,21 @@ from simple_tensor.transfer_learning.inception_v4 import *
 
 
 - Object Detector Package
+![alt text](assets/obj_detector.jpg)
+
 ```python
 import tensorflow as tf
 from simple_tensor.object_detector.detector_utils import *
 from simple_tensor.object_detector.yolo_v4 import *
 ```
-&nbsp; For more detail documentations about object detector package (yolov3), visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor/transfer_learning). This package still in preview mode or unstable.
+&nbsp; For more detail documentations about object detector package (yolov3), visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor/transfer_learning).
 
 - Unet Segmentation Package
+![alt text](assets/semantic_segmentation.jpg)
+
 ```python
-still on progress ....
+import tensorflow as tf
+from simple_tensor.segmentation.unet import UNet
 ```
 
 - LSTM Package
