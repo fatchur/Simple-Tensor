@@ -444,7 +444,6 @@ class ObjectDetector(object):
         for boxes in batch:
             mask = boxes[:, 4] > confidence_threshold
             boxes = boxes[mask, :] 
-
             classes = np.argmax(boxes[:, 5:], axis=-1)
             classes = classes.astype(np.float32).reshape((classes.shape[0], 1))
             boxes = np.concatenate((boxes[:, :5], classes), axis=-1)
@@ -464,10 +463,12 @@ class ObjectDetector(object):
                     
                     boxes_conf_scores = class_boxes[:, 4:5]
                     boxes_conf_scores = boxes_conf_scores.reshape((len(boxes_conf_scores)))
+                    the_class = class_boxes[:, 5:]
+
                     result_box.extend(boxes_.tolist())
                     result_conf.extend(boxes_conf_scores.tolist())
-                    result_class.extend(classes.tolist())
-                    
+                    result_class.extend(the_class.tolist())
+        
         indices = cv2.dnn.NMSBoxes(result_box, result_conf, confidence_threshold, overlap_threshold)
         for i in indices:
             i = i[0]
@@ -477,7 +478,7 @@ class ObjectDetector(object):
             width = box[2]
             height = box[3]
             conf = result_conf[i]
-            the_class = result_class[i]
+            the_class = result_class[i][0]
             final_box.append([left, top, width, height, conf, the_class])
         return final_box
     
