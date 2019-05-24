@@ -916,8 +916,8 @@ class ObjectDetector(object):
             filters['c'] = 128
         elif network_type == 'very_small':
             filters['a'] = 128
-            filters['b'] = 128
-            filters['c'] = 128
+            filters['b'] = 32
+            filters['c'] = 32
         #---------------------------------#
 
         route1, route2, inputs = darknet53(inputs, 
