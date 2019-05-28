@@ -72,35 +72,11 @@ class Yolo(ObjectDetector):
                                         dropout_rate = dropout_rate,
                                         leaky_relu_alpha = leaky_relu_alpha)
 
-        self.label_folder_path = label_folder_path
-        self.dataset_folder_path = dataset_folder_path
-        self.dataset_file_list = get_filenames(self.dataset_folder_path)
-        random.shuffle(self.dataset_file_list)
-        
-        print ("------------------------INFO-------------------")
-        print ("Image Folder: " + self.dataset_folder_path)
-        print ("Number of Image: " + str(len(self.dataset_file_list)))
-        print ("-----------------------------------------------")
-
-        self.all_label_target_np = None
 
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, 3))
         self.output_placeholder1 = tf.placeholder(tf.float32, shape=(None, 13, 13, 3*(5 + num_of_class)))
         self.output_placeholder2 = tf.placeholder(tf.float32, shape=(None, 26, 26, 3*(5 + num_of_class)))
         self.output_placeholder3 = tf.placeholder(tf.float32, shape=(None, 52, 52, 3*(5 + num_of_class)))
-
-    
-    def read_target(self, file_path):
-        """[summary]
-        
-        Arguments:
-            file_path {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        target = self.read_yolo_labels(file_path)
-        return target
 
 
     def build_net(self, input_tensor, 
@@ -119,13 +95,23 @@ class Yolo(ObjectDetector):
             self.build_yolov3_net(inputs=input_tensor, network_type=network_type, is_training=is_training)
 
 
-    def train_batch_generator(self, batch_size):
+    def train_batch_generator(self, batch_size, dataset_path):
         """Train Generator
         
         Arguments:
             batch_size {integer} -- the size of the batch
             image_name_list {list of string} -- the list of image name
         """
+        self.label_folder_path = dataset_path + "labels/"
+        self.dataset_folder_path = dataset_path + "images/"
+        self.dataset_file_list = get_filenames(self.dataset_folder_path)
+        random.shuffle(self.dataset_file_list)
+        
+        print ("------------------------INFO-------------------")
+        print ("Image Folder: " + self.dataset_folder_path)
+        print ("Number of Image: " + str(len(self.dataset_file_list)))
+        print ("-----------------------------------------------")
+        
         # Infinite loop.
         idx = 0
         while True:
@@ -153,7 +139,10 @@ class Yolo(ObjectDetector):
                     pass
 
                 idx += 1
-
             yield (np.array(x_batch), [np.array(y_pred1), np.array(y_pred2), np.array(y_pred3)])
+
+    
+
+
     
     
