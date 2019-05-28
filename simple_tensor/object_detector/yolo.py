@@ -13,9 +13,7 @@ from comdutils.file_utils import *
 # in simple_tensor.object_detector.detector_utils #
 # =============================================== #
 class Yolo(ObjectDetector):
-    def __init__(self,
-                 dataset_folder_path,
-                 label_folder_path,  
+    def __init__(self, 
                  num_of_class,
                  input_height=416, 
                  input_width=416, 
@@ -111,7 +109,7 @@ class Yolo(ObjectDetector):
         print ("Image Folder: " + self.dataset_folder_path)
         print ("Number of Image: " + str(len(self.dataset_file_list)))
         print ("-----------------------------------------------")
-        
+
         # Infinite loop.
         idx = 0
         while True:
