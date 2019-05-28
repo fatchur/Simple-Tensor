@@ -3,12 +3,11 @@
 ## NEWS
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |       
-|March 2019    | simple_tensor is available on pypi (pip3 install simple-tensor)                                                                |     >=v0.4.0      |
-|March 2019    | Add Inceptionv4 and Densenet for transfer-learning package                                                                     |      v0.4.3       |
-|29th March 2019    | Simple tensor for Tensorflow 1.13.1 is available on pypi                                                                  |      v0.4.3       |
 |              | **n**                                                                               |                   |
 |April 2019    | yolov3 (preview version) |      v0.4.18       |
 |April 2019    | Unet-segmentation (preview version) |      v0.4.18      |
+|Mei 2019    | Stable version of object detector is released                                                                                    | > v0.5.1          |
+|Mei 2019    | Stable version of U-net semantic segmentation is released                                                                        | > v0.5.1          |   
 
 
 
