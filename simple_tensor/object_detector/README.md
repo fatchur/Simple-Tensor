@@ -28,17 +28,24 @@ from simple_tensor.object_detector.yolo import *
 
 - Create simple_yolo object & Build architecture
 ```python
-simple_yolo = Yolo(label_folder_path ='images/', 
-                   dataset_folder_path='labels/', 
-                   num_of_class=80) 
-simple_yolo.build_net(network_type='big', is_training=False)
+simple_yolo = Yolo(num_of_class=1,
+         objectness_loss_alpha=10., 
+         noobjectness_loss_alpha=0.1, 
+         center_loss_alpha=10., 
+         size_loss_alpha=10., 
+         class_loss_alpha=10.,
+         add_modsig_toshape=True,
+         dropout_rate = 0.2) 
+
+simple_yolo.build_net(input_tensor=c.input_placeholder, is_training=False, network_type='small') 
 ```
 
 - Tensorflow saver & session
 ```python
-saver = tf.train.Saver()
-sess = tf.Session() 
-saver.restore(sess, 'models/yolov3')
+saver_all = tf.train.Saver()
+session = tf.Session()
+session.run(tf.global_variables_initializer())
+saver_all.restore(session, 'models/yolov3')
 ```
 
 - Predict
@@ -47,7 +54,7 @@ img = cv2.imread('sample_image/dog.jpg')
 img = cv2.resize(img, (416, 416)).reshape((1, 416, 416, 3))
 
 detection_result = sess.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
-bboxes = simple_yolo.nms(detection_result) #[[x1, y1, w, h], [...]]
+bboxes = simple_yolo.nms(detection_result, 0.8, 0.1) #[[x1, y1, w, h], [...]]
 ```
 
 ### Training Example
@@ -58,16 +65,14 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from simple_tensor.object_detector.yolo import *
 
-c = Yolo(label_folder_path ='label folder path/', 
-              dataset_folder_path='image folder path/', 
-              num_of_class=1,
-              objectness_loss_alpha=10., 
-              noobjectness_loss_alpha=0.1, 
-              center_loss_alpha=10., 
-              size_loss_alpha=10., 
-              class_loss_alpha=1.,
-              add_modsig_toshape=True,
-              dropout_rate = 0.2) 
+simple_yolo = Yolo(num_of_class=1,
+         objectness_loss_alpha=10., 
+         noobjectness_loss_alpha=0.1, 
+         center_loss_alpha=10., 
+         size_loss_alpha=10., 
+         class_loss_alpha=10.,
+         add_modsig_toshape=True,
+         dropout_rate = 0.2) 
 
 c.build_net(network_type='big', is_training=True)    
 cost = c.yolo_loss(c.output_list, [c.output_placeholder1, c.output_placeholder2, c.output_placeholder3])
@@ -82,7 +87,8 @@ session.run(tf.global_variables_initializer())
 saver.restore(session, 'your pretrained yolo model')
 #saver_all.restore(session, 'final model')
 
-train_generator = c.train_batch_generator(batch_size=13)
+train_generator = c.train_batch_generator(batch_size=13, dataset_path='../dataset/plate/')
+
 train_losses = []
 o = []
 no = []
