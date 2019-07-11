@@ -77,6 +77,19 @@ class Yolo(ObjectDetector):
         self.output_placeholder3 = tf.placeholder(tf.float32, shape=(None, 52, 52, 3*(5 + num_of_class)))
 
 
+    def read_target(self, file_path):
+        """[summary]
+        
+        Arguments:
+            file_path {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        target = self.read_yolo_labels(file_path)
+        return target
+
+
     def build_net(self, input_tensor, 
                   network_type='big', 
                   is_training=False):
@@ -118,25 +131,20 @@ class Yolo(ObjectDetector):
             y_pred2 = []
             y_pred3 = []
 
-
             for i in range(batch_size):
                 if idx >= len(self.dataset_file_list):
                     idx = 0
 
-                try:
-                    tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
-                    tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-                    tmp_x = tmp_x.astype(np.float32) / 255.
-                    tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
-                    x_batch.append(tmp_x)
-                    y_pred1.append(tmp_y[0])
-                    y_pred2.append(tmp_y[1])
-                    y_pred3.append(tmp_y[2])
-
-                except:
-                    pass
-
+                tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
+                tmp_x = tmp_x.astype(np.float32) / 255.
+                tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
+                x_batch.append(tmp_x)
+                y_pred1.append(tmp_y[0])
+                y_pred2.append(tmp_y[1])
+                y_pred3.append(tmp_y[2])
                 idx += 1
+
             yield (np.array(x_batch), [np.array(y_pred1), np.array(y_pred2), np.array(y_pred3)])
 
     
