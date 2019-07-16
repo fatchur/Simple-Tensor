@@ -18,7 +18,7 @@ c = Yolo(num_of_class=1,
          add_modsig_toshape=True,
          dropout_rate = 0.2) 
 
-c.build_net(input_tensor=c.input_placeholder, is_training=False, network_type='small')    
+c.build_net(input_tensor=c.input_placeholder, is_training=True, network_type='small')    
 
 saver = tf.train.Saver(var_list=c.yolo_small_vars)
 saver_all = tf.train.Saver()
@@ -30,7 +30,7 @@ img_ = cv2.imread('car.jpg')
 img_ = cv2.resize(img_, (416, 416))
 img = cv2.resize(img_, (416, 416)).reshape((1, 416, 416, 3))
 detection_result = session.run(c.boxes_dicts, feed_dict={c.input_placeholder: img})
-bboxes = c.nms(detection_result, 0.4, 0.1) #[[x1, y1, w, h], [...]]
+bboxes = c.nms(detection_result, 0.8, 0.1) #[[x1, y1, w, h], [...]]
 
 img = draw_rect(bboxes, img_)
 cv2.imshow('dddd', img)
