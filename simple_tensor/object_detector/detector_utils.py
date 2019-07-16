@@ -567,7 +567,7 @@ class ObjectDetector(object):
                             use_batchnorm=True)
             
             inputs, _ = new_conv2d_layer(input=(inputs if stride == 1 else fixed_padding(inputs, 3, 'channels_last')), 
-                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], shortcut.get_shape().as_list()[-1]], 
                             name = name + '_input_conv2', 
                             dropout_val= self.dropout_val, 
                             activation = 'LRELU',
@@ -661,6 +661,8 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
             
+            print ("=====", inputs)
+
             filter_128 = 128
             filter_256 = 256
             filter_512 = 512
@@ -669,8 +671,8 @@ class ObjectDetector(object):
             if network_type == 'special':
                 filter_128 = 32
                 filter_256 = 32
-                filter_512 = 64
-                filter_1024 = 64
+                filter_512 = 32
+                filter_1024 = 32
                 return_vars = tf.global_variables(scope='yolo_v3_model')
 
             for i in range(8):
@@ -947,15 +949,15 @@ class ObjectDetector(object):
             filters['c'] = 32
         #---------------------------------#
         if network_type == 'special':
-            route1, route2, inputs, self.yolo_small_vars = darknet53(inputs, 
+            route1, route2, inputs, self.yolo_special_vars = darknet53(inputs, 
                                                                      training=is_training,
                                                                      data_format=data_format, 
-                                                                     nework_type=network_type)
+                                                                     network_type=network_type)
         else:
             route1, route2, inputs, _ = darknet53(inputs, 
                                                   training=is_training,
                                                   data_format=data_format, 
-                                                  nework_type=network_type)
+                                                  network_type=network_type)
 
         #-------------------------------------#
         #     get yolo small variables        #
