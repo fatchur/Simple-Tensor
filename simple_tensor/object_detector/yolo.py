@@ -1,3 +1,14 @@
+'''
+    File name: test.py
+    Author: [Mochammad F Rahman]
+    Date created: / /2019
+    Date last modified: 17/07/2019
+    Python Version: >= 3.5
+    Simple-tensor version: v0.6.2
+    License: MIT License
+    Maintainer: [Mochammad F Rahman]
+'''
+
 import json
 import random
 import tensorflow as tf
@@ -150,5 +161,4 @@ class Yolo(ObjectDetector):
     
 
 
-    
     
