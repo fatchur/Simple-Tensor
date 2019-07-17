@@ -14,7 +14,7 @@ c = Yolo(num_of_class=1,
          dropout_rate = 0.2)
 
 c.build_net(input_tensor=c.input_placeholder, is_training=True, network_type='special')    
-print ("====>>> ok")
+print ("====>>> build network ok")
 cost = c.yolo_loss(c.output_list, [c.output_placeholder1, c.output_placeholder2, c.output_placeholder3])
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
@@ -26,7 +26,8 @@ session = tf.Session()
 session.run(tf.global_variables_initializer())
 saver.restore(session, '../../model/yolov3/yolov3')
 print ("===== Load Model Success")
-train_generator = c.train_batch_generator(batch_size=4, dataset_path='../../dataset/plate/')
+
+train_generator = c.train_batch_generator(batch_size=16, dataset_path='../../dataset/plate/')
 train_losses = []
 o = []
 no = []

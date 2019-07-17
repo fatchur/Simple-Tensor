@@ -18,23 +18,24 @@ c = Yolo(num_of_class=1,
          add_modsig_toshape=True,
          dropout_rate = 0.2) 
 
-c.build_net(input_tensor=c.input_placeholder, is_training=True, network_type='small')    
+c.build_net(input_tensor=c.input_placeholder, is_training=False, network_type='special')    
 
-saver = tf.train.Saver(var_list=c.yolo_small_vars)
+saver = tf.train.Saver(var_list=c.yolo_special_vars)
 saver_all = tf.train.Saver()
 session = tf.Session()
 session.run(tf.global_variables_initializer())
-saver_all.restore(session, '../../model/model_plate1_small/yolov3_phone')
+saver_all.restore(session, '../../model/model_plate_special/yolov3')
 
 img_ = cv2.imread('car.jpg')
 img_ = cv2.resize(img_, (416, 416))
-img = cv2.resize(img_, (416, 416)).reshape((1, 416, 416, 3))
+img = img_.reshape((1, 416, 416, 3)).astype(np.float32)
+img = img/255.
 detection_result = session.run(c.boxes_dicts, feed_dict={c.input_placeholder: img})
-bboxes = c.nms(detection_result, 0.8, 0.1) #[[x1, y1, w, h], [...]]
+bboxes = c.nms(detection_result, 0.6, 0.1) 
 
-img = draw_rect(bboxes, img_)
+img = draw_rect(bboxes, img[0])
 cv2.imshow('dddd', img)
-cv2.waitKey(1000)
+cv2.waitKey(10000)
 
 
 
