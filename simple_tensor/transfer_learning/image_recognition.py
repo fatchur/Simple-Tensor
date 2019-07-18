@@ -5,6 +5,7 @@ import tensorflow as tf
 from simple_tensor.tensor_operations import *
 from simple_tensor.transfer_learning.inception_utils import *
 from simple_tensor.transfer_learning.inception_v4 import *
+import simple_tensor.transfer_learning.densenet as densenet
 from comdutils.file_utils import *
 
 
@@ -146,13 +147,64 @@ class ImageRecognition(object):
         return out, base_var_list
 
 
-    def build_scratch_net(self, max_layer_num=30,
-                    max_depth_for_layer=16,
-                    hidden_layer_activation='LRELU',
-                    output_activation='SIGMOID'):
+    def build_densenet_base(self, input_tensor,
+                            dropout_rate,
+                            is_training,
+                            top_layer_depth = 128):
+        """[summary]
+        
+        Arguments:
+            input_tensordropout_rate {[type]} -- [description]
+            is_training {bool} -- [description]
+        """
+        arg_scoope = densenet.densenet_arg_scope()
+        with slim.arg_scope(arg_scoope):
+            out = densenet.densenet121(inputs=input_tensor, 
+                                       num_classes=1, 
+                                       is_training=is_training)
+            base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
-        print ('==== sorry unready')
 
+        size = out.get_shape().as_list()[1]
+        while(True):
+            if size == 1:
+                break
+
+            out, _ = new_conv2d_layer(out, 
+                                      filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
+                                      name='cv1', 
+                                      dropout_val=0.85, 
+                                      activation = 'LRELU', 
+                                      lrelu_alpha=0.2,
+                                      padding='SAME', 
+                                      strides=[1, 2, 2, 1],
+                                      data_type=tf.float32,  
+                                      is_training=is_training,
+                                      use_bias=True,
+                                      use_batchnorm=True) 
+            size = out.get_shape().as_list()[1]
+        
+        depth = out.get_shape().as_list()[-1]
+        out = tf.reshape(out, [tf.shape(out)[0], -1])
+        out, _ = new_fc_layer(out, 
+                              num_inputs = depth, 
+                              num_outputs = len(self.classes), 
+                              name = 'fc1', 
+                              dropout_val=1, 
+                              activation="NONE",
+                              lrelu_alpha=0.2, 
+                              data_type=tf.float32,
+                              is_training=is_training,
+                              use_bias=False)
+
+        if len(self.classes) == 1:
+            out = tf.nn.sigmoid(out)
+        else:
+            out = tf.nn.softmax(out)
+
+        self.out = out
+        return out, base_var_list
+        
 
     def batch_generator(self, batch_size, batch_size_val):
         """Train Generator
@@ -208,51 +260,6 @@ class ImageRecognition(object):
                 idx_val += 1
 
             yield (np.array(x_batch), np.array(y_batch), np.array(x_batch_val), np.array(y_batch_val))
-    
-
-    def calculate_sigmoidcrosentropy_loss(self, predicted, labels):
-        """[summary]
-        
-        Arguments:
-            predicted {[type]} -- [description]
-            labels {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        cost = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=predicted )
-        cost = tf.reduce_mean(cost)
-        return cost
-
-
-    def calculate_softmaxcrosentropy_loss(self, predicted, labels):
-        """[summary]
-        
-        Arguments:
-            predicted {[type]} -- [description]
-            labels {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
-        """
-        cost = tf.nn.softmax_cross_entropy_with_logits_v2(labels=labels, logits=predicted )
-        cost = tf.reduce_mean(cost)
-        return cost
-
-
-    def calculate_mse_loss(self, predicted, labels):
-            """[summary]
-            
-            Arguments:
-                predicted {[type]} -- [description]
-                labels {[type]} -- [description]
-            
-            Returns:
-                [type] -- [description]
-            """
-            cost = tf.math.square(predicted - labels)
-            cost = tf.reduce_mean(cost)
-            return cost
     
 
     def optimize(self, 

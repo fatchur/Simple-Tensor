@@ -1,3 +1,14 @@
+'''
+    File name: test.py
+    Author: [Mochammad F Rahman]
+    Date created: / /2019
+    Date last modified: 17/07/2019
+    Python Version: >= 3.5
+    Simple-tensor version: v0.6.2
+    License: MIT License
+    Maintainer: [Mochammad F Rahman]
+'''
+
 import os
 import cv2
 import math
@@ -31,28 +42,36 @@ class ObjectDetector(object):
         """[summary]
         
         Arguments:
-            num_of_class {[type]} -- [description]
+            num_of_class {int} -- the number of the class
         
         Keyword Arguments:
-            input_height {int} -- [description] (default: {416})
-            input_width {int} -- [description] (default: {416})
-            grid_height1 {int} -- [description] (default: {32})
-            grid_width1 {int} -- [description] (default: {32})
-            grid_height2 {int} -- [description] (default: {16})
-            grid_width2 {int} -- [description] (default: {16})
-            grid_height3 {int} -- [description] (default: {8})
-            grid_width3 {int} -- [description] (default: {8})
-            objectness_loss_alpha {[type]} -- [description] (default: {2.})
-            noobjectness_loss_alpha {[type]} -- [description] (default: {1.})
-            center_loss_alpha {[type]} -- [description] (default: {1.})
-            size_loss_alpha {[type]} -- [description] (default: {1.})
-            class_loss_alpha {[type]} -- [description] (default: {1.})
-            anchor {list} -- [description] (default: {[(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]})
-        
+            input_height {int} -- [the height of input image in pixel] (default: {416})
+            input_width {int} -- [the width of input image in pixel] (default: {416})
+            grid_height1 {int} -- [the height of the 1st detector grid in pixel] (default: {32})
+            grid_width1 {int} -- [the width of the 1st detector grid in pixel] (default: {32})
+            grid_height2 {int} -- [the height of the 2nd detector grid in pixel] (default: {16})
+            grid_width2 {int} -- [the width of the 2nd detector grid in pixel] (default: {16})
+            grid_height3 {int} -- [the height of the 3rd detector grid in pixel] (default: {8})
+            grid_width3 {int} -- [the width of the 3rd detector grid in pixel] (default: {8})
+            objectness_loss_alpha {[float]} -- [the alpha for the objectness loss] (default: {2.})
+            noobjectness_loss_alpha {[float]} -- [the alpha for the noobjectness loss] (default: {1.})
+            center_loss_alpha {[float]} -- [the alpha for the center loss] (default: {1.})
+            size_loss_alpha {[float]} -- [the alpha for the size loss] (default: {1.})
+            class_loss_alpha {[float]} -- [the alpha for the class loss] (default: {1.})
+            add_modsig_toshape{bool} -- ADD sigmoid modification to avoid nan loss or not
+            anchor {list of tupple} -- [the list of tupple of the height and weight of anchors] (default: {[(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]})
+            dropout_rate {float} -- the rate of the dropout
+            leaky_relu_alpha -- the alpha of leaky relu
+
         Returns:
             [type] -- [description]
         """          
-        
+        # ----------------------------- #
+        # initialize all properties     #
+        # - grid_relatif_width/height is the relative width/height of the grid to the image
+        # - num_vertical/horizontal_grid is the number of vertical/horizontal grid in an image
+        # - add_modsig_toshape is a boolean flag of adding modified sigmoid to the w/h 
+        # ----------------------------- #
         self.input_height = input_height
         self.input_width = input_width
         
@@ -82,7 +101,7 @@ class ObjectDetector(object):
 
         self.anchor = anchor
         self.num_class = num_of_class
-        self.output_depth = len(anchor) * (5 + num_of_class)
+        #self.output_depth = len(anchor) * (5 + num_of_class)
 
         self.objectness_loss_alpha = objectness_loss_alpha
         self.noobjectness_loss_alpha = noobjectness_loss_alpha
@@ -97,7 +116,7 @@ class ObjectDetector(object):
 
 
     def grid_mask(self):
-        """[summary]
+        """Method for creating the position mask of grids
         """
         self.grid_position_mask_onx_np = []
         self.grid_position_mask_ony_np = []
@@ -142,7 +161,6 @@ class ObjectDetector(object):
         x_bottomright_label = tf.minimum(bbox_label[:, :, :, 0:1] + 0.5 * bbox_label[:, :, :, 2:3], self.input_width)
         y_bottomright_label = tf.minimum(bbox_label[:, :, :, 1:2] + 0.5 * bbox_label[:, :, :, 3:], self.input_height)
 
-        #zero_tensor = tf.zeros_like(x_topleft1, dtype=None, name=None, optimize=True)
         x_overlap = tf.maximum((tf.minimum(x_bottomright_pred, x_bottomright_label) - tf.maximum(x_topleft_pred, x_topleft_label)), 0.0)
         y_overlap = tf.maximum((tf.minimum(y_bottomright_pred, y_bottomright_label) - tf.maximum(y_topleft_pred, y_topleft_label)), 0.0)
         overlap = x_overlap * y_overlap
@@ -284,7 +302,7 @@ class ObjectDetector(object):
                 self.ddd = class_label
                 #----------------------------------------------#
                 #              calculate the iou               #
-                # 1. calculate pred bbox based on real ordinat #out = tf.nn.softmax(out
+                # 1. calculate pred bbox based on real ordinat #
                 # 2. calculate the iou                         #
                 #----------------------------------------------#
                 x_pred_real = tf.multiply(self.grid_width[i] * x_pred, objectness_label)
@@ -410,15 +428,12 @@ class ObjectDetector(object):
                     tmp [cell_y, cell_x, base + 3] = math.log(n * self.input_height/j[1])								            # add height value
                     tmp [cell_y, cell_x, base + 4] = 1.0																				    # add objectness score
                     for p in range(self.num_class):
-                        #print ("p: ", p, "o: ", 0)
-                        #print (file_name, self.num_class)
                         if p == o:
                             tmp [cell_y, cell_x, base + 5 + p] = 1.0
                         else:
                             tmp [cell_y, cell_x, base + 5 + p] = 0.0
                     
             tmps.append(tmp)
-
         return tmps
 
 
@@ -484,7 +499,7 @@ class ObjectDetector(object):
     
 
     def build_yolov3_net(self, inputs, network_type, is_training):
-        """[summary]
+        """method for building yolo-v3 network
         
         Returns:
             [type] -- [description]
@@ -495,7 +510,10 @@ class ObjectDetector(object):
         data_format = 'channels_last'
 
 
-        #-------------------------------------------------------------------------#
+        # -------------------------------------------- #
+        # Function for giving hard padding             #
+        # It is applied on original yolo network       #
+        # -------------------------------------------- #
         def fixed_padding(inputs, 
                           kernel_size, 
                           data_format):
@@ -522,23 +540,25 @@ class ObjectDetector(object):
                                                 [pad_beg, pad_end], [0, 0]])
             return padded_inputs
         
-        #-------------------------------------------------------------------------#
+        # --------------------------------------- #
+        # For building darknet 53 residual block  #
+        # --------------------------------------- #           
         def darknet53_residual_block(inputs, 
                                      filters, 
                                      training, 
-                                     data_format,
+                                     data_format, 
                                      stride=1, 
                                      name='res'):
             """[summary]
             Arguments:
-                inputs {[type]} -- [description]
-                filters {[type]} -- [description]
-                training {[type]} -- [description]
-                data_format {[type]} -- [description]
+                inputs {[tensor]} -- input tensor
+                filters {[tensor]} -- the filter tensor
+                training {[bool]} -- the phase, training or not
+                data_format {[string]} -- channel first or not
             
             Keyword Arguments:
-                stride {int} -- [description] (default: {1})
-                name {str} -- [description] (default: {'res'})
+                stride {int} -- [the strides] (default: {1})
+                name {str} -- [the additional name for all tensors in this block] (default: {'res'})
             
             Returns:
                 [type] -- [description]
@@ -558,7 +578,7 @@ class ObjectDetector(object):
                             use_batchnorm=True)
             
             inputs, _ = new_conv2d_layer(input=(inputs if stride == 1 else fixed_padding(inputs, 3, 'channels_last')), 
-                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], shortcut.get_shape().as_list()[-1]], 
                             name = name + '_input_conv2', 
                             dropout_val= self.dropout_val, 
                             activation = 'LRELU',
@@ -573,14 +593,16 @@ class ObjectDetector(object):
             inputs += shortcut
             return inputs
         
-        #-------------------------------------------------------------------------#
-        def darknet53(inputs, training, data_format):
+        # ------------------------------------- #
+        # function for building main darknet 53 #
+        # ------------------------------------- #
+        def darknet53(inputs, training, data_format, network_type):
             """[summary]
             
             Arguments:
-                inputs {[type]} -- [description]
-                training {[type]} -- [description]
-                data_format {[type]} -- [description]
+                inputs {tensor} -- the input tensor
+                training {bool} -- the phase, training or not
+                data_format {string} -- channel_first or not
             
             Returns:
                 [type] -- [description]
@@ -649,17 +671,31 @@ class ObjectDetector(object):
                             is_training=training,
                             use_bias=False,
                             use_batchnorm=True)
-        
+            
+            print ("=====", inputs)
+
+            filter_128 = 128
+            filter_256 = 256
+            filter_512 = 512
+            filter_1024 = 1024
+            return_vars = None
+            if network_type == 'special':
+                filter_128 = 32
+                filter_256 = 32
+                filter_512 = 32
+                filter_1024 = 32
+                return_vars = tf.global_variables(scope='yolo_v3_model')
+
             for i in range(8):
                 inputs = darknet53_residual_block(inputs, 
-                                                  filters=128,
+                                                  filters=filter_128,
                                                   training=training,
                                                   data_format=data_format, 
                                                   name='res' + str(i+3))
 
             route1 = inputs
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
-                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 512], 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], filter_512], 
                             name = 'main_input_conv5', 
                             dropout_val= self.dropout_val, 
                             activation = 'LRELU',
@@ -673,14 +709,14 @@ class ObjectDetector(object):
             
             for i in range(8):
                 inputs = darknet53_residual_block(inputs, 
-                                                  filters=256,
+                                                  filters=filter_256,
                                                   training=training,
                                                   data_format=data_format, 
                                                   name='res' + str(i+11))
 
             route2 = inputs
             inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
-                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 1024], 
+                            filter_shape=[3, 3, inputs.get_shape().as_list()[-1], filter_1024], 
                             name = 'main_input_conv6', 
                             dropout_val= self.dropout_val, 
                             activation = 'LRELU',
@@ -693,12 +729,12 @@ class ObjectDetector(object):
                             use_batchnorm=True)
 
             for i in range(4):
-                inputs = darknet53_residual_block(inputs, filters=512,
+                inputs = darknet53_residual_block(inputs, filters=filter_512,
                                                 training=training,
                                                 data_format=data_format, name='res' + str(i+19))
-            return route1, route2, inputs
+            return route1, route2, inputs, return_vars
         
-        #-------------------------------------------------------------------------#
+        #---------------------------------------- 
         def yolo_convolution_block(inputs, filters, training, data_format):
             """[summary]
             
@@ -792,7 +828,7 @@ class ObjectDetector(object):
                         
             return route, inputs
         
-        #-------------------------------------------------------------------------#
+        #-----------------------------------#
         def yolo_layer(inputs, n_classes, anchors, img_size, data_format):
             """Creates Yolo final detection layer.
 
@@ -843,7 +879,7 @@ class ObjectDetector(object):
                                 confidence, classes], axis=-1)
             return inputs
 
-        #-------------------------------------------------------------------------#
+        #---------------------------------------------#
         def upsample(inputs, out_shape, data_format):
             """Upsamples to `out_shape` using nearest neighbor interpolation.
             
@@ -868,7 +904,7 @@ class ObjectDetector(object):
                 inputs = tf.transpose(inputs, [0, 3, 1, 2])
             return inputs
         
-        #-------------------------------------------------------------------------#
+        #------------------------------------------------#
         def build_boxes(inputs):
             """Computes top left and bottom right points of the boxes.
             
@@ -896,7 +932,7 @@ class ObjectDetector(object):
                             confidence, classes], axis=-1)
             return boxes
         
-        #------------------------------------------------------------------------#
+        #--------------------------------------------------#
 
         #----------------------------------#
         #     Network Type Choiches        #
@@ -918,11 +954,21 @@ class ObjectDetector(object):
             filters['a'] = 128
             filters['b'] = 32
             filters['c'] = 32
+        elif network_type == 'special':
+            filters['a'] = 64
+            filters['b'] = 32
+            filters['c'] = 32
         #---------------------------------#
-
-        route1, route2, inputs = darknet53(inputs, 
-                                            training=is_training,
-                                            data_format=data_format)
+        if network_type == 'special':
+            route1, route2, inputs, self.yolo_special_vars = darknet53(inputs, 
+                                                                     training=is_training,
+                                                                     data_format=data_format, 
+                                                                     network_type=network_type)
+        else:
+            route1, route2, inputs, _ = darknet53(inputs, 
+                                                  training=is_training,
+                                                  data_format=data_format, 
+                                                  network_type=network_type)
 
         #-------------------------------------#
         #     get yolo small variables        #
