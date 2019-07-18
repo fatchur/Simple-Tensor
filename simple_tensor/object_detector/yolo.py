@@ -2,9 +2,9 @@
     File name: yolo.py
     Author: [Mochammad F Rahman]
     Date created: / /2019
-    Date last modified: 17/07/2019
+    Date last modified: 18/07/2019
     Python Version: >= 3.5
-    Simple-tensor version: v0.6.2
+    Simple-tensor version: v0.6.4
     License: MIT License
     Maintainer: [Mochammad F Rahman]
 '''
@@ -88,6 +88,15 @@ class Yolo(ObjectDetector):
         self.output_placeholder3 = tf.placeholder(tf.float32, shape=(None, 52, 52, 3*(5 + num_of_class)))
         self.optimizer = None
         self.session = None
+        self.saver_partial = None
+        self.saver_all = None
+
+        self.train_losses = []
+        self.o_losses = []
+        self.no_losses = []
+        self.ct_losses = []
+        self.sz_losses = []
+        self.cls_losses = []
 
 
     def read_target(self, file_path):
@@ -147,20 +156,29 @@ class Yolo(ObjectDetector):
             for i in range(batch_size):
                 if idx >= len(self.dataset_file_list):
                     idx = 0
+                try:
+                    tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                    tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
+                    tmp_x = tmp_x.astype(np.float32) / 255.
+                    tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
+                    x_batch.append(tmp_x)
+                    y_pred1.append(tmp_y[0])
+                    y_pred2.append(tmp_y[1])
+                    y_pred3.append(tmp_y[2])
+                except:
+                    print ("-----------------------------------------------------------------------------")
+                    print ("WARNING: the " + self.dataset_file_list[idx][:-3] + "not found in images or labels")
+                    print ("-----------------------------------------------------------------------------")
 
-                tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
-                tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-                tmp_x = tmp_x.astype(np.float32) / 255.
-                tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
-                x_batch.append(tmp_x)
-                y_pred1.append(tmp_y[0])
-                y_pred2.append(tmp_y[1])
-                y_pred3.append(tmp_y[2])
                 idx += 1
             yield (np.array(x_batch), [np.array(y_pred1), np.array(y_pred2), np.array(y_pred3)])
 
 
-    def optimize(self, subdivisions, iterations, best_loss, train_generator, val_generator, save_path):
+    def optimize(self, subdivisions, 
+                 iterations, 
+                 best_loss, 
+                 train_generator, 
+                 val_generator, save_path):
         """[summary]
         
         Arguments:
@@ -215,16 +233,17 @@ class Yolo(ObjectDetector):
             size = sum(tmp_sz)/len(tmp_sz)
             class_l = sum(tmp_class)/len(tmp_class)
             
-            train_losses.append(total)--
-            o.append(obj)--
-            no.append(noobj)--
-            ct.append(ctr)--
-            sz.append(size)--
+            self.train_losses.append(total)
+            self.o_losses.append(obj)
+            self.no_losses.append(noobj)
+            self.ct_losses.append(ctr)
+            self.sz_losses.append(size)
+            self.cls_losses.append(class_l)
             
             if best_loss > total:
                 best_loss = total
-                sign = "*****************"
-                saver_all.save(self.session, save_path) --
+                sign = "************* model saved"
+                self.saver_all.save(self.session, save_path)
             
             print ('eph: ', i, 'ttl loss: ', total, 'obj loss: ', obj, \
                 'noobj loss: ', noobj, 'ctr loss: ', ctr, 'size loss: ', size,  class_l, sign)
