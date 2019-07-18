@@ -1,10 +1,10 @@
 '''
-    File name: test.py
+    File name: detector_train_example.py
     Author: [Mochammad F Rahman]
     Date created: / /2019
-    Date last modified: 17/07/2019
+    Date last modified: 18/07/2019
     Python Version: >= 3.5
-    Simple-tensor version: v0.6.2
+    Simple-tensor version: v0.6.4
     License: MIT License
     Maintainer: [Mochammad F Rahman]
 '''
@@ -29,90 +29,17 @@ print ("====>>> build network ok")
 cost = c.yolo_loss(c.output_list, [c.output_placeholder1, c.output_placeholder2, c.output_placeholder3])
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cost)
+    c.optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cost)
 
-saver = tf.train.Saver(var_list=c.yolo_special_vars)
-saver_all = tf.train.Saver()
-session = tf.Session()
-session.run(tf.global_variables_initializer())
-saver.restore(session, '../../model/yolov3/yolov3')
+c.saver_partial = tf.train.Saver(var_list=c.yolo_special_vars)
+c.saver_all = tf.train.Saver()
+c.session = tf.Session()
+c.session.run(tf.global_variables_initializer())
+c.saver_partial.restore(c.session, '../../model/yolov3/yolov3')
 print ("===== Load Model Success")
 
-train_generator = c.train_batch_generator(batch_size=16, dataset_path='../../dataset/plate/')
-train_losses = []
-o = []
-no = []
-ct = []
-sz = []
-
-
-def optimize(subdivisions, iterations):
-    best_loss = 1000000
-    
-    for i in range(iterations):
-        sign = '-'
-        
-        tmp_all = []
-        tmp_obj = []
-        tmp_noobj = []
-        tmp_ctr = []
-        tmp_sz = []
-        tmp_class = []
-        
-        for j in range (subdivisions):
-            
-            x_train, y_train = next(train_generator)
-            
-            feed_dict = {}
-            feed_dict[c.input_placeholder] = x_train
-            feed_dict[c.output_placeholder1] = y_train[0]
-            feed_dict[c.output_placeholder2] = y_train[1]
-            feed_dict[c.output_placeholder3] = y_train[2]
-            total, obj, noobj, ctr, size, class_l, iou_avg, obj_acc, noobj_acc, class_acc = session.run([c.all_losses, 
-                                                        c.objectness_losses, 
-                                                        c.noobjectness_losses, 
-                                                        c.center_losses, 
-                                                        c.size_losses,
-                                                        c.class_losses,
-                                                        c.iou_avg,
-                                                        c.obj_acc_avg,
-                                                        c.noobj_acc_avg,
-                                                        c.class_acc_avg], feed_dict)
-            session.run(optimizer, feed_dict=feed_dict)
-            
-            tmp_all.append(total)
-            tmp_obj.append(obj)
-            tmp_noobj.append(noobj)
-            tmp_ctr.append(ctr)
-            tmp_sz.append(size)
-            tmp_class.append(class_l)
-            
-            print (">>>>", 'iou: ', iou_avg, 'obj acc: ', obj_acc, 'noobj acc: ', noobj_acc, 'class acc: ', class_acc)
-        
-        total = sum(tmp_all)/len(tmp_all)
-        obj =  sum(tmp_obj)/len(tmp_obj)
-        noobj = sum(tmp_noobj)/len(tmp_noobj)
-        ctr = sum(tmp_ctr)/len(tmp_ctr)
-        size = sum(tmp_sz)/len(tmp_sz)
-        class_l = sum(tmp_class)/len(tmp_class)
-        
-        train_losses.append(total)
-        o.append(obj)
-        no.append(noobj)
-        ct.append(ctr)
-        sz.append(size)
-          
-        if best_loss > total:
-            best_loss = total
-            sign = "*****************"
-            saver_all.save(session, '../../model/model_plate_special/yolov3_plate')
-          
-        print ('eph: ', i, 'ttl loss: ', total, 'obj loss: ', obj, \
-               'noobj loss: ', noobj, 'ctr loss: ', ctr, 'size loss: ', size,  class_l, sign)
-
-
-print ("======>> Training Start")
-optimize(1, 100000)
+train_generator = c.train_batch_generator(batch_size=2, dataset_path='../../dataset/plate/')
+c.optimize(subdivisions=1, iterations=5, best_loss=10000000, train_generator=train_generator, val_generator=None, save_path="./example")
 
 
 
