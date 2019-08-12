@@ -156,19 +156,19 @@ class Yolo(ObjectDetector):
             for i in range(batch_size):
                 if idx >= len(self.dataset_file_list):
                     idx = 0
-                try:
-                    tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
-                    tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-                    tmp_x = tmp_x.astype(np.float32) / 255.
-                    tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
-                    x_batch.append(tmp_x)
-                    y_pred1.append(tmp_y[0])
-                    y_pred2.append(tmp_y[1])
-                    y_pred3.append(tmp_y[2])
-                except:
-                    print ("-----------------------------------------------------------------------------")
-                    print ("WARNING: the " + self.dataset_file_list[idx][:-3] + "not found in images or labels")
-                    print ("-----------------------------------------------------------------------------")
+                #try:
+                tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
+                tmp_x = tmp_x.astype(np.float32) / 255.
+                tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
+                x_batch.append(tmp_x)
+                y_pred1.append(tmp_y[0])
+                y_pred2.append(tmp_y[1])
+                y_pred3.append(tmp_y[2])
+                #except:
+                    #print ("-----------------------------------------------------------------------------")
+                    #print ("WARNING: the " + self.dataset_file_list[idx][:-3] + "not found in images or labels")
+                    #print ("-----------------------------------------------------------------------------")
 
                 idx += 1
             yield (np.array(x_batch), [np.array(y_pred1), np.array(y_pred2), np.array(y_pred3)])
@@ -202,6 +202,7 @@ class Yolo(ObjectDetector):
             
             for j in range (subdivisions):
                 x_train, y_train = next(train_generator)
+                #print (x_train.shape, y_train[0].shape)
                 feed_dict = {}
                 feed_dict[self.input_placeholder] = x_train
                 feed_dict[self.output_placeholder1] = y_train[0]
