@@ -1,10 +1,10 @@
 '''
     File name: yolo.py
-    Author: [Mochammad F Rahman]
+    Author: [Mochammad F Rahman, Agil Haykal]
     Date created: / /2019
-    Date last modified: 18/07/2019
+    Date last modified: 17/08/2019
     Python Version: >= 3.5
-    Simple-tensor version: v0.6.4
+    Simple-tensor version: v0.6.7
     License: MIT License
     Maintainer: [Mochammad F Rahman, Agil Haykal]
 '''
@@ -200,9 +200,12 @@ class Yolo(ObjectDetector):
             tmp_sz = [] 
             tmp_class = [] 
             
+            # ---------------------------------- #
+            # Training Data                      #
+            # ---------------------------------- #
             for j in range (subdivisions):
                 x_train, y_train = next(train_generator)
-                #print (x_train.shape, y_train[0].shape)
+                
                 feed_dict = {}
                 feed_dict[self.input_placeholder] = x_train
                 feed_dict[self.output_placeholder1] = y_train[0]
@@ -227,6 +230,9 @@ class Yolo(ObjectDetector):
                 tmp_class.append(class_l)  
                 print ("> Train sub", j, ': iou: ', round(iou_avg*100, 3), 'obj acc: ', round(obj_acc*100, 3), 'noobj acc: ', round(noobj_acc*100, 3), 'class acc: ', round(class_acc*100, 3))
             
+            # ------------------------------- #
+            # validating the data             #
+            # ------------------------------- #
             x_val, y_val = next(val_generator)
             val_feed_dict = {}
             val_feed_dict[self.input_placeholder] = x_val
@@ -258,12 +264,16 @@ class Yolo(ObjectDetector):
             self.sz_losses.append(size)
             self.cls_losses.append(class_l)
             
+            # ------------------------------- #
+            # save the model                  #
+            # ------------------------------- #
             if best_loss > total_val:
                 best_loss = total_val
                 sign = "************* model saved"
                 self.saver_all.save(self.session, save_path)
             
-            print ("> Val epoch :", 'iou: ', round(iou_avg_val*100, 3), 'obj acc: ', round(obj_acc_val*100, 3), 'noobj acc: ', round(noobj_acc_val*100, 3), 'class acc: ', round(class_acc_val*100, 3))
+            print ("> Val epoch :", 'iou: ', round(iou_avg_val*100, 3), 'obj acc: ', round(obj_acc_val*100, 3), \
+                'noobj acc: ', round(noobj_acc_val*100, 3), 'class acc: ', round(class_acc_val*100, 3))
             
             print ('eph: ', i, 'ttl loss: ', round(total*100, 2), 'obj loss: ', round(obj*100, 2), \
                 'noobj loss: ', round(noobj*100, 2), 'ctr loss: ', round(ctr*100, 2), 'size loss: ', round(size*100, 2),  round(class_l*100, 2), sign)

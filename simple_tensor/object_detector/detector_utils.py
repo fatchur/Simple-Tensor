@@ -1,12 +1,12 @@
 '''
-    File name: test.py
-    Author: [Mochammad F Rahman]
+    File name: detector_utils.py
+    Author: [Mochammad F Rahman, Agyl Haikal]
     Date created: / /2019
-    Date last modified: 17/07/2019
+    Date last modified: 16/08/2019
     Python Version: >= 3.5
-    Simple-tensor version: v0.6.2
+    Simple-tensor version: v0.6.7
     License: MIT License
-    Maintainer: [Mochammad F Rahman]
+    Maintainer: [Mochammad F Rahman, Agyl Haikal]
 '''
 
 import os
