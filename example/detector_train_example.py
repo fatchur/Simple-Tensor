@@ -6,7 +6,7 @@
     Python Version: >= 3.5
     Simple-tensor version: v0.6.4
     License: MIT License
-    Maintainer: [Mochammad F Rahman]
+    Maintainer: [Mochammad F Rahman, Agil Haykal]
 '''
 
 import cv2 
@@ -38,8 +38,9 @@ c.session.run(tf.global_variables_initializer())
 #c.saver_partial.restore(c.session, '../../model/yolov3/yolov3')
 print ("===== Load Model Success")
 
-train_generator = c.train_batch_generator(batch_size=2, dataset_path='yolo_dataset/car/')
-c.optimize(subdivisions=1, iterations=5, best_loss=10000000, train_generator=train_generator, val_generator=None, save_path="./example")
+train_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/plate/')
+validate_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/validation/')
+c.optimize(subdivisions=1, iterations=5, best_loss=10000000, train_generator=train_generator, val_generator=validate_generator, save_path="./example")
 
 
 
