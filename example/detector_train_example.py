@@ -35,10 +35,10 @@ c.saver_partial = tf.train.Saver(var_list=c.yolo_special_vars)
 c.saver_all = tf.train.Saver()
 c.session = tf.Session()
 c.session.run(tf.global_variables_initializer())
-c.saver_partial.restore(c.session, '../../model/yolov3/yolov3')
+#c.saver_partial.restore(c.session, '../../model/yolov3/yolov3')
 print ("===== Load Model Success")
 
-train_generator = c.train_batch_generator(batch_size=2, dataset_path='../../dataset/plate/')
+train_generator = c.train_batch_generator(batch_size=2, dataset_path='yolo_dataset/car/')
 c.optimize(subdivisions=1, iterations=5, best_loss=10000000, train_generator=train_generator, val_generator=None, save_path="./example")
 
 
