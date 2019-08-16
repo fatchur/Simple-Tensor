@@ -6,7 +6,7 @@
     Python Version: >= 3.5
     Simple-tensor version: v0.6.4
     License: MIT License
-    Maintainer: [Mochammad F Rahman]
+    Maintainer: [Mochammad F Rahman, Agil Haykal]
 '''
 
 import json
@@ -128,7 +128,7 @@ class Yolo(ObjectDetector):
             self.build_yolov3_net(inputs=input_tensor, network_type=network_type, is_training=is_training)
 
 
-    def train_batch_generator(self, batch_size, dataset_path):
+    def batch_generator(self, batch_size, dataset_path):
         """Train Generator
         
         Arguments:
@@ -224,7 +224,24 @@ class Yolo(ObjectDetector):
                 tmp_ctr.append(ctr)
                 tmp_sz.append(size)
                 tmp_class.append(class_l)  
-                print (">>>>", 'iou: ', iou_avg, 'obj acc: ', obj_acc, 'noobj acc: ', noobj_acc, 'class acc: ', class_acc)
+                print ("> Train sub", j, ': iou: ', round(iou_avg*100, 3), 'obj acc: ', round(obj_acc*100, 3), 'noobj acc: ', round(noobj_acc*100, 3), 'class acc: ', round(class_acc*100, 3))
+            
+            x_val, y_val = next(val_generator)
+            val_feed_dict = {}
+            val_feed_dict[self.input_placeholder] = x_val
+            val_feed_dict[self.output_placeholder1] = y_val[0]
+            val_feed_dict[self.output_placeholder2] = y_val[1]
+            val_feed_dict[self.output_placeholder3] = y_val[2]
+            total_val, _, _, _, _, _, iou_avg_val, obj_acc_val, noobj_acc_val, class_acc_val = self.session.run([self.all_losses, 
+                                                        self.objectness_losses, 
+                                                        self.noobjectness_losses, 
+                                                        self.center_losses, 
+                                                        self.size_losses,
+                                                        self.class_losses,
+                                                        self.iou_avg,
+                                                        self.obj_acc_avg,
+                                                        self.noobj_acc_avg,
+                                                        self.class_acc_avg], val_feed_dict)
             
             total = sum(tmp_all)/len(tmp_all)
             obj =  sum(tmp_obj)/len(tmp_obj)
@@ -240,13 +257,15 @@ class Yolo(ObjectDetector):
             self.sz_losses.append(size)
             self.cls_losses.append(class_l)
             
-            if best_loss > total:
-                best_loss = total
+            if best_loss > total_val:
+                best_loss = total_val
                 sign = "************* model saved"
                 self.saver_all.save(self.session, save_path)
             
-            print ('eph: ', i, 'ttl loss: ', total, 'obj loss: ', obj, \
-                'noobj loss: ', noobj, 'ctr loss: ', ctr, 'size loss: ', size,  class_l, sign)
+            print ("> Val epoch :", 'iou: ', round(iou_avg_val*100, 3), 'obj acc: ', round(obj_acc_val*100, 3), 'noobj acc: ', round(noobj_acc_val*100, 3), 'class acc: ', round(class_acc_val*100, 3))
+            
+            print ('eph: ', i, 'ttl loss: ', round(total*100, 2), 'obj loss: ', round(obj*100, 2), \
+                'noobj loss: ', round(noobj*100, 2), 'ctr loss: ', round(ctr*100, 2), 'size loss: ', round(size*100, 2),  round(class_l*100, 2), sign)
     
 
 
