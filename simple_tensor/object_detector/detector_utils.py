@@ -397,7 +397,7 @@ class ObjectDetector(object):
             w = []
             h = []
             for j in range (line_num):
-                c.append(int(data[j*5 + 0]))
+                c.append(int(float(data[j*5 + 0])))
                 x.append(float(data[j*5 + 1]))
                 y.append(float(data[j*5 + 2]))
                 w.append(float(data[j*5 + 3]))
