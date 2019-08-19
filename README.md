@@ -2,12 +2,12 @@
 
 ## NEWS
 | Date       |                                                         News                                                                     |     Version       |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |       
-|              | **n**                                                                               |                   |
-|April 2019    | yolov3 (preview version) |      v0.4.18       |
-|April 2019    | Unet-segmentation (preview version) |      v0.4.18      |
-|Mei 2019    | Stable version of object detector is released                                                                                    | > v0.5.1          |
-|Mei 2019    | Stable version of U-net semantic segmentation is released                                                                        | > v0.5.1          |   
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |  
+|Mei 2019    | yolov3 (stable version) was relesed                                                                                              | > v0.5.1          |
+|Mei 2019    | U-net semantic segmentation (stable version) was released                                                                        | > v0.5.1          |      
+|April 2019  | yolov3 (preview version)                                                                                                         |      v0.4.18      |
+|April 2019  | Unet-segmentation (preview version)                                                                                              |      v0.4.18      |
+ 
 
 
 
@@ -15,12 +15,12 @@
 | Tensorflow version      |        Simple-Tensor Version      |   
 | ----------------------- | --------------------------------- | 
 | 1.4.1 - 1.12            |      >=v0.4.0                     |
-| 1.3.1                   |      >=v0.4.3                     |
+| 1.13.1                  |      >=v0.4.3                     |
 
 
 
 ## ABOUT PROJECT
-This is a simplification of tensorflow operations and related projects
+This project is a simplification of tensorflow operations and related projects
 
 ## DEPENDENCIES
 1. Tensorflow (1.4.1 - 1.13)

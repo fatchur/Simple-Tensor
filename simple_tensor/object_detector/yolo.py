@@ -275,8 +275,38 @@ class Yolo(ObjectDetector):
             print ("> Val epoch :", 'iou: ', round(iou_avg_val*100, 3), 'obj acc: ', round(obj_acc_val*100, 3), \
                 'noobj acc: ', round(noobj_acc_val*100, 3), 'class acc: ', round(class_acc_val*100, 3))
             
-            print ('eph: ', i, 'ttl loss: ', round(total*100, 2), 'obj loss: ', round(obj*100, 2), \
+            print ('eph: ', i, 'ttl loss: ', round(total, 2), 'obj loss: ', round(obj*100, 2), \
                 'noobj loss: ', round(noobj*100, 2), 'ctr loss: ', round(ctr*100, 2), 'size loss: ', round(size*100, 2),  round(class_l*100, 2), sign)
+
+    
+    def check_val_data(self, val_generator):
+        """[summary]
+        
+        Arguments:
+            val_generator {[type]} -- [description]
+        """
+        x_val, y_val = next(val_generator)
+        val_feed_dict = {}
+        val_feed_dict[self.input_placeholder] = x_val
+        val_feed_dict[self.output_placeholder1] = y_val[0]
+        val_feed_dict[self.output_placeholder2] = y_val[1]
+        val_feed_dict[self.output_placeholder3] = y_val[2]
+        total, obj, noobj, ctr, size, class_l, iou_avg_val, obj_acc_val, noobj_acc_val, class_acc_val = self.session.run([self.all_losses, 
+                                                    self.objectness_losses, 
+                                                    self.noobjectness_losses, 
+                                                    self.center_losses, 
+                                                    self.size_losses,
+                                                    self.class_losses,
+                                                    self.iou_avg,
+                                                    self.obj_acc_avg,
+                                                    self.noobj_acc_avg,
+                                                    self.class_acc_avg], val_feed_dict)
+
+        print ("> iou: ", round(iou_avg_val*100, 3), 'obj acc: ', round(obj_acc_val*100, 3), \
+                'noobj acc: ', round(noobj_acc_val*100, 3), 'class acc: ', round(class_acc_val*100, 3))
+
+        print ('ttl loss: ', round(total, 2), 'obj loss: ', round(obj*100, 2), \
+                'noobj loss: ', round(noobj*100, 2), 'ctr loss: ', round(ctr*100, 2), 'size loss: ', round(size*100, 2),  round(class_l*100, 2))
     
 
 

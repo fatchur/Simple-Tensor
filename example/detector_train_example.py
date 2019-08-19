@@ -40,7 +40,7 @@ print ("===== Load Model Success")
 
 train_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/plate/')
 validate_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/plate/')
-c.optimize(subdivisions=1, iterations=5, best_loss=10000000, train_generator=train_generator, val_generator=validate_generator, save_path="./example")
+c.optimize(subdivisions=1, iterations=5, best_loss=10000000, train_generator=train_generator, val_generator=validate_generator, save_path="tmp_model/yolov3")
 
 
 
