@@ -1,4 +1,4 @@
-import simple_tensor.segmentation.deeplab import *
+from simple_tensor.segmentation.deeplab import *
 
 
 segmentation = DeepLab(num_classes=1)
