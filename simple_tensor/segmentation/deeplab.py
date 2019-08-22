@@ -171,7 +171,20 @@ class DeepLab():
                        model_path = '/home/model/resnet_v2_101/resnet_v2_101.ckpt',
                        base_architecture='resnet_v2_101',
                        output_stride = 16,
-                       learning_rate = 0.0001):
+                       learning_rate = 0.0001, 
+                       is_training = True):
+        """[summary]
+        
+        Arguments:
+            num_classes {[type]} -- [description]
+        
+        Keyword Arguments:
+            input_shape {tuple} -- [description] (default: {(None, 300, 300, 3)})
+            base_architecture {str} -- [description] (default: {'resnet_v2_101'})
+            output_stride {int} -- [description] (default: {16})
+            learning_rate {float} -- [description] (default: {0.0001})
+            is_training {bool} -- [description] (default: {True})
+        """
         
         self.input = tf.placeholder(shape=input_shape, dtype=tf.float32)
         self.target = tf.placeholder(shape=input_shape, dtype=tf.float32)
@@ -184,14 +197,15 @@ class DeepLab():
                                        batch_norm_decay = None)
         self.output, self.base_vars = network(self.input, True)
         self.output = tf.nn.sigmoid(self.output)
-
-        # ---------------------------------- #
-        # calculate loss, using soft dice    #
-        # ---------------------------------- #
-        self.cost = self.soft_dice_loss(self.target, self.output)
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(update_ops):
-            self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
+        
+        if is_training:
+            # ---------------------------------- #
+            # calculate loss, using soft dice    #
+            # ---------------------------------- #
+            self.cost = self.soft_dice_loss(self.target, self.output)
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(update_ops):
+                self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
 
         # ---------------------------------- #
         # tensorflow saver                   #

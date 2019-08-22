@@ -1,7 +1,7 @@
 from simple_tensor.segmentation.deeplab import *
 
 
-segmentation = DeepLab(num_classes=1)
+segmentation = DeepLab(num_classes=1, model_path = "gdrive/My Drive/model/resnet_v2_101/resnet_v2_101.ckpt", is_training=True)
 train_generator = segmentation.batch_generator(batch_size=4, dataset_path='/home/dataset/melon_segmentation/')
 val_generator = segmentation.batch_generator(batch_size=4, dataset_path='/home/dataset/melon_segmentation/')
 

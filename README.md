@@ -10,8 +10,6 @@
 |April 2019  | Unet-segmentation (preview version)                                                                                              |      v0.4.18      |
  
 
-
-
 ## Tensorflow Compatibility
 | Tensorflow version      |        Simple-Tensor Version      |   
 | ----------------------- | --------------------------------- | 
