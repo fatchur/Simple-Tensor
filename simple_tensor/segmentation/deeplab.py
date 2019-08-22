@@ -2,7 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import cv2
+import random
+import numpy as np
 import tensorflow as tf
+from comdutils.file_utils import *
 
 from tensorflow.contrib.slim.nets import resnet_v2
 from tensorflow.contrib import layers as layers_lib
@@ -27,7 +31,6 @@ def atrous_spatial_pyramid_pooling(inputs, output_stride, batch_norm_decay, is_t
     Returns:
         The atrous spatial pyramid pooling output.
     """
-    print ("=======>> input : ", inputs)
     with tf.variable_scope("aspp"):
         if output_stride not in [8, 16]:
             raise ValueError('output_stride must be either 8 or 16.')
@@ -45,8 +48,6 @@ def atrous_spatial_pyramid_pooling(inputs, output_stride, batch_norm_decay, is_t
                 conv_3x3_1 = resnet_utils.conv2d_same(inputs, depth, 3, stride=1, rate=atrous_rates[0], scope='conv_3x3_1')
                 conv_3x3_2 = resnet_utils.conv2d_same(inputs, depth, 3, stride=1, rate=atrous_rates[1], scope='conv_3x3_2')
                 conv_3x3_3 = resnet_utils.conv2d_same(inputs, depth, 3, stride=1, rate=atrous_rates[2], scope='conv_3x3_3')
-
-                print ("=======>> input : ", conv_1x1, conv_3x3_1, conv_3x3_2, conv_3x3_3)
 
                 # (b) the image-level features
                 with tf.variable_scope("image_level_features"):
@@ -164,24 +165,165 @@ def deeplab_v3_generator(num_classes,
     return model
 
 
-network = deeplab_v3_generator(num_classes=3,
-                               output_stride=16,
-                               base_architecture='resnet_v2_101',
-                               batch_norm_decay = None)
+class DeepLab():
+    def __init__(self, num_classes, 
+                       input_shape = (None, 300, 300, 3),\
+                       model_path = '/home/model/resnet_v2_101/resnet_v2_101.ckpt',
+                       base_architecture='resnet_v2_101',
+                       output_stride = 16,
+                       learning_rate = 0.0001):
+        
+        self.input = tf.placeholder(shape=input_shape, dtype=tf.float32)
+        self.target = tf.placeholder(shape=input_shape, dtype=tf.float32)
+        self.input_width = input_shape[1]
+        self.input_height = input_shape[2]
 
-x = tf.placeholder(shape=(None, 300, 300, 3), dtype=tf.float32)
-logits, vars = network(x, True)
+        network = deeplab_v3_generator(num_classes=num_classes,
+                                       output_stride=output_stride,
+                                       base_architecture=base_architecture,
+                                       batch_norm_decay = None)
+        self.output, self.base_vars = network(self.input, True)
+        self.output = tf.nn.sigmoid(self.output)
 
-session = tf.Session()
-saver = tf.train.Saver(var_list=vars)
-saver_all = tf.train.Saver()
-session.run(tf.global_variables_initializer())
-saver.restore(session, '/home/model/resnet_v2_101/resnet_v2_101.ckpt')
-print ("success")
+        # ---------------------------------- #
+        # calculate loss, using soft dice    #
+        # ---------------------------------- #
+        self.cost = self.soft_dice_loss(self.target, self.output)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
+
+        # ---------------------------------- #
+        # tensorflow saver                   #
+        # ---------------------------------- #
+        self.saver_partial = tf.train.Saver(var_list=self.base_vars)
+        self.saver_all = tf.train.Saver()
+        self.session = tf.Session()
+        self.session.run(tf.global_variables_initializer())
+        self.saver_partial.restore(self.session, model_path)
+        print ("===>>> Build Model and Load Weight is Success")
 
 
+    def soft_dice_loss(self, y_true, y_pred, epsilon=1e-6):
+        """[summary]
+        
+        Arguments:
+            y_true {[type]} -- [description]
+            y_pred {[type]} -- [description]
+        
+        Keyword Arguments:
+            epsilon {[type]} -- [description] (default: {1e-6})
+        """ 
+        numerator = tf.reduce_sum( y_pred * y_true)
+        denominator = tf.reduce_sum(y_true)
+        dice_loss = 1 - numerator / (denominator + epsilon)
+
+        mse_loss = tf.reduce_mean(tf.square(y_true - y_pred))
+        return 0.8 * dice_loss + 0.2 * mse_loss
 
 
+    def batch_generator(self, batch_size, dataset_path):
+        """Train Generator
+        
+        Arguments:
+            batch_size {integer} -- the size of the batch
+            image_name_list {list of string} -- the list of image name
+        """
+        self.label_folder_path = dataset_path + "labels/"
+        self.dataset_folder_path = dataset_path + "images/"
+        self.dataset_file_list = get_filenames(self.dataset_folder_path)
+        random.shuffle(self.dataset_file_list)
+        
+        print ("------------------------INFO IMAGES-------------------")
+        print ("Image Folder: " + self.dataset_folder_path)
+        print ("Number of Image: " + str(len(self.dataset_file_list)))
+        print ("------------------------------------------------------")
+
+        # Infinite loop.
+        idx = 0
+        while True:
+            x_batch = []
+            y_pred = []
+
+            for i in range(batch_size):
+                if idx >= len(self.dataset_file_list):
+                    idx = 0
+                
+                try:
+                    tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                    tmp_x = cv2.resize(tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
+                    tmp_x = tmp_x.astype(np.float32) / 255.
+                    tmp_y = cv2.imread(self.label_folder_path + "mask"+self.dataset_file_list[idx].split('.')[0]+"_m.jpg")
+                    tmp_y = cv2.resize(tmp_y, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
+                    tmp_y = tmp_y.astype(np.float32) / 255.
+                    x_batch.append(tmp_x)
+                    y_pred.append(tmp_y)
+                except:
+                    pass
+                idx += 1
+            yield (np.array(x_batch), np.array(y_pred))
+
+
+    def optimize(self, subdivisions,
+                iterations, 
+                best_loss, 
+                train_batch, 
+                val_batch, 
+                save_path):
+        """[summary]
+        
+        Arguments:
+            subdivisions {[type]} -- [description]
+            iterations {[type]} -- [description]
+            best_loss {[type]} -- [description]
+            train_batch {[type]} -- [description]
+            val_batch {[type]} -- [description]
+            save_path {[type]} -- [description]
+        """
+        
+        self.train_losses = []
+        self.val_losses = []
+        best_loss = best_loss
+
+        for i in range(iterations):
+            sign = '-'
+
+            tmp_losses = []
+            for j in range(subdivisions):
+                # ------------------------- #
+                # feed train data           #
+                # ------------------------- #
+                input_image, target_image = next(train_batch)
+                feed_dict = {}
+                feed_dict[self.input] = input_image
+                feed_dict[self.target] = target_image
+                self.session.run(self.optimizer, feed_dict)
+                loss = self.session.run(self.cost, feed_dict)
+                tmp_losses.append(loss)
+                print ("> Train sub", j, 'loss : ', loss)
+                
+            # ------------------------- #
+            # feed validation data      #
+            # ------------------------- #
+            input_image, target_image = next(val_batch)
+            feed_dict = {}
+            feed_dict[self.input] = input_image
+            feed_dict[self.target] = target_image
+            loss = self.session.run(self.cost, feed_dict)
+
+            # ------------------------- #
+            # append loss val           #
+            # ------------------------- #
+            self.val_losses.append(loss)
+            train_loss = sum(tmp_losses)/(len(tmp_losses)+0.0001)
+            self.train_losses.append(train_loss)
+            
+            if loss < best_loss:
+                best_loss = loss
+                sign = '***************'
+                self.saver_all.save(self.session, save_path)
+                
+            print ("> iteration", i, 'train loss: ', train_loss, 'val loss: ', loss, sign)
 
 
 
