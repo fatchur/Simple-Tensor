@@ -214,8 +214,17 @@ class DeepLab():
         self.saver_all = tf.train.Saver()
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
-        self.saver_partial.restore(self.session, model_path)
-        print ("===>>> Build Model and Load Weight is Success")
+
+        try:
+            self.saver_all.restore(self.session, model_path)
+            print ("-------------------------------------")
+            print ("INFO: Read all model weight success")
+            print ("-------------------------------------")
+        except:
+            self.saver_partial.restore(self.session, model_path)
+            print ("-------------------------------------")
+            print ("WARNING: Read only some parts of model weight")
+            print ("-------------------------------------")
 
 
     def soft_dice_loss(self, y_true, y_pred, epsilon=1e-6):
