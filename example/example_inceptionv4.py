@@ -20,10 +20,14 @@ update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
     optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cost)
 
-saver = tf.train.Saver()
+saver_partial = tf.train.Saver(var_list)
+saver_all = tf.train.Saver()
 session = tf.Session()
 session.run(tf.global_variables_initializer())
-#saver.restore(sess=session, save_path='/home/model/test_imrec/model')
+# >> for the first training
+saver_partial.restore(sess=session, save_path='/home/model/inception_v4/inception_v4.ckpt')
+# >> for continuing your training
+# saver_all.restore(sess=session, save_path='your model path from previous training')
 
 imrec.optimize(iteration=2000, 
          subdivition=1,
@@ -31,7 +35,7 @@ imrec.optimize(iteration=2000,
          optimizer_tensor=optimizer,
          out_tensor = out,
          session = session, 
-         saver = saver,
+         saver = saver_all,
          train_batch_size=2, 
          val_batch_size=10,
          path_tosave_model='/home/model/test_imrec/model')
