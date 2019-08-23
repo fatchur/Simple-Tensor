@@ -279,15 +279,20 @@ class DeepLab():
                 
                 try:
                     tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                    tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                     tmp_x = cv2.resize(tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
                     tmp_x = tmp_x.astype(np.float32) / 255.
-                    tmp_y = cv2.imread(self.label_folder_path + "mask"+self.dataset_file_list[idx].split('.')[0]+"_m.jpg")
+                    tmp_y = cv2.imread(self.label_folder_path + self.dataset_file_list[idx])
+                    tmp_y = cv2.cvtColor(tmp_y, cv2.COLOR_BGR2RGB)
                     tmp_y = cv2.resize(tmp_y, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
                     tmp_y = tmp_y.astype(np.float32) / 255.
                     x_batch.append(tmp_x)
                     y_pred.append(tmp_y)
-                except:
-                    pass
+                except Exception as e:
+                    print ("-----------------------------------------------------------------------------")
+                    print ('>>> WARNING: fail handling ' +  self.dataset_file_list[idx], e)
+                    print ("-----------------------------------------------------------------------------")
+
                 idx += 1
             yield (np.array(x_batch), np.array(y_pred))
 

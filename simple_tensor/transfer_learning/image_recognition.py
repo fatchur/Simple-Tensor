@@ -229,6 +229,7 @@ class ImageRecognition(object):
 
                     # train
                     tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_train[j][index_t])
+                    tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                     tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
                     if self.input_channel == 1:
                         tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2GRAY)
@@ -247,6 +248,7 @@ class ImageRecognition(object):
 
                     # val
                     tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_val[j][index_v])
+                    tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                     tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
                     if self.input_channel == 1:
                         tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2GRAY)
@@ -269,6 +271,7 @@ class ImageRecognition(object):
                  optimizer_tensor,
                  out_tensor, 
                  session,
+                 saver, 
                  train_batch_size=32, 
                  val_batch_size=50,
                  path_tosave_model='model/model1'):
@@ -326,14 +329,14 @@ class ImageRecognition(object):
             loss = sum(losses) / (len(losses) + 0.0001)
             acc = sum(accs) / (len(accs) + 0.0001)
             
-            train_loss.append(t_loss)
-            val_loss.append(loss)
+            self.train_loss.append(t_loss)
+            self.val_loss.append(loss)
                 
             if best_loss > loss:
                 best_loss = loss
-                sign = "****************"
+                sign = "************* model saved"
                 saver.save(session, path_tosave_model)
         
-            print (i, t_loss, loss, acc, sign)
+            print (">> epoch: ", i, "train loss: ", round(t_loss, 3), "val loss: ", round(loss, 3), "val acc: ", round(acc,3), sign)
 
     

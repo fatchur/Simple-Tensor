@@ -158,6 +158,7 @@ class Yolo(ObjectDetector):
                     idx = 0
                 try:
                     tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                    tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                     tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
                     tmp_x = tmp_x.astype(np.float32) / 255.
                     tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
