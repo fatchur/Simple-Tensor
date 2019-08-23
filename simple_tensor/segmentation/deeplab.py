@@ -167,6 +167,7 @@ def deeplab_v3_generator(num_classes,
 
 class DeepLab():
     def __init__(self, num_classes, 
+                       input_tensor = None,
                        input_shape = (None, 300, 300, 3),\
                        model_path = '/home/model/resnet_v2_101/resnet_v2_101.ckpt',
                        base_architecture='resnet_v2_101',
@@ -186,7 +187,11 @@ class DeepLab():
             is_training {bool} -- [description] (default: {True})
         """
         
-        self.input = tf.placeholder(shape=input_shape, dtype=tf.float32)
+        if input_tensor is None:
+            self.input = tf.placeholder(shape=input_shape, dtype=tf.float32)
+        else:
+            self.input = input_tensor
+            
         self.target = tf.placeholder(shape=input_shape, dtype=tf.float32)
         self.input_width = input_shape[1]
         self.input_height = input_shape[2]
