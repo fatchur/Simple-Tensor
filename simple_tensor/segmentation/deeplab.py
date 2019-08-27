@@ -200,7 +200,7 @@ class DeepLab():
                                        output_stride=output_stride,
                                        base_architecture=base_architecture,
                                        batch_norm_decay = None)
-        self.output, self.base_vars = network(self.input, True)
+        self.output, self.base_vars = network(self.input, is_training)
         self.output = tf.nn.sigmoid(self.output)
         
         if is_training:
