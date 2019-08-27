@@ -684,7 +684,31 @@ class ObjectDetector(object):
                 filter_256 = 32
                 filter_512 = 32
                 filter_1024 = 32
-                return_vars = tf.global_variables(scope='yolo_v3_model')
+                return_vars = tf.global_variables(scope='yolo_v3_model_special')
+            elif network_type == 'very_small':
+                filter_128 = 64
+                filter_256 = 64
+                filter_512 = 64
+                filter_1024 = 64
+                return_vars = tf.global_variables(scope='yolo_v3_model_very_small')
+            elif network_type == 'small':
+                filter_128 = 64
+                filter_256 = 128
+                filter_512 = 128
+                filter_1024 = 256
+                return_vars = tf.global_variables(scope='yolo_v3_model_small')
+            elif network_type == 'medium':
+                filter_128 = 64
+                filter_256 = 128
+                filter_512 = 256
+                filter_1024 = 512
+                return_vars = tf.global_variables(scope='yolo_v3_model_medium')
+            elif network_type == 'big':
+                filter_128 = 128
+                filter_256 = 256
+                filter_512 = 512
+                filter_1024 = 1024
+                return_vars = tf.global_variables(scope='yolo_v3_model_big')
 
             for i in range(8):
                 inputs = darknet53_residual_block(inputs, 
@@ -974,8 +998,8 @@ class ObjectDetector(object):
         #     get yolo small variables        #
         #  get yolo veyi_small variables      #
         #-------------------------------------#
-        self.yolo_small_vars = tf.global_variables(scope='yolo_v3_model')
-        self.yolo_very_small_vars = tf.global_variables(scope='yolo_v3_model')
+        self.yolo_small_vars = tf.global_variables(scope='yolo_v3_model_small')
+        self.yolo_very_small_vars = tf.global_variables(scope='yolo_v3_model_very_small')
         route, inputs = yolo_convolution_block(inputs, 
                                                 filters=filters['a'], 
                                                 training=is_training,
@@ -1005,7 +1029,7 @@ class ObjectDetector(object):
         #-------------------------------------#
         #     get yolo medium variables       #
         #-------------------------------------#
-        self.yolo_medium_vars = tf.global_variables(scope='yolo_v3_model')
+        self.yolo_medium_vars = tf.global_variables(scope='yolo_v3_model_medium')
         route, inputs = yolo_convolution_block(inputs, 
                                                 filters=filters['b'],  
                                                 training=is_training,
@@ -1040,7 +1064,7 @@ class ObjectDetector(object):
         #       get yolo big variables        #
         #       get yolo all variables        #
         #-------------------------------------#
-        self.yolo_big_vars = tf.global_variables(scope='yolo_v3_model')
+        self.yolo_big_vars = tf.global_variables(scope='yolo_v3_model_big')
         self.yolo_vars = tf.global_variables(scope='yolo_v3_model')
 
         self.detect1 = tf.layers.conv2d(inputs_detect1, 
