@@ -685,6 +685,30 @@ class ObjectDetector(object):
                 filter_512 = 32
                 filter_1024 = 32
                 return_vars = tf.global_variables(scope='yolo_v3_model')
+            elif network_type == 'very_small':
+                filter_128 = 64
+                filter_256 = 64
+                filter_512 = 64
+                filter_1024 = 64
+                return_vars = tf.global_variables(scope='yolo_v3_model')
+            elif network_type == 'small':
+                filter_128 = 64
+                filter_256 = 128
+                filter_512 = 128
+                filter_1024 = 256
+                return_vars = tf.global_variables(scope='yolo_v3_model')
+            elif network_type == 'medium':
+                filter_128 = 64
+                filter_256 = 128
+                filter_512 = 256
+                filter_1024 = 512
+                return_vars = tf.global_variables(scope='yolo_v3_model')
+            elif network_type == 'big':
+                filter_128 = 128
+                filter_256 = 256
+                filter_512 = 512
+                filter_1024 = 1024
+                return_vars = tf.global_variables(scope='yolo_v3_model')
 
             for i in range(8):
                 inputs = darknet53_residual_block(inputs, 
