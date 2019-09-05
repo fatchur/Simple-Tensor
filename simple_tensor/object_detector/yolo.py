@@ -128,21 +128,21 @@ class Yolo(ObjectDetector):
             self.build_yolov3_net(inputs=input_tensor, network_type=network_type, is_training=is_training)
 
 
-    def batch_generator(self, batch_size, dataset_path):
+    def batch_generator(self, batch_size, dataset_path, message):
         """Train Generator
         
         Arguments:
             batch_size {integer} -- the size of the batch
             image_name_list {list of string} -- the list of image name
         """
-        self.label_folder_path = dataset_path + "labels/"
-        self.dataset_folder_path = dataset_path + "images/"
-        self.dataset_file_list = get_filenames(self.dataset_folder_path)
-        random.shuffle(self.dataset_file_list)
+        label_folder_path = dataset_path + "labels/"
+        dataset_folder_path = dataset_path + "images/"
+        dataset_file_list = get_filenames(dataset_folder_path)
+        random.shuffle(dataset_file_list)
         
         print ("------------------------INFO-------------------")
-        print ("Image Folder: " + self.dataset_folder_path)
-        print ("Number of Image: " + str(len(self.dataset_file_list)))
+        print ("Image Folder: " + dataset_folder_path)
+        print ("Number of Image: " + str(len(dataset_file_list)))
         print ("-----------------------------------------------")
 
         # Infinite loop.
@@ -154,22 +154,24 @@ class Yolo(ObjectDetector):
             y_pred3 = []
 
             for i in range(batch_size):
-                if idx >= len(self.dataset_file_list):
+                if idx >= len(dataset_file_list):
+                    random.shuffle(dataset_file_list)
+                    print ("==>>> INFO: your " + message +" dataset is reshuffled again", idx)
                     idx = 0
                 try:
-                    tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                    tmp_x = cv2.imread(dataset_folder_path + dataset_file_list[idx])
                     tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                     tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
                     tmp_x = tmp_x.astype(np.float32) / 255.
-                    tmp_y = self.read_target(self.label_folder_path + self.dataset_file_list[idx][:-3] + "txt")
+                    tmp_y = self.read_target(label_folder_path + dataset_file_list[idx][:-3] + "txt")
                     x_batch.append(tmp_x)
                     y_pred1.append(tmp_y[0])
                     y_pred2.append(tmp_y[1])
                     y_pred3.append(tmp_y[2])
                 except Exception as e:
-                    print ("-----------------------------------------------------------------------------")
+                    print ("---------------------------------------------------------------")
                     print ("WARNING: the " + str(e))
-                    print ("-----------------------------------------------------------------------------")
+                    print ("---------------------------------------------------------------")
 
                 idx += 1
             yield (np.array(x_batch), [np.array(y_pred1), np.array(y_pred2), np.array(y_pred3)])
