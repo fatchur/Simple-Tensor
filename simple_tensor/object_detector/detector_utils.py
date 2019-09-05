@@ -691,24 +691,6 @@ class ObjectDetector(object):
                 filter_512 = 64
                 filter_1024 = 64
                 return_vars = tf.global_variables(scope='yolo_v3_model')
-            elif network_type == 'small':
-                filter_128 = 64
-                filter_256 = 128
-                filter_512 = 128
-                filter_1024 = 256
-                return_vars = tf.global_variables(scope='yolo_v3_model')
-            elif network_type == 'medium':
-                filter_128 = 64
-                filter_256 = 128
-                filter_512 = 256
-                filter_1024 = 512
-                return_vars = tf.global_variables(scope='yolo_v3_model')
-            elif network_type == 'big':
-                filter_128 = 128
-                filter_256 = 256
-                filter_512 = 512
-                filter_1024 = 1024
-                return_vars = tf.global_variables(scope='yolo_v3_model')
 
             for i in range(8):
                 inputs = darknet53_residual_block(inputs, 
@@ -976,14 +958,14 @@ class ObjectDetector(object):
             filters['c'] = 128
         elif network_type == 'very_small':
             filters['a'] = 128
-            filters['b'] = 32
-            filters['c'] = 32
+            filters['b'] = 64
+            filters['c'] = 64
         elif network_type == 'special':
             filters['a'] = 64
             filters['b'] = 32
             filters['c'] = 32
         #---------------------------------#
-        if network_type == 'special':
+        if network_type == 'special' or network_type == 'very_small':
             route1, route2, inputs, self.yolo_special_vars = darknet53(inputs, 
                                                                      training=is_training,
                                                                      data_format=data_format, 
@@ -996,10 +978,8 @@ class ObjectDetector(object):
 
         #-------------------------------------#
         #     get yolo small variables        #
-        #  get yolo veyi_small variables      #
         #-------------------------------------#
         self.yolo_small_vars = tf.global_variables(scope='yolo_v3_model')
-        self.yolo_very_small_vars = tf.global_variables(scope='yolo_v3_model')
         route, inputs = yolo_convolution_block(inputs, 
                                                 filters=filters['a'], 
                                                 training=is_training,

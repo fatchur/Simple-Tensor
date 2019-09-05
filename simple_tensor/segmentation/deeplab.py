@@ -168,7 +168,7 @@ def deeplab_v3_generator(num_classes,
 class DeepLab():
     def __init__(self, num_classes, 
                        input_tensor = None,
-                       input_shape = (None, 300, 300, 3),\
+                       input_shape = (None, 300, 300, 3),
                        model_path = '/home/model/resnet_v2_101/resnet_v2_101.ckpt',
                        base_architecture='resnet_v2_101',
                        output_stride = 16,
