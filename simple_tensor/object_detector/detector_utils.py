@@ -565,7 +565,7 @@ class ObjectDetector(object):
             """
             shortcut = inputs
             
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = name + '_input_conv1', 
                             dropout_val= self.dropout_val, 
@@ -577,7 +577,7 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
             
-            inputs, _ = new_conv2d_layer(input=(inputs if stride == 1 else fixed_padding(inputs, 3, 'channels_last')), 
+            inputs = new_conv2d_layer(input=(inputs if stride == 1 else fixed_padding(inputs, 3, 'channels_last')), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], shortcut.get_shape().as_list()[-1]], 
                             name = name + '_input_conv2', 
                             dropout_val= self.dropout_val, 
@@ -607,7 +607,7 @@ class ObjectDetector(object):
             Returns:
                 [type] -- [description]
             """
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 32], 
                             name = 'main_input_conv1', 
                             dropout_val= self.dropout_val, 
@@ -620,7 +620,7 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
 
-            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+            inputs = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 64], 
                             name = 'main_input_conv2', 
                             dropout_val= self.dropout_val, 
@@ -639,7 +639,7 @@ class ObjectDetector(object):
                                               data_format=data_format, 
                                               name='res1')
 
-            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+            inputs = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 128], 
                             name = 'main_input_conv3', 
                             dropout_val= self.dropout_val, 
@@ -659,7 +659,7 @@ class ObjectDetector(object):
                                                   data_format=data_format, 
                                                   name='res' + str(i+1))
                 
-            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+            inputs = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 256], 
                             name = 'main_input_conv4', 
                             dropout_val= self.dropout_val, 
@@ -700,7 +700,7 @@ class ObjectDetector(object):
                                                   name='res' + str(i+3))
 
             route1 = inputs
-            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+            inputs = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], filter_512], 
                             name = 'main_input_conv5', 
                             dropout_val= self.dropout_val, 
@@ -721,7 +721,7 @@ class ObjectDetector(object):
                                                   name='res' + str(i+11))
 
             route2 = inputs
-            inputs, _ = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
+            inputs = new_conv2d_layer(input=fixed_padding(inputs, 3, 'channels_last'), 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], filter_1024], 
                             name = 'main_input_conv6', 
                             dropout_val= self.dropout_val, 
@@ -753,7 +753,7 @@ class ObjectDetector(object):
             Returns:
                 [type] -- [description]
             """
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = 'main_input_conv7', 
                             dropout_val= self.dropout_val, 
@@ -766,7 +766,7 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
         
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
                             name = 'main_input_conv8', 
                             dropout_val= self.dropout_val, 
@@ -779,7 +779,7 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
             
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = 'main_input_conv9', 
                             dropout_val= self.dropout_val, 
@@ -792,7 +792,7 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
             
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
                             name = 'main_input_conv10', 
                             dropout_val= self.dropout_val, 
@@ -805,7 +805,7 @@ class ObjectDetector(object):
                             use_bias=False,
                             use_batchnorm=True)
             
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[1, 1, inputs.get_shape().as_list()[-1], filters], 
                             name = 'main_input_conv11', 
                             dropout_val= self.dropout_val, 
@@ -819,7 +819,7 @@ class ObjectDetector(object):
                             use_batchnorm=True)
 
             route = inputs
-            inputs, _ = new_conv2d_layer(input=inputs, 
+            inputs = new_conv2d_layer(input=inputs, 
                             filter_shape=[3, 3, inputs.get_shape().as_list()[-1], 2*filters], 
                             name = 'main_input_conv12', 
                             dropout_val= self.dropout_val, 
@@ -986,7 +986,7 @@ class ObjectDetector(object):
                                                 data_format=data_format)
         inputs_detect1 = inputs
 
-        inputs, _ = new_conv2d_layer(input=route, 
+        inputs = new_conv2d_layer(input=route, 
                     filter_shape=[1, 1, route.get_shape().as_list()[-1], 256], 
                     name = 'main_input_conv13', 
                     dropout_val= self.dropout_val, 
@@ -1016,7 +1016,7 @@ class ObjectDetector(object):
                                                 data_format=data_format)
         inputs_detect2 = inputs
         
-        inputs, _ = new_conv2d_layer(input=route, 
+        inputs = new_conv2d_layer(input=route, 
                     filter_shape=[1, 1, route.get_shape().as_list()[-1], 128], 
                     name = 'main_input_conv14', 
                     dropout_val= self.dropout_val, 

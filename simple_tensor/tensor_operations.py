@@ -13,7 +13,6 @@ import tensorflow as tf
 from tensorflow.python import control_flow_ops
 
 
-
 def new_weights(shape, 
                 name, 
                 data_type=tf.float32):
@@ -27,7 +26,7 @@ def new_weights(shape,
     Return:
         a trainable weight/filter tensor with float 32 data type
     """
-    return tf.Variable(tf.truncated_normal(shape, stddev=0.05, dtype=data_type), dtype=data_type, name='weight_'+name)
+    return tf.Variable(tf.truncated_normal(shape, stddev=0.05, dtype=data_type), dtype=data_type, name='weight_'+str(name))
 
 
 def new_biases(length, 
@@ -42,31 +41,36 @@ def new_biases(length,
     Return:
         a trainable bias tensor with float 32 data type
     """
-    return tf.Variable(tf.constant(0.05, shape=[length], dtype=data_type), dtype=data_type, name='bias_'+name)
+    return tf.Variable(tf.constant(0.05, shape=[length], dtype=data_type), dtype=data_type, name='bias_'+str(name))
 
 
 def new_fc_layer(input, 
-                 num_inputs, 
+                 num_inputs,
                  num_outputs, 
-                 name, 
+                 name=None, 
                  dropout_val=0.85, 
                  activation="LRELU",
                  lrelu_alpha=0.2, 
                  data_type=tf.float32,
                  is_training=True,
                  use_bias=True): 
-    """
-    A simplification method of tensorflow fully connected operation
-    Args:
-        input:		an input tensor
-        num_inputs:	an integer, the number of input neurons
-        num_outputs:	an integer, the number of output neurons
-        name:		a string, basic name for all filters/weights and biases for this operation
-        dropout		a float, dropout presentage, by default 0.85 (dropped out 15%)
-        activation:	an uppercase string, the activation used
-                - if you don't need an activation function, fill it with 'non'
-    Return:
-        a tensor as the result of activated matrix multiplication, its weights, and biases
+    """[summary]
+    
+    Arguments:
+        input {[type]} -- [description]
+        num_outputs {[type]} -- [description]
+    
+    Keyword Arguments:
+        name {[type]} -- [description] (default: {None})
+        dropout_val {float} -- [description] (default: {0.85})
+        activation {str} -- [description] (default: {"LRELU"})
+        lrelu_alpha {float} -- [description] (default: {0.2})
+        data_type {[type]} -- [description] (default: {tf.float32})
+        is_training {bool} -- [description] (default: {True})
+        use_bias {bool} -- [description] (default: {True})
+    
+    Returns:
+        [type] -- [description]
     """
     weights = new_weights(shape=[num_inputs, num_outputs], name=name, data_type=data_type)
     layer = tf.matmul(input, weights)
@@ -75,26 +79,26 @@ def new_fc_layer(input,
         biases = new_biases(length=num_outputs, name=name, data_type=data_type)
         layer += biases
 
-    if activation=="RELU":
+    if activation in ["RELU", "relu", "Relu"]:
         layer = tf.nn.relu(layer)
-    elif activation=="LRELU":
-        layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha, name=name + '_LRELU')
-    elif activation == "SELU":
+    elif activation in ["LRELU", "lrelu", "Lrelu"]:
+        layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
+    elif activation in ["SELU", "selu", "Selu"]:
         layer = tf.nn.selu(layer)
-    elif activation == "ELU":
+    elif activation in ["ELU", "elu", "Elu"]:
         layer = tf.nn.elu(layer)
-    elif activation == "SIGMOID":
+    elif activation in ["SIGMOID", "sigmoid", "Sigmoid"]:
         layer = tf.nn.sigmoid(layer)
-    elif activation == "SOFTMAX":
+    elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
     
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, None
+    return layer
 
 
 def new_conv1d_layer(input, 
                      filter_shape, 
-                     name, 
+                     name=None, 
                      dropout_val=0.85, 
                      activation='LRELU',
                      lrelu_alpha=0.2,  
@@ -107,51 +111,55 @@ def new_conv1d_layer(input,
     """[summary]
     
     Arguments:
-        input {3D tensor} -- The input tensor with shape [batch, width, channel]
-        filter_shape {List of integer} -- the shape of the filter with format [filter width, input channel, output channel]
-        name {string} -- The additional name for all tensors in this operation
+        input {[type]} -- [description]
+        filter_shape {[type]} -- [description]
     
     Keyword Arguments:
+        name {[type]} -- [description] (default: {None})
         dropout_val {float} -- [description] (default: {0.85})
         activation {str} -- [description] (default: {'LRELU'})
+        lrelu_alpha {float} -- [description] (default: {0.2})
         padding {str} -- [description] (default: {'SAME'})
         strides {int} -- [description] (default: {1})
         data_type {[type]} -- [description] (default: {tf.float32})
+        is_training {bool} -- [description] (default: {True})
+        use_bias {bool} -- [description] (default: {True})
+        use_batchnorm {bool} -- [description] (default: {False})
     
     Returns:
-        [3D tensor] --  The input tensor with shape [batch, width, channel]
+        [type] -- [description]
     """
     shape = filter_shape
     weights = new_weights(shape=shape, name=name, data_type=data_type)
-    layer = tf.nn.conv1d(input, filters = weights, stride = strides, padding = padding, name='convolution1d_' + name)
+    layer = tf.nn.conv1d(input, filters=weights, stride=strides, padding=padding, name='convolution1d_' + str(name))
 
     if use_bias:
         biases = new_biases(length=filter_shape[2], name=name, data_type=data_type)
         layer += biases
 
     if use_batchnorm:
-        layer = batch_norm(inputs=layer, training = is_training)
+        layer = batch_norm(inputs=layer, training=is_training)
 
-    if activation == "RELU":
+    if activation in ["RELU", "relu", "Relu"]:
         layer = tf.nn.relu(layer)
-    elif activation == "LRELU":
+    elif activation in ["LRELU", "lrelu", "Lrelu"]:
         layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
-    elif activation == "SELU":
+    elif activation in ["SELU", "selu", "Selu"]:
         layer = tf.nn.selu(layer)
-    elif activation == "ELU":
+    elif activation in ["ELU", "elu", "Elu"]:
         layer = tf.nn.elu(layer)
-    elif activation == "SIGMOID":
+    elif activation in ["SIGMOID", "sigmoid", "Sigmoid"]:
         layer = tf.nn.sigmoid(layer)
-    elif activation == "SOFTMAX":
+    elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
 
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, None
+    return layer
 
 
 def new_conv2d_layer(input, 
                      filter_shape, 
-                     name, 
+                     name=None, 
                      dropout_val=0.85, 
                      activation = 'LRELU', 
                      lrelu_alpha=0.2,
@@ -161,29 +169,26 @@ def new_conv2d_layer(input,
                      is_training=True,
                      use_bias=True,
                      use_batchnorm=False):  
-    """
-    A simplification method of tensorflow convolution operation
-    Args:
-        input:		an input tensor
-        filter shape:	a list of integer, the shape of trainable filter for this operation.
-                - the format, [filter height, filter width, num of input channels, num of output channels]
-                - example, 
-                - you want to set, 
-                - the filter height=3, 
-                - filter width=3, 
-                - the layer/channel/depth of the input tensor= 64, 
-                - the layer/channel/depth of the output tensor = 128
-                - so the shape of your filter is , [3, 3, 64, 128]
-        name:		a string, basic name for all filters/weights and biases for this operation
-        dropout_val	a float, dropout presentage, by default 0.85 (dropped out 15%)
-        activation:	an uppercase string, the activation function used. 
-                - If no activation, use 'none'
-        padding:	an uppercase string, the padding method (SAME or VALID)
-        strides:	a list of integer as the shape of the stride.
-                - the  format: [batch stride, height stride, width stride, depth stride]
-                - example: [1, 1, 1, 1]
-    Return:
-        a tensor as the result of convolution operation, its weights, and biases
+    """[summary]
+    
+    Arguments:
+        input {[type]} -- [description]
+        filter_shape {[type]} -- [description]
+    
+    Keyword Arguments:
+        name {[type]} -- [description] (default: {None})
+        dropout_val {float} -- [description] (default: {0.85})
+        activation {str} -- [description] (default: {'LRELU'})
+        lrelu_alpha {float} -- [description] (default: {0.2})
+        padding {str} -- [description] (default: {'SAME'})
+        strides {list} -- [description] (default: {[1, 1, 1, 1]})
+        data_type {[type]} -- [description] (default: {tf.float32})
+        is_training {bool} -- [description] (default: {True})
+        use_bias {bool} -- [description] (default: {True})
+        use_batchnorm {bool} -- [description] (default: {False})
+    
+    Returns:
+        [type] -- [description]
     """
 
     shape = filter_shape
@@ -191,35 +196,36 @@ def new_conv2d_layer(input,
     layer = tf.nn.conv2d(input=input,
                             filter=weights,
                             strides=strides,
-                            padding=padding, name='convolution_'+name)
+                            padding=padding, 
+                            name='convolution_'+str(name))
     
     if use_bias:
         biases = new_biases(length=filter_shape[3], name=name, data_type=data_type)
         layer += biases
     
     if use_batchnorm:
-        layer = batch_norm(inputs=layer, training = is_training)
+        layer = batch_norm(inputs=layer, training=is_training)
 
-    if activation == "RELU":
+    if activation in ["RELU", "relu", "Relu"]:
         layer = tf.nn.relu(layer)
-    elif activation == "LRELU":
+    elif activation in ["LRELU", "lrelu", "Lrelu"]:
         layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
-    elif activation == "SELU":
+    elif activation in ["SELU", "selu", "Selu"]:
         layer = tf.nn.selu(layer)
-    elif activation == "ELU":
+    elif activation in ["ELU", "elu", "Elu"]:
         layer = tf.nn.elu(layer)
-    elif activation == "SIGMOID":
+    elif activation in ["SIGMOID", "sigmoid", "Sigmoid"]:
         layer = tf.nn.sigmoid(layer)
-    elif activation == "SOFTMAX":
+    elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
 
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, None
+    return layer
     
 
 def new_conv2d_depthwise_layer(input, 
                                filter_shape, 
-                               name, 
+                               name=None, 
                                dropout_val=0.85, 
                                activation = 'LRELU', 
                                lrelu_alpha=0.2, 
@@ -229,113 +235,116 @@ def new_conv2d_depthwise_layer(input,
                                is_training=True,
                                use_bias=True,
                                use_batchnorm=False): 
-    """Function for conv2d depth wise convolution operation
+    """[summary]
     
     Arguments:
-        input {tensor} -- the input tensor
-        filter_shape {list of integer} -- the shape of the filter with format [filter height, filter width, input channel, multiplier]
-        name {str} -- the name of tensors in this operation
+        input {[type]} -- [description]
+        filter_shape {[type]} -- [description]
     
     Keyword Arguments:
+        name {[type]} -- [description] (default: {None})
         dropout_val {float} -- [description] (default: {0.85})
         activation {str} -- [description] (default: {'LRELU'})
+        lrelu_alpha {float} -- [description] (default: {0.2})
         padding {str} -- [description] (default: {'SAME'})
         strides {list} -- [description] (default: {[1, 1, 1, 1]})
+        data_type {[type]} -- [description] (default: {tf.float32})
+        is_training {bool} -- [description] (default: {True})
+        use_bias {bool} -- [description] (default: {True})
+        use_batchnorm {bool} -- [description] (default: {False})
     
-    Return:
-        a tensor as the result of depthwise conv2d operation, its weights, and biases
+    Returns:
+        [type] -- [description]
     """
     shape = filter_shape
     weights = new_weights(shape=shape, name=name, data_type=data_type)
     layer = tf.nn.depthwise_conv2d(input=input,
                             filter=weights,
                             strides=strides,
-                            padding=padding, name='convolution_'+name)
+                            padding=padding, name='convolution_depthwise_'+str(name))
 
     if use_bias:
         biases = new_biases(length=filter_shape[3], name=name, data_type=data_type)
         layer += biases
 
     if use_batchnorm:
-        layer = batch_norm(inputs=layer, training = is_training)
+        layer = batch_norm(inputs=layer, training=is_training)
 
-    if activation == "RELU":
+    if activation in ["RELU", "relu", "Relu"]:
         layer = tf.nn.relu(layer)
-    elif activation == "LRELU":
+    elif activation in ["LRELU", "lrelu", "Lrelu"]:
         layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
-    elif activation == "SELU":
+    elif activation in ["SELU", "selu", "Selu"]:
         layer = tf.nn.selu(layer)
-    elif activation == "ELU":
+    elif activation in ["ELU", "elu", "Elu"]:
         layer = tf.nn.elu(layer)
-    elif activation == "SIGMOID":
+    elif activation in ["SIGMOID", "sigmoid", "Sigmoid"]:
         layer = tf.nn.sigmoid(layer)
-    elif activation == "SOFTMAX":
+    elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
 
     layer = tf.nn.dropout(layer, dropout_val)
-    return layer, None
+    return layer
     
 
 def new_deconv_layer(input, 
                      filter_shape, 
                      output_shape, 
-                     name, 
+                     name=None, 
                      activation = 'LRELU',  
                      lrelu_alpha=0.2, 
                      padding = 'SAME',
                      strides = [1,1,1,1],
                      data_type=tf.float32,  
                      use_bias=True):
-    """
-    A simplification method of tensorflow deconvolution operation
-    Args:
-        input:		an input tensor
-        filter shape:	a list of integer, the shape of trainable filter for this operaation.
-                - the format, [filter height, filter width, num of input channels, num of output channels]
-        output_shape:	a list of integer, the shape of output tensor.
-                - the format:[batch size, height, width, num of output layer/depth]
-                - MAKE SURE YOU HAVE CALCULATED THE OUTPUT TENSOR SHAPE BEFORE or some errors will eat your brain
-                - TRICKS ...,
-                - a. for easy and common case, set your input tensor has an even height and width
-                - b. the usually even number used is, 4, 8, 16, 32, 64, 128, 256, 512, ...
-        name:		a string, basic name for all filters/weights and biases for this operation
-        dropout_val	a float, dropout presentage, by default 0.85 (dropped out 15%)
-        activation:	an uppercase string, the activation used
-                - if no activation, use 'none'
-        padding:	an uppercase string, the padding method (SAME or VALID)
-        strides:	a list of integer, the shape of strides with form [batch stride, height stride, width stride, channel stride], example: [1, 1, 1, 1]
-    Return:
-        a result of deconvolution operation, its weights, and biases
+    """[summary]
+    
+    Arguments:
+        input {[type]} -- [description]
+        filter_shape {[type]} -- [description]
+        output_shape {[type]} -- [description]
+    
+    Keyword Arguments:
+        name {[type]} -- [description] (default: {None})
+        activation {str} -- [description] (default: {'LRELU'})
+        lrelu_alpha {float} -- [description] (default: {0.2})
+        padding {str} -- [description] (default: {'SAME'})
+        strides {list} -- [description] (default: {[1,1,1,1]})
+        data_type {[type]} -- [description] (default: {tf.float32})
+        use_bias {bool} -- [description] (default: {True})
+    
+    Returns:
+        [type] -- [description]
     """
     weights = tf.Variable(tf.truncated_normal(shape=[filter_shape[0], filter_shape[1], filter_shape[3], filter_shape[2]], stddev=0.05), 
-                          name='weight_' + name,
+                          name="weight_" + name,
                           dtype=data_type)
     deconv_shape = tf.stack(output_shape)
-    deconv = tf.nn.conv2d_transpose(value=input, 
+    layer = tf.nn.conv2d_transpose(value=input, 
                                     filter = weights, 
                                     output_shape = deconv_shape,
                                     strides = strides,
                                     padding = padding, 
-                                    name=name)
+                                    name="deconv_"+str(name))
 
     if use_bias:
         biases = new_biases(length=filter_shape[3], name=name, data_type=data_type)
-        deconv += biases
+        layer += biases
 
-    if activation == 'RELU':
-        deconv = tf.nn.relu(deconv)
-    elif activation == "LRELU":
-        deconv = tf.nn.leaky_relu(deconv, alpha=lrelu_alpha)
-    elif activation == "SELU":
-        deconv = tf.nn.selu(deconv)
-    elif activation == "ELU":
-        deconv = tf.nn.elu(deconv)
-    elif activation == "SIGMOID":
-        deconv = tf.nn.sigmoid(deconv)
-    elif activation == "SOFTMAX":
-        deconv == tf.nn.softmax(deconv)
+    if activation in ["RELU", "relu", "Relu"]:
+        layer = tf.nn.relu(layer)
+    elif activation in ["LRELU", "lrelu", "Lrelu"]:
+        layer = tf.nn.leaky_relu(layer, alpha=lrelu_alpha)
+    elif activation in ["SELU", "selu", "Selu"]:
+        layer = tf.nn.selu(layer)
+    elif activation in ["ELU", "elu", "Elu"]:
+        layer = tf.nn.elu(layer)
+    elif activation in ["SIGMOID", "sigmoid", "Sigmoid"]:
+        layer = tf.nn.sigmoid(layer)
+    elif activation in ["SOFTMAX", "softmax", "Softmax"]:
+        layer == tf.nn.softmax(layer)
 
-    return deconv, None
+    return layer
 
 
 def new_batch_norm(x, 

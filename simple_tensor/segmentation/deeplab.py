@@ -250,21 +250,21 @@ class DeepLab():
         return 0.8 * dice_loss + 0.2 * mse_loss
 
 
-    def batch_generator(self, batch_size, dataset_path):
+    def batch_generator(self, batch_size, dataset_path, message):
         """Train Generator
         
         Arguments:
             batch_size {integer} -- the size of the batch
             image_name_list {list of string} -- the list of image name
         """
-        self.label_folder_path = dataset_path + "labels/"
-        self.dataset_folder_path = dataset_path + "images/"
-        self.dataset_file_list = get_filenames(self.dataset_folder_path)
-        random.shuffle(self.dataset_file_list)
+        label_folder_path = dataset_path + "labels/"
+        dataset_folder_path = dataset_path + "images/"
+        dataset_file_list = get_filenames(dataset_folder_path)
+        random.shuffle(dataset_file_list)
         
         print ("------------------------INFO IMAGES-------------------")
-        print ("Image Folder: " + self.dataset_folder_path)
-        print ("Number of Image: " + str(len(self.dataset_file_list)))
+        print ("Image Folder: " + dataset_folder_path)
+        print ("Number of Image: " + str(len(dataset_file_list)))
         print ("------------------------------------------------------")
 
         # Infinite loop.
@@ -274,23 +274,25 @@ class DeepLab():
             y_pred = []
 
             for i in range(batch_size):
-                if idx >= len(self.dataset_file_list):
+                if idx >= len(dataset_file_list):
+                    random.shuffle(dataset_file_list)
+                    print ("==>>> INFO: your " + message +" dataset is reshuffled again", idx)
                     idx = 0
                 
                 try:
-                    tmp_x = cv2.imread(self.dataset_folder_path + self.dataset_file_list[idx])
+                    tmp_x = cv2.imread(dataset_folder_path + dataset_file_list[idx])
                     tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                     tmp_x = cv2.resize(tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
                     tmp_x = tmp_x.astype(np.float32) / 255.
-                    tmp_y = cv2.imread(self.label_folder_path + self.dataset_file_list[idx])
-                    tmp_y = cv2.cvtColor(tmp_y, cv2.COLOR_BGR2RGB)
-                    tmp_y = cv2.resize(tmp_y, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
+                    tmp_y = cv2.imread(label_folder_path + dataset_file_list[idx])
+                    #tmp_y = cv2.cvtColor(tmp_y, cv2.COLOR_BGR2GRAY)
+                    tmp_y = cv2.resize(tmp_y, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC).reshape((300, 300, 3))
                     tmp_y = tmp_y.astype(np.float32) / 255.
                     x_batch.append(tmp_x)
                     y_pred.append(tmp_y)
                 except Exception as e:
                     print ("-----------------------------------------------------------------------------")
-                    print ('>>> WARNING: fail handling ' +  self.dataset_file_list[idx], e)
+                    print ('>>> WARNING: fail handling ' +  dataset_file_list[idx], e)
                     print ("-----------------------------------------------------------------------------")
 
                 idx += 1
