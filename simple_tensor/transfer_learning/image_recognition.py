@@ -31,47 +31,12 @@ class ImageRecognition(object):
         """
 
         self.classes = classes
-        self.dataset_folder_path = dataset_folder_path
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
 
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, self.input_channel))
         self.output_placeholder = tf.placeholder(tf.float32, shape=(None, len(self.classes)))
-
-        self.read_image_filename()
-
-    
-    def read_image_filename(self):
-        """Function for getting the image filenames for each class
-        """
-        self.file_list_by_class = {}
-        for i in self.classes:
-            self.file_list_by_class[i] = get_filenames(self.dataset_folder_path + i)
-
-        self.file_list_by_class_train = {}
-        self.file_list_by_class_val = {}
-        for i in self.classes:
-            border = int(0.9 * len(self.file_list_by_class[i]))
-            self.file_list_by_class_train[i] = self.file_list_by_class[i][:border]
-            self.file_list_by_class_val[i] = self.file_list_by_class[i][border:]
-
-        self.lenfile_each_class = {}
-        self.lenfile_each_class_train = {}
-        self.lenfile_each_class_val = {}
-        for i in self.classes:
-            self.lenfile_each_class[i] = len(self.file_list_by_class[i])
-            self.lenfile_each_class_train[i] = len(self.file_list_by_class_train[i])
-            self.lenfile_each_class_val[i] = len(self.file_list_by_class_val[i])
-            
-        print ('-------------------------------------------------------')
-        print ("------ INFO, the number of your dataset each class are:")
-        print ( self.lenfile_each_class)
-        print ("------ Train split: ")
-        print (self.lenfile_each_class_train)
-        print ("------ Val split: ")
-        print (self.lenfile_each_class_val)
-        print ('-------------------------------------------------------')
 
 
     def build_inceptionv4_basenet(self, 
@@ -206,62 +171,58 @@ class ImageRecognition(object):
         return out, base_var_list
         
 
-    def batch_generator(self, batch_size, batch_size_val):
+    def batch_generator(self, batch_size, dataset_path, message):
         """Train Generator
         
         Arguments:
-            batch_size {int} -- the size of the batch
+            batch_size {integer} -- the size of the batch
             image_name_list {list of string} -- the list of image name
         """
-        # Infinite loop.
-        idx_train = 0
-        idx_val = 0
+        file_list_by_class = {}
+        idx = {}
+        for i in self.classes:
+            file_list_by_class[i] = get_filenames(dataset_path + i)
+            random.shuffle(file_list_by_class[i])
+            idx[i] = 0
+        
+        perclass_sample = int(batch_size/len(self.classes))
 
+        print ("------------------------INFO IMAGES-------------------")
+        print ("Image Folder: " + dataset_path)
+        for i in self.classes:
+            print ("Number of Image in " + str(i) + ": ", len(file_list_by_class[i]))
+        print ("------------------------------------------------------")
+
+        # Infinite loop.
         while True:
             x_batch = []
-            y_batch = []
-            x_batch_val = []
-            y_batch_val = []
+            y_pred = []
 
-            for i in range(int(batch_size/len(self.classes))):
-                for j in self.classes:
-                    index_t = idx_train % self.lenfile_each_class_train[j]
+            for i in self.classes:
+                for j in range(perclass_sample):
+                    if idx[i] >= len(file_list_by_class[i]):
+                        random.shuffle(file_list_by_class[i])
+                        print ("==>>> INFO: your " + message + "in class " + str(i) + " dataset is reshuffled again", idx)
+                        idx[i] = 0
+                    try:
+                        tmp_x = cv2.imread(dataset_path + file_list_by_class[i][idx[i]])
+                        tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
+                        tmp_x = cv2.resize(tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
+                        tmp_x = tmp_x.astype(np.float32) / 255.
+                        tmp_y = np.zeros((len(self.classes))).astype(np.float32)
+                        tmp_y[self.classes.index[j]] = 1.
+                        x_batch.append(tmp_x)
+                        y_pred.append(tmp_y)
 
-                    # train
-                    tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_train[j][index_t])
-                    tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
-                    tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-                    if self.input_channel == 1:
-                        tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2GRAY)
-                        tmp_x = tmp_x.reshape((self.input_height, self.input_width, 1))
-                    tmp_x = tmp_x.astype(np.float32)/255.
-                    x_batch.append(tmp_x)
-                    tmp_y = np.zeros(len(self.classes)).astype(np.float32)
-                    tmp_y[self.classes.index(j)] = 1.
-                    y_batch.append(tmp_y)
-
-                idx_train += 1
-
-            for i in range(int(batch_size_val/len(self.classes))):
-                for j in self.classes:
-                    index_v = idx_val % self.lenfile_each_class_val[j]
-
-                    # val
-                    tmp_x = cv2.imread(self.dataset_folder_path + j + "/" + self.file_list_by_class_val[j][index_v])
-                    tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
-                    tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
-                    if self.input_channel == 1:
-                        tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2GRAY)
-                        tmp_x = tmp_x.reshape((self.input_height, self.input_width, 1))
-                    tmp_x = tmp_x.astype(np.float32)/255.
-                    x_batch_val.append(tmp_x)
-                    tmp_y = np.zeros(len(self.classes)).astype(np.float32)
-                    tmp_y[self.classes.index(j)] = 1.
-                    y_batch_val.append(tmp_y)
-
-                idx_val += 1
-
-            yield (np.array(x_batch), np.array(y_batch), np.array(x_batch_val), np.array(y_batch_val))
+                    except Exception as e:
+                        print ("-----------------------------------------------------------------------------")
+                        print ('>>> WARNING: fail handling ' +  dataset_file_list[i][idx[i]], e)
+                        print ("-----------------------------------------------------------------------------")
+                    
+                    idx[i] += 1
+                    
+            x_batch, y_pred = 
+            yield (np.array(x_batch), np.array(y_pred))
     
 
     def optimize(self, 
