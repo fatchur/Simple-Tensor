@@ -1,5 +1,6 @@
 import json
 import cv2
+import random
 import numpy as np
 import tensorflow as tf
 from simple_tensor.tensor_operations import *
@@ -11,18 +12,15 @@ from comdutils.file_utils import *
 
 class ImageRecognition(object):
     def __init__(self,
-                 classes,
-                 dataset_folder_path, 
-                 input_height = 512,
-                 input_width = 512, 
+                 classes, 
+                 input_height = 400,
+                 input_width = 400, 
                  input_channel = 3):
 
         """Constructor
         
         Arguments:
             classes {list of string} -- the image classes list
-            dataset_folder_path {string} -- a path to the image main folder. Inside this folder, there are some folders contain images for each class. 
-                                            The name of the child folder is same with the class name in class list.
 
         Keyword Arguments:
             input_height {int} -- the height of input image (default: {512})
@@ -202,26 +200,28 @@ class ImageRecognition(object):
                 for j in range(perclass_sample):
                     if idx[i] >= len(file_list_by_class[i]):
                         random.shuffle(file_list_by_class[i])
-                        print ("==>>> INFO: your " + message + "in class " + str(i) + " dataset is reshuffled again", idx)
+                        print ("==>>> INFO: your " + message + " in class " + str(i) + " dataset is reshuffled again", idx[i])
                         idx[i] = 0
                     try:
-                        tmp_x = cv2.imread(dataset_path + file_list_by_class[i][idx[i]])
+                        tmp_x = cv2.imread(dataset_path + i + "/" + file_list_by_class[i][idx[i]])
                         tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                         tmp_x = cv2.resize(tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
                         tmp_x = tmp_x.astype(np.float32) / 255.
                         tmp_y = np.zeros((len(self.classes))).astype(np.float32)
-                        tmp_y[self.classes.index[j]] = 1.
+                        tmp_y[self.classes.index(i)] = 1.
                         x_batch.append(tmp_x)
                         y_pred.append(tmp_y)
 
                     except Exception as e:
                         print ("-----------------------------------------------------------------------------")
-                        print ('>>> WARNING: fail handling ' +  dataset_file_list[i][idx[i]], e)
+                        print ('>>> WARNING: fail handling ' +  file_list_by_class[i][idx[i]], e)
                         print ("-----------------------------------------------------------------------------")
                     
                     idx[i] += 1
-                    
-            x_batch, y_pred = 
+
+            c = list(zip(x_batch, y_pred))
+            random.shuffle(c)
+            x_batch, y_pred = zip(*c)
             yield (np.array(x_batch), np.array(y_pred))
     
 
@@ -233,8 +233,9 @@ class ImageRecognition(object):
                  out_tensor, 
                  session,
                  saver, 
-                 train_batch_size=32, 
-                 val_batch_size=50,
+                 train_generator,
+                 val_generator,
+                 best_loss,
                  path_tosave_model='model/model1'):
         """[summary]
         
@@ -251,45 +252,39 @@ class ImageRecognition(object):
             path_tosave_model {str} -- [description] (default: {'model/model1'})
         """
         from sklearn.metrics import accuracy_score
-        gen = self.batch_generator(batch_size=train_batch_size, 
-                                    batch_size_val=val_batch_size)
+
         self.train_loss = []
         self.val_loss = []
         self.train_acc = []
         self.val_acc = []
-
-        best_loss = 1000
+        best_loss = best_loss
         
         for i in range(iteration):
             sign = "-"
             t_losses = []
-            losses = []
-            accs = []
 
             for j in range(subdivition):
-                x_train, y_train, x_val, y_val = next(gen)
+                x_train, y_train = next(train_generator)
                 feed_dict = {}
                 feed_dict[self.input_placeholder] = x_train
                 feed_dict[self.output_placeholder] = y_train
                 session.run(optimizer_tensor, feed_dict)
                 loss = session.run(cost_tensor, feed_dict)
                 t_losses.append(loss)
+                print ("> Train sub", j, 'loss : ', loss)
                 
-                feed_dict = {}
-                feed_dict[self.input_placeholder] = x_val
-                feed_dict[self.output_placeholder] = y_val
-                loss = session.run(cost_tensor, feed_dict)
-                losses.append(loss)
-                val_out = session.run(out_tensor, feed_dict)
-                val_out = np.argmax(val_out, axis=1)
-                y_val =  np.argmax(y_val, axis=1)
-                val_acc = accuracy_score(val_out, y_val)
-                accs.append(val_acc)
+            x_val, y_val = next(val_generator)
+            feed_dict = {}
+            feed_dict[self.input_placeholder] = x_val
+            feed_dict[self.output_placeholder] = y_val
+            loss = session.run(cost_tensor, feed_dict)
+
+            val_out = session.run(out_tensor, feed_dict)
+            val_out = np.argmax(val_out, axis=1)
+            y_val =  np.argmax(y_val, axis=1)
+            val_acc = accuracy_score(val_out, y_val)
             
             t_loss = sum(t_losses) / (len(t_losses) + 0.0001)
-            loss = sum(losses) / (len(losses) + 0.0001)
-            acc = sum(accs) / (len(accs) + 0.0001)
-            
             self.train_loss.append(t_loss)
             self.val_loss.append(loss)
                 
@@ -298,6 +293,6 @@ class ImageRecognition(object):
                 sign = "************* model saved"
                 saver.save(session, path_tosave_model)
         
-            print (">> epoch: ", i, "train loss: ", round(t_loss, 3), "val loss: ", round(loss, 3), "val acc: ", round(acc,3), sign)
+            print (">> epoch: ", i, "train loss: ", round(t_loss, 3), "val loss: ", round(loss, 3), "val acc: ", round(val_acc, 3), sign)
 
     

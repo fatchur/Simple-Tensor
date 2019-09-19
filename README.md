@@ -4,6 +4,7 @@
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |  
 |August 2019 | deeplab semantic segmentation (preview version)was release                                                                       | >= v0.6.10        |
+|August 2019 | deeplab semantic segmentation (preview version)was release                                                                       | >= v0.6.10        |
 |Mei 2019    | yolov3 (stable version) was relesed                                                                                              | > v0.5.1          |
 |Mei 2019    | U-net semantic segmentation (stable version) was released                                                                        | > v0.5.1          |      
 |April 2019  | yolov3 (preview version)                                                                                                         |      v0.4.18      |
