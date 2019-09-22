@@ -19,5 +19,6 @@ setup(
               "simple_tensor.object_detector", 
               "simple_tensor.segmentation",
               "simple_tensor.rnn_packs",
-              "simple_tensor.networks"],  # Required
+              "simple_tensor.networks",
+              "simple_tensor.face_recog"],  # Required
 )
