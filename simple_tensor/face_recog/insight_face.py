@@ -94,6 +94,9 @@ class InsightFace():
         self.image_width = self.config['image_size']
         self.input_placeholder = tf.placeholder(dtype=tf.float32, shape=(None, self.image_height, self.image_width, 3), name='input_ph')
 
+        self.session=None
+        self.saver=None
+
 
     def build_net(self, input_tensor=None):
         train_phase_dropout = tf.convert_to_tensor(self.is_training, dtype=tf.bool)
