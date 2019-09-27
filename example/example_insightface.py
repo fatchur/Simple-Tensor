@@ -22,7 +22,7 @@ def align(img):
     return images[0]
 
 
-insight = InsightFace(is_training=False, config_path='face_recog/insight_face_config.yaml')
+insight = InsightFace(is_training=False, config_path='insight_face_config.yaml')
 insight.build_net()
 
 insight.saver = tf.train.Saver()
