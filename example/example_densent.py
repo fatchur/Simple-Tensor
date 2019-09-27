@@ -2,7 +2,7 @@ import tensorflow as tf
 from simple_tensor.tensor_losses import softmax_crosentropy_mean
 from simple_tensor.transfer_learning.image_recognition import *
 
-imrec = ImageRecognition(classes=['notcrack', 'crack'],
+imrec = ImageRecognition(classes=['1', '2'],
                          input_height = 300,
                          input_width = 300, 
                          input_channel = 3)
@@ -26,11 +26,11 @@ saver_partial.restore(sess=session, save_path='/home/model/tf-densenet121/tf-den
 # for continuing your training
 #saver_all.restore(sess=session, save_path='your model path from previous training')
 
-train_generator = imrec.batch_generator(batch_size=12, 
-                                        dataset_path='/home/dataset/crop_dataset_screencrack/train/', 
+train_generator = imrec.batch_generator(batch_size=2, 
+                                        dataset_path='/home/dataset/test/train/', 
                                         message="TRAIN")
-val_generator = imrec.batch_generator(batch_size=20, 
-                                        dataset_path='/home/dataset/crop_dataset_screencrack/val/', 
+val_generator = imrec.batch_generator(batch_size=2, 
+                                        dataset_path='/home/dataset/test/val/', 
                                         message="VAL")
 
 imrec.optimize(iteration=2000, 

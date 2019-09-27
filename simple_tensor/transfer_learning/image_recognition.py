@@ -4,9 +4,9 @@ import random
 import numpy as np
 import tensorflow as tf
 from simple_tensor.tensor_operations import *
-from simple_tensor.transfer_learning.inception_utils import *
-from simple_tensor.transfer_learning.inception_v4 import *
-import simple_tensor.transfer_learning.densenet as densenet
+from simple_tensor.networks.inception_utils import *
+from simple_tensor.networks.inception_v4 import *
+import simple_tensor.networks.densenet as densenet
 from comdutils.file_utils import *
 
 

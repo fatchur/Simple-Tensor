@@ -4,7 +4,6 @@ from simple_tensor.transfer_learning.image_recognition import *
 
 
 imrec = ImageRecognition(classes=['1', '2'],
-                         dataset_folder_path = '/home/dataset/test_imrec/', 
                          input_height = 300,
                          input_width = 300, 
                          input_channel = 3)
@@ -29,13 +28,23 @@ saver_partial.restore(sess=session, save_path='/home/model/inception_v4/inceptio
 # >> for continuing your training
 # saver_all.restore(sess=session, save_path='your model path from previous training')
 
+
+train_generator = imrec.batch_generator(batch_size=2, 
+                                        dataset_path='/home/dataset/test/train/', 
+                                        message="TRAIN")
+val_generator = imrec.batch_generator(batch_size=2, 
+                                        dataset_path='/home/dataset/test/val/', 
+                                        message="VAL")
+
 imrec.optimize(iteration=2000, 
-         subdivition=1,
+         subdivition=5,
          cost_tensor=cost,
          optimizer_tensor=optimizer,
          out_tensor = out,
          session = session, 
          saver = saver_all,
-         train_batch_size=2, 
-         val_batch_size=10,
+         train_generator = train_generator,
+         val_generator = val_generator,
+         best_loss = 10000,
          path_tosave_model='/home/model/test_imrec/model')
+
