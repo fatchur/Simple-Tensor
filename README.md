@@ -43,7 +43,7 @@ from simple_tensor.tensor_losses import *
 # tensor metrics
 from simple_tensor.tensor_metrics import *
 ```
-This packages contains tensor operation (conv2d, conv1d, depthwise conv2d, fully connected, conv2d transpose), tensor losses (softmax & sigmoid cross entropy, MSE), and tensor metrics (accuracy). For more detail documentations about tensor operations, visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor)
+This packages contains tensor operations (conv2d, conv1d, depthwise conv2d, fully connected, conv2d transpose), tensor losses (softmax & sigmoid cross entropy, MSE), and tensor metrics (accuracy). For more detail documentations about tensor operations, visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor)
 
 #### Transfer Learning Package (Image Classification)
 ```python
@@ -80,6 +80,14 @@ This package contains the tensorflow implementation of U-net for semantic segmen
 ![alt text](assets/semantic_segmentation.jpg)
 
 (img source: internal)
+
+
+#### Face Recognition Package (Insightface)
+```python
+import tensorflow as tf
+from simple_tensor.face_recog.insight_face import *
+```
+This package contains the tensorflow implementation of insight face. This repo is refractoring [this github link](https://github.com/luckycallor/InsightFace-tensorflow). For more detail documentation, visit [this page](https://github.com/fatchur/Simple-Tensor/tree/dev/simple_tensor/face_recog)
 
 
 #### LSTM Package
