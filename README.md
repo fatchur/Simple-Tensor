@@ -3,19 +3,17 @@
 ## NEWS
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |  
-|August 2019 | deeplab semantic segmentation (preview version)was release                                                                       | >= v0.6.10        |
-|August 2019 | deeplab semantic segmentation (preview version)was release                                                                       | >= v0.6.10        |
-|Mei 2019    | yolov3 (stable version) was relesed                                                                                              | > v0.5.1          |
-|Mei 2019    | U-net semantic segmentation (stable version) was released                                                                        | > v0.5.1          |      
-|April 2019  | yolov3 (preview version)                                                                                                         |      v0.4.18      |
-|April 2019  | Unet-segmentation (preview version)                                                                                              |      v0.4.18      |
+|Sept 2019   | face recognition (insight face) was released for inferencing (STABLE), for training will available in the future version         | >= v0.7.4         |
+|August 2019 | deeplab semantic segmentation (PREVIEW version)was released                                                                      | >= v0.6.10        |
+|Mei 2019    | yolov3 object detection (STABLE version) was relesed                                                                             | > v0.5.1          |
+|April 2019  | Unet-segmentation (PREVIEW version)                                                                                              |      v0.4.18      |
  
 
 ## Tensorflow Compatibility
 | Tensorflow version      |        Simple-Tensor Version      |   
 | ----------------------- | --------------------------------- | 
 | 1.4.1 - 1.12            |      >=v0.4.0                     |
-| 1.13.1                  |      >=v0.4.3                     |
+| 1.13.1 and 1.14.0       |      >=v0.4.3                     |
 
 
 
@@ -23,30 +21,13 @@
 This project is a simplification of tensorflow operations and related projects
 
 ## DEPENDENCIES
-1. Tensorflow (1.4.1 - 1.13)
-
-For installing tensorflow, with GPU:
-```python
-# python3 
-pip3 install tensorflow-gpu
-# python2
-pip2 install tensorflow-gpu
-```
-Without GPU:
-```python
-# python3 
-pip3 install tensorflow
-# python2
-pip2 install tensorflow
-```
+1. Tensorflow (1.4.1 - 1.13) `pip3 install tensorflow-gpu`
+2. Comdutils `pip3 install comdutils`
+3. opencv-python `pip3 install opencv-python`
+4. numpy
 
 ## HOW TO USE
 ### :shipit: Installing The Package
-```python
-python setup.py install
-```
-or
-
 ```python
 pip3 install simple-tensor
 ```
@@ -64,13 +45,7 @@ from simple_tensor.tensor_metrics import *
 ```
 This packages contains tensor operation (conv2d, conv1d, depthwise conv2d, fully connected, conv2d transpose), tensor losses (softmax & sigmoid cross entropy, MSE), and tensor metrics (accuracy). For more detail documentations about tensor operations, visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor)
 
-#### Convert Keras Model to Tensorflow Serving
-```python
-import tensorflow as tf
-from simple_tensor.convert import *
-```
-
-#### Transfer Learning Package
+#### Transfer Learning Package (Image Classification)
 ```python
 import tensorflow as tf
 from simple_tensor.transfer_learning.inception_utils import *
@@ -110,6 +85,12 @@ This package contains the tensorflow implementation of U-net for semantic segmen
 #### LSTM Package
 ```python
 still on progress ....
+```
+
+#### Convert Keras Model to Tensorflow Serving
+```python
+import tensorflow as tf
+from simple_tensor.convert import *
 ```
 
 

@@ -58,6 +58,7 @@ for i in target_filenames:
         feed_dict = {}
         feed_dict[insight.input_placeholder] = img2
         feature2 = insight.session.run(insight.embds, feed_dict=feed_dict)
+        print (feature2.shape)
 
         #distaa = calculate_distance(feature1, feature2)
         distaa = calculate_distance(feature1/np.linalg.norm(feature1, axis=1, keepdims=True), feature2/np.linalg.norm(feature2, axis=1, keepdims=True))
