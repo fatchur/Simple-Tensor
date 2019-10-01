@@ -38,8 +38,8 @@ c.session.run(tf.global_variables_initializer())
 #c.saver_partial.restore(c.session, '../../model/yolov3/yolov3')
 print ("===== Load Model Success")
 
-train_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/plate/', message="TRAIN")
-validate_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/plate/', message="VAL")
+train_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/plate/train/', message="TRAIN")
+validate_generator = c.batch_generator(batch_size=2, dataset_path='../../dataset/plate/val/', message="VAL")
 c.optimize(subdivisions=1, iterations=5, best_loss=10000000, train_generator=train_generator, val_generator=validate_generator, save_path="tmp_model/yolov3")
 
 
