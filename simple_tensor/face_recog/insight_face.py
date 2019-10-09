@@ -2,7 +2,6 @@ import yaml
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 from simple_tensor.networks import modified_resnet_v2
-#from simple_tensor.networks.resnet_v2 import *
 
 
 def get_embd(inputs, 

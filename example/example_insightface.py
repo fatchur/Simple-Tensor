@@ -47,6 +47,7 @@ for i in target_filenames:
         img2 = cv2.imread(nontarget_path + j)
         img2 = align(img2)
         img2_= img2
+        cv2.imwrite(j, img2)
         #img2 = img2[20:-20, 20:-20, :]
         img2 = cv2.resize(img2, (112, 112)).reshape((1, 112, 112, 3))
         img2 = (img2.astype(np.float32) / 127.5) - 1.
@@ -66,5 +67,5 @@ for i in target_filenames:
 
         cv2.imshow('ddd', img1_)
         cv2.imshow('ddd2', img2_)
-        cv2.waitKey(5000)
+        cv2.waitKey(33)
     

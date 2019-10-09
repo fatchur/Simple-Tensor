@@ -6,6 +6,7 @@ import tensorflow as tf
 from simple_tensor.tensor_operations import *
 from simple_tensor.networks.inception_utils import *
 from simple_tensor.networks.inception_v4 import *
+from simple_tensor.networks.resnet_v2 import *
 import simple_tensor.networks.densenet as densenet
 from comdutils.file_utils import *
 
@@ -35,6 +36,55 @@ class ImageRecognition(object):
 
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, self.input_channel))
         self.output_placeholder = tf.placeholder(tf.float32, shape=(None, len(self.classes)))
+
+
+    def build_resnetv2(self, 
+                       input_tensor,
+                       is_training,
+                       top_layer_depth = 128): 
+        """[summary]
+        
+        Arguments:
+            input_tensor {[type]} -- [description]
+            is_training {bool} -- [description]
+        
+        Keyword Arguments:
+            top_layer_depth {int} -- [description] (default: {128})
+        
+        Returns:
+            [type] -- [description]
+        """
+        
+        out = None
+        with slim.arg_scope(resnet_arg_scope()):
+            out, end_points = resnet_v2_152(inputs = input_tensor,
+                                            num_classes=1001,
+                                            is_training=is_training,
+                                            global_pool=True,
+                                            output_stride=None,
+                                            spatial_squeeze=True,
+                                            reuse=None,
+                                            scope='resnet_v2_152')
+            base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+        
+        depth = out.get_shape().as_list()[-1]
+        out = new_fc_layer(out, 
+                            num_inputs = depth, 
+                            num_outputs = len(self.classes), 
+                            name = 'fc1', 
+                            dropout_val=1, 
+                            activation="NONE",
+                            lrelu_alpha=0.2, 
+                            data_type=tf.float32,
+                            is_training=is_training,
+                            use_bias=False)
+
+        if len(self.classes) == 1:
+            out = tf.nn.sigmoid(out)
+        else:
+            out = tf.nn.softmax(out)
+
+        return out, base_var_list
 
 
     def build_inceptionv4_basenet(self, 
