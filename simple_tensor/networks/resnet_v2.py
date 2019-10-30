@@ -42,7 +42,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from qoalai.networks.resnet_utils import Block, resnet_arg_scope, subsample, conv2d_same, stack_blocks_dense
+from simple_tensor.networks.resnet_utils import Block, resnet_arg_scope, subsample, conv2d_same, stack_blocks_dense
 
 slim = tf.contrib.slim
 resnet_arg_scope = resnet_arg_scope

@@ -57,32 +57,33 @@ class ImageRecognition(object):
         
         out = None
         with slim.arg_scope(resnet_arg_scope()):
-            out, end_points = resnet_v2_152(inputs = input_tensor,
+            out, end_points = resnet_v2_101(inputs = input_tensor,
                                             num_classes=1001,
                                             is_training=is_training,
                                             global_pool=True,
                                             output_stride=None,
                                             spatial_squeeze=True,
                                             reuse=None,
-                                            scope='resnet_v2_152')
+                                            scope='resnet_v2_101')
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
         
-        depth = out.get_shape().as_list()[-1]
-        out = new_fc_layer(out, 
-                            num_inputs = depth, 
-                            num_outputs = len(self.classes), 
-                            name = 'fc1', 
-                            dropout_val=1, 
-                            activation="NONE",
-                            lrelu_alpha=0.2, 
-                            data_type=tf.float32,
-                            is_training=is_training,
-                            use_bias=False)
+        with tf.variable_scope('resnet_v2_101'):
+            depth = out.get_shape().as_list()[-1]
+            out = new_fc_layer(out, 
+                                num_inputs = depth, 
+                                num_outputs = len(self.classes), 
+                                name = 'fc1', 
+                                dropout_val=1, 
+                                activation="NONE",
+                                lrelu_alpha=0.2, 
+                                data_type=tf.float32,
+                                is_training=is_training,
+                                use_bias=False)
 
-        if len(self.classes) == 1:
-            out = tf.nn.sigmoid(out)
-        else:
-            out = tf.nn.softmax(out)
+            if len(self.classes) == 1:
+                out = tf.nn.sigmoid(out)
+            else:
+                out = tf.nn.softmax(out)
 
         return out, base_var_list
 
@@ -118,45 +119,45 @@ class ImageRecognition(object):
             # get inception variable name
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
-
-        size = out.get_shape().as_list()[1]
-        while(True):
-            if size == 1:
-                break
-
-            out = new_conv2d_layer(out, 
-                                filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
-                                name='cv1', 
-                                dropout_val=0.85, 
-                                activation = 'LRELU', 
-                                lrelu_alpha=0.2,
-                                padding='SAME', 
-                                strides=[1, 2, 2, 1],
-                                data_type=tf.float32,  
-                                is_training=is_training,
-                                use_bias=True,
-                                use_batchnorm=True) 
+        with tf.variable_scope('inception_v4'):
             size = out.get_shape().as_list()[1]
-        
-        depth = out.get_shape().as_list()[-1]
-        out = tf.reshape(out, [tf.shape(out)[0], -1])
-        out = new_fc_layer(out, 
-                            num_inputs = depth, 
-                            num_outputs = len(self.classes), 
-                            name = 'fc1', 
-                            dropout_val=1, 
-                            activation="NONE",
-                            lrelu_alpha=0.2, 
-                            data_type=tf.float32,
-                            is_training=is_training,
-                            use_bias=False)
+            while(True):
+                if size == 1:
+                    break
 
-        if len(self.classes) == 1:
-            out = tf.nn.sigmoid(out)
-        else:
-            out = tf.nn.softmax(out)
-        
-        self.out = out
+                out = new_conv2d_layer(out, 
+                                    filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
+                                    name='cv1', 
+                                    dropout_val=0.85, 
+                                    activation = 'LRELU', 
+                                    lrelu_alpha=0.2,
+                                    padding='SAME', 
+                                    strides=[1, 2, 2, 1],
+                                    data_type=tf.float32,  
+                                    is_training=is_training,
+                                    use_bias=True,
+                                    use_batchnorm=True) 
+                size = out.get_shape().as_list()[1]
+            
+            depth = out.get_shape().as_list()[-1]
+            out = tf.reshape(out, [tf.shape(out)[0], -1])
+            out = new_fc_layer(out, 
+                                num_inputs = depth, 
+                                num_outputs = len(self.classes), 
+                                name = 'fc1', 
+                                dropout_val=1, 
+                                activation="NONE",
+                                lrelu_alpha=0.2, 
+                                data_type=tf.float32,
+                                is_training=is_training,
+                                use_bias=False)
+
+            if len(self.classes) == 1:
+                out = tf.nn.sigmoid(out)
+            else:
+                out = tf.nn.softmax(out)
+            
+            self.out = out
         return out, base_var_list
 
 
@@ -177,45 +178,45 @@ class ImageRecognition(object):
                                        is_training=is_training)
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
-
-        size = out.get_shape().as_list()[1]
-        while(True):
-            if size == 1:
-                break
-
-            out = new_conv2d_layer(out, 
-                                    filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
-                                    name='cv1', 
-                                    dropout_val=0.85, 
-                                    activation = 'LRELU', 
-                                    lrelu_alpha=0.2,
-                                    padding='SAME', 
-                                    strides=[1, 2, 2, 1],
-                                    data_type=tf.float32,  
-                                    is_training=is_training,
-                                    use_bias=True,
-                                    use_batchnorm=True) 
+        with tf.variable_scope('densenet'):
             size = out.get_shape().as_list()[1]
-        
-        depth = out.get_shape().as_list()[-1]
-        out = tf.reshape(out, [tf.shape(out)[0], -1])
-        out = new_fc_layer(out, 
-                            num_inputs = depth, 
-                            num_outputs = len(self.classes), 
-                            name = 'fc1', 
-                            dropout_val=1, 
-                            activation="NONE",
-                            lrelu_alpha=0.2, 
-                            data_type=tf.float32,
-                            is_training=is_training,
-                            use_bias=False)
+            while(True):
+                if size == 1:
+                    break
 
-        if len(self.classes) == 1:
-            out = tf.nn.sigmoid(out)
-        else:
-            out = tf.nn.softmax(out)
+                out = new_conv2d_layer(out, 
+                                        filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
+                                        name='cv1', 
+                                        dropout_val=0.85, 
+                                        activation = 'LRELU', 
+                                        lrelu_alpha=0.2,
+                                        padding='SAME', 
+                                        strides=[1, 2, 2, 1],
+                                        data_type=tf.float32,  
+                                        is_training=is_training,
+                                        use_bias=True,
+                                        use_batchnorm=True) 
+                size = out.get_shape().as_list()[1]
+            
+            depth = out.get_shape().as_list()[-1]
+            out = tf.reshape(out, [tf.shape(out)[0], -1])
+            out = new_fc_layer(out, 
+                                num_inputs = depth, 
+                                num_outputs = len(self.classes), 
+                                name = 'fc1', 
+                                dropout_val=1, 
+                                activation="NONE",
+                                lrelu_alpha=0.2, 
+                                data_type=tf.float32,
+                                is_training=is_training,
+                                use_bias=False)
 
-        self.out = out
+            if len(self.classes) == 1:
+                out = tf.nn.sigmoid(out)
+            else:
+                out = tf.nn.softmax(out)
+
+            self.out = out
         return out, base_var_list
         
 
