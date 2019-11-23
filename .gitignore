@@ -16,3 +16,4 @@
 *.egg
 build*
 dist
+*.3gp
