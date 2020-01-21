@@ -17,7 +17,7 @@ from simple_tensor.object_detector.yolo import Yolo
 # -------------------------- #
 # here we want to train to detect 1 class
 # -------------------------- #
-c = Yolo(num_of_class=1,
+c = Yolo(num_of_class=2,
          objectness_loss_alpha=10., 
          noobjectness_loss_alpha=0.1, 
          center_loss_alpha=10., 
