@@ -1,5 +1,10 @@
 # README #
 
+[![version](https://img.shields.io/badge/simple__tensor-%3E%3Dv0.7.13-brightgreen)](https://pypi.org/project/simple-tensor/)
+[![platform](https://img.shields.io/badge/platform-linux--64-brightgreen)]()
+[![python](https://img.shields.io/badge/python-%3E%3D3.5-brightgreen)]()
+[![tensorflow](https://img.shields.io/badge/tensorflow-1.12.x%20--%201.15.0-brightgreen)]()
+
 ## NEWS
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |  
