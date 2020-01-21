@@ -11,7 +11,7 @@
 
 | Lib         |     Model                                                             |     Size          | Version |
 | ----------- | --------------------------------------------------------------------- | ----------------- | --------------|
-|  darknet    | yolo v3 .weigth original (BIG) [Download]()                           |      200 MB       | v0.5.0 |
+|  darknet    | yolo v3 .weigth original (BIG)                                        |      200 MB       | v0.5.0 |
 |  tensorflow | yolo v3 (.data, .index, .meta) (BIG) [Download](https://drive.google.com/drive/folders/1yfC0jj5RsrLgU5PquNGSkccTL4V8_i-T?usp=sharing) |      400 MB       | v0.5.0 |
 |  tensorflow | yolo v3 (.data, .index, .meta) (MEDIUM) [Download]()             | 224 MB    ||
 |  tensorflow | yolo v3 (.data, .index, .meta) (SMALL) [Download]()               |60 MB ||
