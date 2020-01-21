@@ -39,7 +39,7 @@ pip3 install opencv-python
 ```python
 import cv2
 import tensorflow as tf
-from qoalai.object_detector.yolo import *
+from simple_tensor.object_detector.yolo import *
 
 
 def draw_rect(bbox, img):
