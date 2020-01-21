@@ -1,12 +1,12 @@
 '''
     File name: detector_utils.py
-    Author: [Mochammad F Rahman, Agyl Haikal]
+    Author: [Mochammad F Rahman]
     Date created: / /2019
-    Date last modified: 16/08/2019
+    Date last modified: 21/01/2020
     Python Version: >= 3.5
-    Simple-tensor version: v0.6.7
+    qoalai version: v0.4
     License: MIT License
-    Maintainer: [Mochammad F Rahman, Agyl Haikal]
+    Maintainer: [Mochammad F Rahman]
 '''
 
 import os
@@ -38,7 +38,8 @@ class ObjectDetector(object):
                        add_modsig_toshape=False,
                        anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)],
                        dropout_rate = 0.0,
-                       leaky_relu_alpha = 0.1):
+                       leaky_relu_alpha = 0.1,
+                       convert_to_tflite=False):
         """[summary]
         
         Arguments:
@@ -112,6 +113,7 @@ class ObjectDetector(object):
         self.add_modsig_toshape = add_modsig_toshape
         self.dropout_val = 1 - dropout_rate
         self.leaky_relu_alpha = leaky_relu_alpha
+        self.lite=convert_to_tflite
         self.threshold = 0.5
 
 
@@ -677,8 +679,6 @@ class ObjectDetector(object):
                             is_training=training,
                             use_bias=False,
                             use_batchnorm=True)
-            
-            print ("=====", inputs)
 
             filter_128 = 128
             filter_256 = 256
@@ -937,13 +937,58 @@ class ObjectDetector(object):
             top_left_x = center_x - width / 2
             top_left_y = center_y - height / 2
             bottom_right_x = center_x + width / 2
-            bottom_right_y = center_y + height / 2
-
-            boxes = tf.concat([top_left_x, top_left_y,
+            bottom_right_y = center_y + height / 2 
+            
+            if self.lite:
+                '''
+                boxes = tf.concat([top_left_x, top_left_y,
                             bottom_right_x, bottom_right_y,
                             confidence, classes], axis=-1)
-            return boxes
-        
+                tmp_boxes = boxes[:, :, :-(self.num_class + 1)]
+                self.selected_indices = tf.image.non_max_suppression(tmp_boxes[0, :],
+                                                                    tf.squeeze(confidence[0, :]),
+                                                                    max_output_size = 15,
+                                                                    iou_threshold=0.5,
+                                                                    score_threshold=float('-inf'),
+                                                                    name=None)
+                self.selected_boxes = tf.gather(boxes, self.selected_indices, axis=1)
+                
+                results = {} 
+                results['detection_boxes'] = tf.concat([top_left_x, top_left_y, bottom_right_x, bottom_right_y], axis = -1)
+                results['detection_classes'] = classes
+                results['detection_scores'] = confidence
+                return results
+                '''
+                boxes = tf.concat([top_left_x, top_left_y,
+                            bottom_right_x, bottom_right_y,
+                            confidence, classes], axis=-1)
+                return boxes
+
+            else: 
+                selected_mask = tf.math.greater(confidence, tf.convert_to_tensor(np.array(self.threshold), tf.float32))
+                total_num = tf.reduce_sum(tf.cast(selected_mask, tf.float32))
+                
+                #----------------------------------#
+                # Remove some bbox with confidence lower than thd       
+                #----------------------------------#
+                confidence = tf.boolean_mask(confidence, selected_mask, axis=None)
+                classes = tf.boolean_mask(classes, tf.squeeze(selected_mask, 2), axis=0)
+                top_left_x = tf.boolean_mask(top_left_x, selected_mask, axis=None)
+                top_left_y = tf.boolean_mask(top_left_y, selected_mask, axis=None)
+                bottom_right_y = tf.boolean_mask(bottom_right_y, selected_mask, axis=None)
+                bottom_right_x = tf.boolean_mask(bottom_right_x, selected_mask, axis=None)
+                
+                confidence = tf.reshape(tensor=confidence, shape=(-1, total_num, 1))
+                classes = tf.reshape(tensor=classes, shape=(-1, total_num, self.num_class))
+                top_left_x = tf.reshape(tensor=top_left_x, shape=(-1, total_num, 1))
+                top_left_y = tf.reshape(tensor=top_left_y, shape=(-1, total_num, 1))
+                bottom_right_x = tf.reshape(tensor=bottom_right_x, shape=(-1, total_num, 1))
+                bottom_right_y = tf.reshape(tensor=bottom_right_y, shape=(-1, total_num, 1))
+
+                boxes = tf.concat([top_left_x, top_left_y,
+                            bottom_right_x, bottom_right_y,
+                            confidence, classes], axis=-1)
+                return boxes
         #--------------------------------------------------#
 
         #----------------------------------#
@@ -976,6 +1021,7 @@ class ObjectDetector(object):
                                                                      training=is_training,
                                                                      data_format=data_format, 
                                                                      network_type=network_type)
+            self.yolo_very_small_vars = self.yolo_special_vars
         else:
             route1, route2, inputs, _ = darknet53(inputs, 
                                                   training=is_training,
@@ -1023,17 +1069,17 @@ class ObjectDetector(object):
         inputs_detect2 = inputs
         
         inputs = new_conv2d_layer(input=route, 
-                    filter_shape=[1, 1, route.get_shape().as_list()[-1], 128], 
-                    name = 'main_input_conv14', 
-                    dropout_val= self.dropout_val, 
-                    activation = 'LRELU',
-                    lrelu_alpha=self.leaky_relu_alpha,
-                    padding='SAME', 
-                    strides=[1, 1, 1, 1],
-                    data_type=tf.float32,  
-                    is_training=is_training,
-                    use_bias=False,
-                    use_batchnorm=True)
+                                    filter_shape=[1, 1, route.get_shape().as_list()[-1], 128], 
+                                    name = 'main_input_conv14', 
+                                    dropout_val= self.dropout_val, 
+                                    activation = 'LRELU',
+                                    lrelu_alpha=self.leaky_relu_alpha,
+                                    padding='SAME', 
+                                    strides=[1, 1, 1, 1],
+                                    data_type=tf.float32,  
+                                    is_training=is_training,
+                                    use_bias=False,
+                                    use_batchnorm=True)
         
         upsample_size = route1.get_shape().as_list()
         inputs = upsample(inputs, 
@@ -1090,8 +1136,11 @@ class ObjectDetector(object):
                                 anchors=self.anchor[0:3],
                                 img_size=model_size,
                                 data_format=data_format)
-
-        inputs = tf.concat([combine_box1, combine_box2, combine_box3], axis=1)
+        
+        if self.lite: 
+            inputs = combine_box3
+        else: 
+            inputs = tf.concat([combine_box1, combine_box2, combine_box3], axis=1)
         self.boxes_dicts = build_boxes(inputs)
 
 

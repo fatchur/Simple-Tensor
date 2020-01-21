@@ -1,5 +1,10 @@
 # README #
 
+[![version](https://img.shields.io/badge/simple__tensor-%3E%3Dv0.7.13-brightgreen)](https://pypi.org/project/simple-tensor/)
+[![platform](https://img.shields.io/badge/platform-linux--64-brightgreen)]()
+[![python](https://img.shields.io/badge/python-%3E%3D3.5-brightgreen)]()
+[![tensorflow](https://img.shields.io/badge/tensorflow-1.12.x%20--%201.15.0-brightgreen)]()
+
 ## NEWS
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |  
@@ -12,8 +17,8 @@
 ## Tensorflow Compatibility
 | Tensorflow version      |        Simple-Tensor Version      |   
 | ----------------------- | --------------------------------- | 
-| 1.4.1 - 1.12            |      >=v0.4.0                     |
-| 1.13.1 and 1.14.0       |      >=v0.4.3                     |
+| 1.4.1 - 1.1             |       <=v0.4.0                     |
+| 1.13.1 and 1.15.0       |      >=v0.4.3                     |
 
 
 
@@ -21,7 +26,7 @@
 This project is a simplification of tensorflow operations and related projects
 
 ## DEPENDENCIES
-1. Tensorflow (1.4.1 - 1.13) `pip3 install tensorflow-gpu`
+1. Tensorflow (1.4.1 - 1.15.0) `pip3 install tensorflow-gpu`
 2. Comdutils `pip3 install comdutils`
 3. opencv-python `pip3 install opencv-python`
 4. numpy
@@ -62,9 +67,9 @@ This package contains a library of tensorflow implementation of Inception-v4 for
 ```python
 import tensorflow as tf
 from simple_tensor.object_detector.detector_utils import *
-from simple_tensor.object_detector.yolo_v4 import *
+from simple_tensor.object_detector.yolo import Yolo
 ```
-This package contains a library of tensorflow implementation of Yolov3 (training and inferencing). You can customize your yolo detector with four types of network ("big", 'medium", "small", "very_small"). For more detail documentations about object detector package (yolov3), visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/simple_tensor/transfer_learning).
+This package contains a library of tensorflow implementation of Yolov3 (training and inferencing). You can customize your yolo detector with four types of network ("big", 'medium", "small", "very_small"). For more detail documentations about object detector package (yolov3), visit [this page](https://github.com/fatchur/Simple-Tensor/tree/master/example/detector/).
 
 ![alt text](assets/obj_detector.jpg)
 
