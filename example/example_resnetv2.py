@@ -22,7 +22,7 @@ saver_all = tf.train.Saver()
 session = tf.Session()
 session.run(tf.global_variables_initializer())
 # for the first training
-saver_partial.restore(sess=session, save_path='/home/model/resnet_v2/resnet_v2_152.ckpt')
+saver_partial.restore(sess=session, save_path='/home/model/resnet_v2_101/resnet_v2_101.ckpt')
 # for continuing your training
 #saver_all.restore(sess=session, save_path='your model path from previous training')
 

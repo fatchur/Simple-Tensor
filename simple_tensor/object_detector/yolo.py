@@ -163,7 +163,7 @@ class Yolo(ObjectDetector):
                     tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                     tmp_x = cv2.resize(tmp_x, (self.input_width, self.input_height))
                     tmp_x = tmp_x.astype(np.float32) / 255.
-                    tmp_y = self.read_target(label_folder_path + dataset_file_list[idx].split('.')[0] + ".txt")
+                    tmp_y = self.read_target(label_folder_path + dataset_file_list[idx].split('.j')[0] + ".txt")
                     x_batch.append(tmp_x)
                     y_pred1.append(tmp_y[0])
                     y_pred2.append(tmp_y[1])

@@ -178,7 +178,7 @@ class ImageRecognition(object):
                                        is_training=is_training)
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
-        with tf.variable_scope('densenet'):
+        with tf.variable_scope('densenet121'):
             size = out.get_shape().as_list()[1]
             while(True):
                 if size == 1:
