@@ -13,9 +13,9 @@
 | ----------- | --------------------------------------------------------------------- | ----------------- | --------------|
 |  darknet    | yolo v3 .weigth original (BIG) [Download]()                           |      200 MB       | v0.5.0 |
 |  tensorflow | yolo v3 (.data, .index, .meta) (BIG) [Download](https://drive.google.com/drive/folders/1yfC0jj5RsrLgU5PquNGSkccTL4V8_i-T?usp=sharing) |      400 MB       | v0.5.0 |
-|  tensorflow | yolo v3 (.data, .index, .meta) (MEDIUM) [future version]              | target: 200 MB    ||
-|  tensorflow | yolo v3 (.data, .index, .meta) (SMALL) [future version]               |target: 100-150 MB ||
-|  tensorflow | yolo v3 (.data, .index, .meta) (SUPER SMALL) [future version]         | target: 50-80 MB  ||
+|  tensorflow | yolo v3 (.data, .index, .meta) (MEDIUM) [Download]()             | 224 MB    ||
+|  tensorflow | yolo v3 (.data, .index, .meta) (SMALL) [Download]()               |60 MB ||
+|  tensorflow | yolo v3 (.data, .index, .meta) (SUPER SMALL) [future version]         | 7.8 MB  ||
 
 
 ### Inferencing Example
@@ -37,15 +37,31 @@ simple_yolo = Yolo(num_of_class=1,
          add_modsig_toshape=True,
          dropout_rate = 0.2) 
 
-simple_yolo.build_net(input_tensor=c.input_placeholder, is_training=False, network_type='small') 
+simple_yolo.build_net(input_tensor=simple_yolo.input_placeholder, is_training=False, network_type='big') 
+# --------------------------------- #
+# IMPORTANT INFO ....
+# we provides 4 tipes of architecture 
+# you can choose one of it
+# big => 'big'
+# medium => 'medium'
+# small => 'small'
+# special => 'special' (special for tf lite)
+# --------------------------------- #
 ```
 
 - Tensorflow saver & session
 ```python
+# => if you are using big architecture
 saver_all = tf.train.Saver()
+# => if you are using medium architecture
+# saver_all = tf.train.Saver(simple_yolo.yolo_medium_vars)
+# => if you are using small architecture
+# saver_all = tf.train.Saver(simple_yolo.yolo_small_vars)
+# => if you are using medium architecture
+# saver_all = tf.train.Saver(simple_yolo.yolo_special_vars)
 session = tf.Session()
 session.run(tf.global_variables_initializer())
-saver_all.restore(session, 'models/yolov3')
+saver_all.restore(session, 'models/yolov3')    # path to your model
 ```
 
 - Predict
@@ -60,8 +76,6 @@ For more examples, see [here](https://github.com/fatchur/Simple-Tensor/tree/mast
 
 ### Training Example
 see the example [here](https://github.com/fatchur/Simple-Tensor/tree/master/example)
-
-
 
 
 
