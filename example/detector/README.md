@@ -1,6 +1,6 @@
 # README #
 
-[![version](https://img.shields.io/badge/simple__tensor-v0.7.12-brightgreen)](https://pypi.org/project/simple-tensor/)
+[![version](https://img.shields.io/badge/simple__tensor-%3E%3Dv0.7.13-brightgreen)](https://pypi.org/project/simple-tensor/)
 [![platform](https://img.shields.io/badge/platform-linux--64-brightgreen)]()
 [![python](https://img.shields.io/badge/python-%3E%3D3.5-brightgreen)]()
 [![tensorflow](https://img.shields.io/badge/tensorflow-1.12.x%20--%201.15.0-brightgreen)]()
@@ -26,9 +26,9 @@
 |  tensorflow | yolo v3 (.data, .index, .meta) (Special)[Download](https://drive.google.com/file/d/1ZdO8ZyfqxfrOz6PdQdQaCgKx1_LBQUjm/view?usp=sharing)|7.5 MB | >=v0.4.1 | you mast retraint it first (truncated from big architecture) |
 
 ### Dependencies and Installation
-1. **simple tensor**
+1. **simple tensor (>=v0.7.13)**
 ```
-pip3 install simple_tensor
+pip3 install simple_tensor 
 ```
 2. **comdutils**
 ```
