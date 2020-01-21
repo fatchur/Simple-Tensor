@@ -2,9 +2,9 @@
     File name: yolo.py
     Author: [Mochammad F Rahman, Agil Haykal]
     Date created: / /2019
-    Date last modified: 17/08/2019
+    Date last modified: 21/01/2020
     Python Version: >= 3.5
-    Simple-tensor version: v0.6.7
+    qoalai version: v0.4.4
     License: MIT License
     Maintainer: [Mochammad F Rahman, Agil Haykal]
 '''
@@ -14,8 +14,6 @@ import random
 import tensorflow as tf
 from simple_tensor.tensor_operations import *
 from simple_tensor.object_detector.detector_utils import *
-#from simple_tensor.transfer_learning.inception_utils import *
-#from simple_tensor.transfer_learning.inception_v4 import *
 from comdutils.file_utils import *
 
 
@@ -42,7 +40,8 @@ class Yolo(ObjectDetector):
                  add_modsig_toshape=False,
                  anchor = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)],
                  dropout_rate = 0.8,
-                 leaky_relu_alpha = 0.1):
+                 leaky_relu_alpha = 0.1,
+                 convert_to_tflite=False):
         """[summary]
         
         Arguments:
@@ -79,8 +78,8 @@ class Yolo(ObjectDetector):
                                         add_modsig_toshape=add_modsig_toshape,
                                         anchor = anchor,
                                         dropout_rate = dropout_rate,
-                                        leaky_relu_alpha = leaky_relu_alpha)
-
+                                        leaky_relu_alpha = leaky_relu_alpha,
+                                        convert_to_tflite=convert_to_tflite)
 
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, 3))
         self.output_placeholder1 = tf.placeholder(tf.float32, shape=(None, 13, 13, 3*(5 + num_of_class)))
