@@ -1,6 +1,6 @@
 # README #
 
-[![version](https://img.shields.io/badge/simple__tensor-%3E%3Dv0.7.13-brightgreen)](https://pypi.org/project/simple-tensor/)
+[![version](https://img.shields.io/badge/simple__tensor-v0.7.14-brightgreen)](https://pypi.org/project/simple-tensor/)
 [![platform](https://img.shields.io/badge/platform-linux--64-brightgreen)]()
 [![python](https://img.shields.io/badge/python-%3E%3D3.5-brightgreen)]()
 [![tensorflow](https://img.shields.io/badge/tensorflow-1.12.x%20--%201.15.0-brightgreen)]()
@@ -99,8 +99,8 @@ img = cv2.imread('sample_image/dog.jpg')
 img = cv2.resize(img, (416, 416)).reshape((1, 416, 416, 3))
 img = img.astype(np.float32)/255.
 
-detection_result = sess.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
-bboxes = simple_yolo.nms(detection_result, 0.8, 0.1) #[[x1, y1, w, h], [...]]
+detection_result = session.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
+bboxes = simple_yolo.nms(detection_result, 0.2, 0.1) #[[x1, y1, w, h], [...]]
 
 # show image
 img = draw_rect(bboxes, img[0])

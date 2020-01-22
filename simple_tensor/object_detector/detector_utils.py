@@ -965,6 +965,7 @@ class ObjectDetector(object):
                 return boxes
 
             else: 
+                '''
                 selected_mask = tf.math.greater(confidence, tf.convert_to_tensor(np.array(self.threshold), tf.float32))
                 total_num = tf.reduce_sum(tf.cast(selected_mask, tf.float32))
                 
@@ -984,7 +985,7 @@ class ObjectDetector(object):
                 top_left_y = tf.reshape(tensor=top_left_y, shape=(-1, total_num, 1))
                 bottom_right_x = tf.reshape(tensor=bottom_right_x, shape=(-1, total_num, 1))
                 bottom_right_y = tf.reshape(tensor=bottom_right_y, shape=(-1, total_num, 1))
-
+                '''
                 boxes = tf.concat([top_left_x, top_left_y,
                             bottom_right_x, bottom_right_y,
                             confidence, classes], axis=-1)
