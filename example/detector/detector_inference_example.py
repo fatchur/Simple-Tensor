@@ -13,6 +13,8 @@ import tensorflow as tf
 import numpy as np
 import cv2
 from simple_tensor.object_detector.yolo import Yolo
+import simple_tensor as st 
+print (st.version)
 
 
 def draw_rect(bbox, img):
@@ -38,12 +40,12 @@ session = tf.Session()
 session.run(tf.global_variables_initializer())
 saver_all.restore(session, '/home/model/yolov3/yolov3') #path to your downloaded big model
 
-img_ = cv2.imread('example/detector/images/car2.jpeg')
+img_ = cv2.imread('/home/Simple-Tensor/example/detector/images/car2.jpeg')
 img_ = cv2.resize(img_, (416, 416))
 img = img_.reshape((1, 416, 416, 3)).astype(np.float32)
 img = img/255.
 detection_result = session.run(c.boxes_dicts, feed_dict={c.input_placeholder: img})
-bboxes = c.nms(detection_result, 0.6, 0.1) 
+bboxes = c.nms(detection_result, 0.2, 0.1) #set the threshold to 0.2, you can modify it
 
 img = draw_rect(bboxes, img[0])
 cv2.imshow('dddd', img)
