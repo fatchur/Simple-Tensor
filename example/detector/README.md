@@ -27,7 +27,7 @@
 ### Dependencies and Installation
 1. **simple tensor (>=v0.7.13)**
 ```
-pip3 install simple_tensor 
+pip3 install simple-tensor 
 ```
 2. **comdutils**
 ```
