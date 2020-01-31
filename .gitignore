@@ -7,11 +7,6 @@
 *.meta
 *.data*
 *.index
-*.png
-*.jpg
-*.PNG
-*.JPG
-*.JPEG
 *.egg-info
 *.egg
 build*

@@ -4,7 +4,7 @@
     Date created: / /2019
     Date last modified: 21/01/2020
     Python Version: >= 3.5
-    Qoalai version: >=v0.4.1
+    Simple-tenso version: >=v0.7.14
     License: MIT License
     Maintainer: [Mochammad F Rahman]
 '''
@@ -46,8 +46,8 @@ print ("===== Load Model Success")
 # -------------------------- #
 # batch generator and training                 
 # -------------------------- #
-train_generator = c.batch_generator(batch_size=2, dataset_path='example/detector/example_dataset/train/', message="TRAIN")
-validate_generator = c.batch_generator(batch_size=2, dataset_path='example/detector/example_dataset/val/', message="VAL")
+train_generator = c.batch_generator(batch_size=2, dataset_path='example_dataset/train/', message="TRAIN")
+validate_generator = c.batch_generator(batch_size=2, dataset_path='example_dataset/val/', message="VAL")
 c.optimize(subdivisions=1, 
            iterations=5, 
            best_loss=10000000, 
