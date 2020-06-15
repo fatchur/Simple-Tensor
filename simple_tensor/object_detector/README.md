@@ -12,11 +12,11 @@
 | Lib         |     Model                                                             |     Size          | Version       | INFO |
 | ----------- | --------------------------------------------------------------------- | ----------------- | --------------|------|
 |  darknet    | yolo v3 .weigth original (Big)                                        |      200 MB       | v0.5.0        |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Big) [Download](https://drive.google.com/drive/folders/1yfC0jj5RsrLgU5PquNGSkccTL4V8_i-T?usp=sharing) | 400 MB | >=v0.5.0 | you can use it directly |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Medium) [Download](https://drive.google.com/file/d/1wPb35ZyJS_Hx1Jw35qe9Mltygs9EzDXW/view?usp=sharing)| 234 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Small) [Download](https://drive.google.com/file/d/1Sjld1hE9Ts5ltkG-8Wj4JJsAv2uK_m8k/view?usp=sharing) | 187 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture)|
-|  tensorflow | yolo v3 (.data, .index, .meta) (Very Small)[Download](https://drive.google.com/file/d/1ssDC3PjoYEmZmd1iwmYSw6BqR4pk_3K3/view?usp=sharing)|16.6 MB| >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Special)[Download](https://drive.google.com/file/d/1ZdO8ZyfqxfrOz6PdQdQaCgKx1_LBQUjm/view?usp=sharing)|7.5 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Big) [Download](https://drive.google.com/file/d/1Rsxgtngy8Gl0N7UFdbjSFf1Bvh5U89tQ/view?usp=sharing) | 400 MB | >=v0.5.0 | you can use it directly |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Medium) [Download](https://drive.google.com/file/d/1yVRtJO0TRyer_fJIAayejzpYiG2NTLVj/view?usp=sharing)| 234 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Small) [Download](https://drive.google.com/file/d/1qqkjAtgJwYT4utrp_Dwu1YS1fLQ4Tka0/view?usp=sharing) | 187 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture)|
+|  tensorflow | yolo v3 (.data, .index, .meta) (Very Small)[Download](https://drive.google.com/file/d/1vCDeUE9qQ_IozK5IepNzTdCdbQX8u2Cy/view?usp=sharing)|16.6 MB| >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Special)[Download](https://drive.google.com/file/d/1It4CyR_yqOcz3jUUru3qCHxL3rP2qlR7/view?usp=sharing)|7.5 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
 
 
 ### Inferencing Example
