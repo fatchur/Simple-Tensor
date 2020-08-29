@@ -11,7 +11,6 @@
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 |April 2019 | yolo v3 added to simple tensor     |      v0.5.0       |
-|           | yolo v3 model available: big only (medium, & small) will be supported in the future version ||
 
 
 ### Model Info
