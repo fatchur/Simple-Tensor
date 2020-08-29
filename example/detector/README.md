@@ -10,35 +10,20 @@
 ### NEWS
 | Date       |                                                         News                                                                     |     Version       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-|Nov 2019    | yolo v3 added to simple-tensor     |      >=v0.4.1       |
+|April 2019 | yolo v3 added to simple tensor     |      v0.5.0       |
+|           | yolo v3 model available: big only (medium, & small) will be supported in the future version ||
 
 
 ### Model Info
 
 | Lib         |     Model                                                             |     Size          | Version       | INFO |
 | ----------- | --------------------------------------------------------------------- | ----------------- | --------------|------|
-|  darknet    | yolo v3 .weigth original (Big)                                        |      200 MB       | v0.4.1        |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Big) [Download](https://drive.google.com/drive/folders/1yfC0jj5RsrLgU5PquNGSkccTL4V8_i-T?usp=sharing) | 400 MB | >=v0.4.1 | you can use it directly |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Medium) [Download](https://drive.google.com/file/d/1wPb35ZyJS_Hx1Jw35qe9Mltygs9EzDXW/view?usp=sharing)| 234 MB | >=v0.4.1 | you must retraint it first (truncated from big architecture) |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Small) [Download](https://drive.google.com/file/d/1Sjld1hE9Ts5ltkG-8Wj4JJsAv2uK_m8k/view?usp=sharing) | 187 MB | >=v0.4.1 | you must retraint it first (truncated from big architecture)|
-|  tensorflow | yolo v3 (.data, .index, .meta) (Very Small)[Download](https://drive.google.com/file/d/1ssDC3PjoYEmZmd1iwmYSw6BqR4pk_3K3/view?usp=sharing)|16.6 MB| >=v0.4.1 | you must retraint it first (truncated from big architecture) |
-|  tensorflow | yolo v3 (.data, .index, .meta) (Special)[Download](https://drive.google.com/file/d/1ZdO8ZyfqxfrOz6PdQdQaCgKx1_LBQUjm/view?usp=sharing)|7.5 MB | >=v0.4.1 | you must retraint it first (truncated from big architecture) |
-
-### Dependencies and Installation
-1. **simple tensor (>=v0.7.13)**
-```
-pip3 install simple-tensor 
-```
-2. **comdutils**
-```
-pip3 install comdutils
-```
-3. **Opencv**
-```
-pip3 install opencv-python
-```
-4. **Tensorflow (1.12 - 1.15.0)**
-
+|  darknet    | yolo v3 .weigth original (Big)                                        |      200 MB       | v0.5.0        |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Big) [Download](https://drive.google.com/file/d/1Rsxgtngy8Gl0N7UFdbjSFf1Bvh5U89tQ/view?usp=sharing) | 400 MB | >=v0.5.0 | you can use it directly |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Medium) [Download](https://drive.google.com/file/d/1yVRtJO0TRyer_fJIAayejzpYiG2NTLVj/view?usp=sharing)| 234 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Small) [Download](https://drive.google.com/file/d/1qqkjAtgJwYT4utrp_Dwu1YS1fLQ4Tka0/view?usp=sharing) | 187 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture)|
+|  tensorflow | yolo v3 (.data, .index, .meta) (Very Small)[Download](https://drive.google.com/file/d/1vCDeUE9qQ_IozK5IepNzTdCdbQX8u2Cy/view?usp=sharing)|16.6 MB| >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
+|  tensorflow | yolo v3 (.data, .index, .meta) (Special)[Download](https://drive.google.com/file/d/1It4CyR_yqOcz3jUUru3qCHxL3rP2qlR7/view?usp=sharing)|7.5 MB | >=v0.5.0 | you mast retraint it first (truncated from big architecture) |
 
 
 ### Inferencing Example
@@ -98,14 +83,19 @@ img = cv2.imread('sample_image/dog.jpg')
 img = cv2.resize(img, (416, 416)).reshape((1, 416, 416, 3))
 img = img.astype(np.float32)/255.
 
-detection_result = session.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
-bboxes = simple_yolo.nms(detection_result, 0.2, 0.1) #[[x1, y1, w, h], [...]]
+detection_result = sess.run(simple_yolo.boxes_dicts, feed_dict={simple_yolo.input_placeholder: img})
+bboxes = simple_yolo.nms(detection_result, 0.8, 0.1) #[[x1, y1, w, h], [...]]
 
 # show image
 img = draw_rect(bboxes, img[0])
 cv2.imshow('test', img)
 cv2.waitKey(10000)
 ```
+
+For more examples, see [here](https://github.com/fatchur/Simple-Tensor/tree/master/example)
+
+### Training Example
+see the example [here](https://github.com/fatchur/Simple-Tensor/tree/master/example)
 
 
 ### Training Example
