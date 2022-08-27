@@ -220,7 +220,10 @@ class ImageRecognition(object):
         return out, base_var_list
         
 
-    def batch_generator(self, batch_size, dataset_path, message):
+    def batch_generator(self, batch_size, 
+                            dataset_path, 
+                            message,
+                            randomly_cvt_grayscale=False):
         """Train Generator
         
         Arguments:
@@ -249,9 +252,12 @@ class ImageRecognition(object):
 
             for i in self.classes:
                 for j in range(perclass_sample):
+
+                    rand_num = random.randint(1, 4)
+
                     if idx[i] >= len(file_list_by_class[i]):
                         random.shuffle(file_list_by_class[i])
-                        print ("==>>> INFO: your " + message + " in class " + str(i) + " dataset is reshuffled again", idx[i])
+                        #print ("==>>> INFO: your " + message + " in class " + str(i) + " dataset is reshuffled again", idx[i])
                         idx[i] = 0
                     try:
                         tmp_x = cv2.imread(dataset_path + i + "/" + file_list_by_class[i][idx[i]])
@@ -262,6 +268,23 @@ class ImageRecognition(object):
                         tmp_y[self.classes.index(i)] = 1.
                         x_batch.append(tmp_x)
                         y_pred.append(tmp_y)
+
+                        flip_tmp_x = np.flip(tmp_x, 0)
+                        x_batch.append(flip_tmp_x)
+                        y_pred.append(tmp_y)
+
+                        flip_tmp_x = np.flip(tmp_x, 1)
+                        x_batch.append(flip_tmp_x)
+                        y_pred.append(tmp_y)
+
+                        if rand_num == 1: 
+                            gray_tmp_x = cv2.imread(dataset_path + i + "/" + file_list_by_class[i][idx[i]])
+                            gray_tmp_x = cv2.cvtColor(gray_tmp_x, cv2.COLOR_BGR2GRAY)
+                            gray_tmp_x = cv2.cvtColor(gray_tmp_x, cv2.COLOR_GRAY2RGB)
+                            gray_tmp_x = cv2.resize(gray_tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
+                            gray_tmp_x = gray_tmp_x.astype(np.float32) / 255.
+                            x_batch.append(gray_tmp_x)
+                            y_pred.append(tmp_y)
 
                     except Exception as e:
                         print ("-----------------------------------------------------------------------------")
@@ -286,7 +309,7 @@ class ImageRecognition(object):
                  saver, 
                  train_generator,
                  val_generator,
-                 best_loss,
+                 best_acc,
                  path_tosave_model='model/model1'):
         """[summary]
         
@@ -308,11 +331,12 @@ class ImageRecognition(object):
         self.val_loss = []
         self.train_acc = []
         self.val_acc = []
-        best_loss = best_loss
+        best_acc = best_acc
         
         for i in range(iteration):
             sign = "-"
             t_losses = []
+            t_acc = 0.
 
             for j in range(subdivition):
                 x_train, y_train = next(train_generator)
@@ -322,7 +346,16 @@ class ImageRecognition(object):
                 session.run(optimizer_tensor, feed_dict)
                 loss = session.run(cost_tensor, feed_dict)
                 t_losses.append(loss)
-                print ("> Train sub", j, 'loss : ', loss)
+                
+                if j == 0: 
+                    train_out = session.run(out_tensor, feed_dict)
+                    train_out = np.argmax(train_out, axis=1)
+                    y_train =  np.argmax(y_train, axis=1)
+                    t_acc = accuracy_score(train_out, y_train)
+
+                print ("> Train sub", j, 'loss : ', loss, 'acc: ', t_acc)
+
+            t_loss = sum(t_losses) / (len(t_losses) + 0.0001)
                 
             x_val, y_val = next(val_generator)
             feed_dict = {}
@@ -335,12 +368,13 @@ class ImageRecognition(object):
             y_val =  np.argmax(y_val, axis=1)
             val_acc = accuracy_score(val_out, y_val)
             
-            t_loss = sum(t_losses) / (len(t_losses) + 0.0001)
+            self.train_acc.append(t_acc)
+            self.val_acc.append(val_acc)
             self.train_loss.append(t_loss)
             self.val_loss.append(loss)
                 
-            if best_loss > loss:
-                best_loss = loss
+            if best_acc < val_acc:
+                best_acc = val_acc
                 sign = "************* model saved"
                 saver.save(session, path_tosave_model)
         
