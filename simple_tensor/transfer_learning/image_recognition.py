@@ -41,7 +41,8 @@ class ImageRecognition(object):
     def build_resnetv2(self, 
                        input_tensor,
                        is_training,
-                       top_layer_depth = 128): 
+                       top_layer_depth = 128,
+                       dropout_rate=0.2): 
         """[summary]
         
         Arguments:
@@ -73,7 +74,7 @@ class ImageRecognition(object):
                                 num_inputs = depth, 
                                 num_outputs = len(self.classes), 
                                 name = 'fc1', 
-                                dropout_val=1, 
+                                dropout_val= 1 - dropout_rate, 
                                 activation="NONE",
                                 lrelu_alpha=0.2, 
                                 data_type=tf.float32,
@@ -113,7 +114,7 @@ class ImageRecognition(object):
         with slim.arg_scope(arg_scope):
             # get output (logits)
             out, end_points = inception_v4(input_tensor, 
-                                           num_classes=1, 
+                                           num_classes=1001, 
                                            final_endpoint=final_endpoint, 
                                            is_training=is_training)
             # get inception variable name
@@ -145,7 +146,7 @@ class ImageRecognition(object):
                                 num_inputs = depth, 
                                 num_outputs = len(self.classes), 
                                 name = 'fc1', 
-                                dropout_val=1, 
+                                dropout_val=0.85, 
                                 activation="NONE",
                                 lrelu_alpha=0.2, 
                                 data_type=tf.float32,
@@ -174,7 +175,7 @@ class ImageRecognition(object):
         arg_scoope = densenet.densenet_arg_scope()
         with slim.arg_scope(arg_scoope):
             out = densenet.densenet121(inputs=input_tensor, 
-                                       num_classes=1, 
+                                       num_classes=1001, 
                                        is_training=is_training)
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
@@ -187,7 +188,7 @@ class ImageRecognition(object):
                 out = new_conv2d_layer(out, 
                                         filter_shape=[3, 3, out.get_shape().as_list()[-1], top_layer_depth], 
                                         name='cv1', 
-                                        dropout_val=0.85, 
+                                        dropout_val= 1- dropout_rate, 
                                         activation = 'LRELU', 
                                         lrelu_alpha=0.2,
                                         padding='SAME', 
@@ -204,7 +205,7 @@ class ImageRecognition(object):
                                 num_inputs = depth, 
                                 num_outputs = len(self.classes), 
                                 name = 'fc1', 
-                                dropout_val=1, 
+                                dropout_val=1 - dropout_rate, 
                                 activation="NONE",
                                 lrelu_alpha=0.2, 
                                 data_type=tf.float32,
@@ -269,9 +270,9 @@ class ImageRecognition(object):
                         x_batch.append(tmp_x)
                         y_pred.append(tmp_y)
 
-                        flip_tmp_x = np.flip(tmp_x, 0)
-                        x_batch.append(flip_tmp_x)
-                        y_pred.append(tmp_y)
+                        #flip_tmp_x = np.flip(tmp_x, 0)
+                        #x_batch.append(flip_tmp_x)
+                        #y_pred.append(tmp_y)
 
                         flip_tmp_x = np.flip(tmp_x, 1)
                         x_batch.append(flip_tmp_x)
