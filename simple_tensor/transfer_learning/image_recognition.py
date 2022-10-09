@@ -1,5 +1,7 @@
+import os
 import json
 import cv2
+import math
 import random
 import numpy as np
 import tensorflow as tf
@@ -9,6 +11,11 @@ from simple_tensor.networks.inception_v4 import *
 from simple_tensor.networks.resnet_v2 import *
 import simple_tensor.networks.densenet as densenet
 from comdutils.file_utils import *
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import precision_score
+
 
 
 class ImageRecognition(object):
@@ -231,6 +238,11 @@ class ImageRecognition(object):
             batch_size {integer} -- the size of the batch
             image_name_list {list of string} -- the list of image name
         """
+        file_list = get_filenames(os.path.join(dataset_path + self.classes[0]))
+        self.file_num = len(file_list) * len(self.classes)
+        self.tmp_batch_size = batch_size
+
+
         file_list_by_class = {}
         idx = {}
         for i in self.classes:
@@ -254,11 +266,9 @@ class ImageRecognition(object):
             for i in self.classes:
                 for j in range(perclass_sample):
 
-                    rand_num = random.randint(1, 4)
-
                     if idx[i] >= len(file_list_by_class[i]):
                         random.shuffle(file_list_by_class[i])
-                        #print ("==>>> INFO: your " + message + " in class " + str(i) + " dataset is reshuffled again", idx[i])
+                        print ("==>>> INFO: your " + message + " in class " + str(i) + " reshuffled ", idx[i])
                         idx[i] = 0
                     try:
                         tmp_x = cv2.imread(dataset_path + i + "/" + file_list_by_class[i][idx[i]])
@@ -270,14 +280,11 @@ class ImageRecognition(object):
                         x_batch.append(tmp_x)
                         y_pred.append(tmp_y)
 
-                        #flip_tmp_x = np.flip(tmp_x, 0)
-                        #x_batch.append(flip_tmp_x)
-                        #y_pred.append(tmp_y)
-
                         flip_tmp_x = np.flip(tmp_x, 1)
                         x_batch.append(flip_tmp_x)
                         y_pred.append(tmp_y)
 
+                        rand_num = random.randint(1, 4)
                         if rand_num == 1: 
                             gray_tmp_x = cv2.imread(dataset_path + i + "/" + file_list_by_class[i][idx[i]])
                             gray_tmp_x = cv2.cvtColor(gray_tmp_x, cv2.COLOR_BGR2GRAY)
@@ -298,6 +305,44 @@ class ImageRecognition(object):
             random.shuffle(c)
             x_batch, y_pred = zip(*c)
             yield (np.array(x_batch), np.array(y_pred))
+
+
+    def validate(self, val_generator, 
+                        session, 
+                        cost_tensor,
+                        out_tensor): 
+        x_val, y_val = next(val_generator)
+        iteration_needed = math.ceil(self.file_num / self.tmp_batch_size)
+
+        losses = [] 
+        accs = [] 
+        recalls = []
+        precisions = [] 
+        for i in range(iteration_needed): 
+            x_val, y_val = next(val_generator)
+            feed_dict = {}
+            feed_dict[self.input_placeholder] = x_val
+            feed_dict[self.output_placeholder] = y_val
+            loss = session.run(cost_tensor, feed_dict)
+
+            val_out = session.run(out_tensor, feed_dict)
+            val_out = np.argmax(val_out, axis=1)
+            y_val =  np.argmax(y_val, axis=1)
+            acc = accuracy_score(val_out, y_val)
+            recall = recall_score(val_out, y_val)
+            precision = precision_score(val_out, y_val)
+
+            losses.append(loss)
+            accs.append(acc)
+            recalls.append(recall)
+            precisions.append(precision)
+
+        loss = np.mean(np.array(losses))
+        acc = np.mean(np.array(accs))
+        recall = np.mean(np.array(recalls))
+        precision = np.mean(np.array(precisions))
+
+        return loss, acc, precision, recall
     
 
     def optimize(self, 
@@ -326,7 +371,6 @@ class ImageRecognition(object):
             val_batch_size {int} -- [description] (default: {50})
             path_tosave_model {str} -- [description] (default: {'model/model1'})
         """
-        from sklearn.metrics import accuracy_score
 
         self.train_loss = []
         self.val_loss = []
@@ -357,28 +401,25 @@ class ImageRecognition(object):
                 print ("> Train sub", j, 'loss : ', loss, 'acc: ', t_acc)
 
             t_loss = sum(t_losses) / (len(t_losses) + 0.0001)
-                
-            x_val, y_val = next(val_generator)
-            feed_dict = {}
-            feed_dict[self.input_placeholder] = x_val
-            feed_dict[self.output_placeholder] = y_val
-            loss = session.run(cost_tensor, feed_dict)
 
-            val_out = session.run(out_tensor, feed_dict)
-            val_out = np.argmax(val_out, axis=1)
-            y_val =  np.argmax(y_val, axis=1)
-            val_acc = accuracy_score(val_out, y_val)
+            val_loss, val_acc, val_precision, val_recall = self.validate(val_generator=val_generator,
+                                                                            session=session,
+                                                                            cost_tensor=cost_tensor,
+                                                                            out_tensor=out_tensor)
             
             self.train_acc.append(t_acc)
             self.val_acc.append(val_acc)
             self.train_loss.append(t_loss)
-            self.val_loss.append(loss)
+            self.val_loss.append(val_loss)
                 
             if best_acc < val_acc:
                 best_acc = val_acc
                 sign = "************* model saved"
                 saver.save(session, path_tosave_model)
+
+            print (">> epoch: {}, train loss: {}, val loss: {}, val acc: {}, val recall: {}, val prec: {} {}".format(i, round(t_loss, 3), 
+                                                                                    round(val_loss, 3), round(val_acc, 3), round(val_recall, 3), 
+                                                                                    round(val_precision, 3),  sign))
         
-            print (">> epoch: ", i, "train loss: ", round(t_loss, 3), "val loss: ", round(loss, 3), "val acc: ", round(val_acc, 3), sign)
 
     
