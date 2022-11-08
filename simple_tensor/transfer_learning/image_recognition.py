@@ -127,7 +127,7 @@ class ImageRecognition(object):
             # get inception variable name
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
-        with tf.variable_scope('inception_v4'):
+        with tf.variable_scope('inceptionV4'):
             size = out.get_shape().as_list()[1]
             while(True):
                 if size == 1:
@@ -238,7 +238,7 @@ class ImageRecognition(object):
             batch_size {integer} -- the size of the batch
             image_name_list {list of string} -- the list of image name
         """
-        file_list = get_filenames(os.path.join(dataset_path + self.classes[0]))
+        file_list = get_filenames(os.path.join(dataset_path, self.classes[0]))
         self.file_num = len(file_list) * len(self.classes)
         self.tmp_batch_size = batch_size
 
