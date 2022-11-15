@@ -1,6 +1,5 @@
 import os
 import json
-import cv2
 import math
 import random
 import numpy as np
@@ -10,12 +9,6 @@ from simple_tensor.networks.inception_utils import *
 from simple_tensor.networks.inception_v4 import *
 from simple_tensor.networks.resnet_v2 import *
 import simple_tensor.networks.densenet as densenet
-from comdutils.file_utils import *
-
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import precision_score
-
 
 
 class ImageRecognition(object):
@@ -23,7 +16,9 @@ class ImageRecognition(object):
                  classes, 
                  input_height = 400,
                  input_width = 400, 
-                 input_channel = 3):
+                 input_channel = 3,
+                 classification_by_regression = False,
+                 json_label_file=None):
 
         """Constructor
         
@@ -40,9 +35,18 @@ class ImageRecognition(object):
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
+        self.classification_by_regression = classification_by_regression
 
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, self.input_channel))
         self.output_placeholder = tf.placeholder(tf.float32, shape=(None, len(self.classes)))
+
+        if self.classification_by_regression: 
+            if json_label_file is None: 
+                print ("You have to provide a json file for regression value, format <filename>.jpg: regression_value, ...")
+                self.regression_value = None
+            else: 
+                f = open(json_label_file)
+                self.regression_value = json.load(f)
 
 
     def build_resnetv2(self, 
@@ -62,6 +66,11 @@ class ImageRecognition(object):
         Returns:
             [type] -- [description]
         """
+
+        if self.classification_by_regression and len(self.classes) > 2: 
+            print ("[INFO] Classsification by regression only can be used for binary classification")
+            print ("[INFO] Build network fail")
+            return None, []
         
         out = None
         with slim.arg_scope(resnet_arg_scope()):
@@ -77,21 +86,35 @@ class ImageRecognition(object):
         
         with tf.variable_scope('resnet_v2_101'):
             depth = out.get_shape().as_list()[-1]
-            out = new_fc_layer(out, 
-                                num_inputs = depth, 
-                                num_outputs = len(self.classes), 
-                                name = 'fc1', 
-                                dropout_val= 1 - dropout_rate, 
-                                activation="NONE",
-                                lrelu_alpha=0.2, 
-                                data_type=tf.float32,
-                                is_training=is_training,
-                                use_bias=False)
 
-            if len(self.classes) == 1:
-                out = tf.nn.sigmoid(out)
-            else:
-                out = tf.nn.softmax(out)
+            if self.classification_by_regression: 
+                out = new_fc_layer(out, 
+                                    num_inputs = depth, 
+                                    num_outputs = 1, 
+                                    name = 'fc1', 
+                                    dropout_val= 1 - dropout_rate, 
+                                    activation="NONE",
+                                    lrelu_alpha=0.2, 
+                                    data_type=tf.float32,
+                                    is_training=is_training,
+                                    use_bias=False)
+                out = 6 /(1 + tf.exp(-0.2 * out)) - 3
+            else: 
+                out = new_fc_layer(out, 
+                                    num_inputs = depth, 
+                                    num_outputs = len(self.classes), 
+                                    name = 'fc1', 
+                                    dropout_val= 1 - dropout_rate, 
+                                    activation="NONE",
+                                    lrelu_alpha=0.2, 
+                                    data_type=tf.float32,
+                                    is_training=is_training,
+                                    use_bias=False)
+
+                if len(self.classes) == 1:
+                    out = tf.nn.sigmoid(out)
+                else:
+                    out = tf.nn.softmax(out)
 
         return out, base_var_list
 
@@ -110,6 +133,11 @@ class ImageRecognition(object):
         Returns:
             [type] -- [description]
         """
+        if self.classification_by_regression and len(self.classes) > 2: 
+            print ("[INFO] Classsification by regression only can be used for binary classification")
+            print ("[INFO] Build network fail")
+            return None, []
+
         print ('-------------------------------------------------------')
         print (" NOTICE, your inception v4 base model is end with node:")
         print (final_endpoint)
@@ -121,13 +149,13 @@ class ImageRecognition(object):
         with slim.arg_scope(arg_scope):
             # get output (logits)
             out, end_points = inception_v4(input_tensor, 
-                                           num_classes=1001, 
+                                           num_classes=100, 
                                            final_endpoint=final_endpoint, 
                                            is_training=is_training)
             # get inception variable name
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
-        with tf.variable_scope('inceptionV4'):
+        with tf.variable_scope('InceptionV4'):
             size = out.get_shape().as_list()[1]
             while(True):
                 if size == 1:
@@ -153,7 +181,7 @@ class ImageRecognition(object):
                                 num_inputs = depth, 
                                 num_outputs = len(self.classes), 
                                 name = 'fc1', 
-                                dropout_val=0.85, 
+                                dropout_val=1, 
                                 activation="NONE",
                                 lrelu_alpha=0.2, 
                                 data_type=tf.float32,
@@ -179,6 +207,11 @@ class ImageRecognition(object):
             input_tensordropout_rate {[type]} -- [description]
             is_training {bool} -- [description]
         """
+        if self.classification_by_regression and len(self.classes) > 2: 
+            print ("[INFO] Classsification by regression only can be used for binary classification")
+            print ("[INFO] Build network fail")
+            return None, []
+            
         arg_scoope = densenet.densenet_arg_scope()
         with slim.arg_scope(arg_scoope):
             out = densenet.densenet121(inputs=input_tensor, 
@@ -226,7 +259,23 @@ class ImageRecognition(object):
 
             self.out = out
         return out, base_var_list
-        
+
+
+    def __prepare_output_val(self, index=None, key=None):
+        if self.classification_by_regression: 
+            try: 
+                regression_val = [self.regression_value[key]]
+                return regression_val, False
+            except: 
+                print("Key {} not found in json regression label".format(key))
+                regression_val = None 
+                return regression_val, True
+
+        else: 
+            tmp_y = np.zeros((len(self.classes))).astype(np.float32)
+            tmp_y[self.classes.index(index)] = 1.
+            return tmp_y, False
+
 
     def batch_generator(self, batch_size, 
                             dataset_path, 
@@ -238,6 +287,9 @@ class ImageRecognition(object):
             batch_size {integer} -- the size of the batch
             image_name_list {list of string} -- the list of image name
         """
+        import cv2 
+        from comdutils.file_utils import get_filenames
+
         file_list = get_filenames(os.path.join(dataset_path, self.classes[0]))
         self.file_num = len(file_list) * len(self.classes)
         self.tmp_batch_size = batch_size
@@ -275,8 +327,10 @@ class ImageRecognition(object):
                         tmp_x = cv2.cvtColor(tmp_x, cv2.COLOR_BGR2RGB)
                         tmp_x = cv2.resize(tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
                         tmp_x = tmp_x.astype(np.float32) / 255.
-                        tmp_y = np.zeros((len(self.classes))).astype(np.float32)
-                        tmp_y[self.classes.index(i)] = 1.
+                        tmp_y, err = self.__prepare_output_val(index=i, key=file_list_by_class[i][idx[i]])
+                        if err: 
+                            continue
+                        
                         x_batch.append(tmp_x)
                         y_pred.append(tmp_y)
 
@@ -284,15 +338,16 @@ class ImageRecognition(object):
                         x_batch.append(flip_tmp_x)
                         y_pred.append(tmp_y)
 
-                        rand_num = random.randint(1, 4)
-                        if rand_num == 1: 
-                            gray_tmp_x = cv2.imread(dataset_path + i + "/" + file_list_by_class[i][idx[i]])
-                            gray_tmp_x = cv2.cvtColor(gray_tmp_x, cv2.COLOR_BGR2GRAY)
-                            gray_tmp_x = cv2.cvtColor(gray_tmp_x, cv2.COLOR_GRAY2RGB)
-                            gray_tmp_x = cv2.resize(gray_tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
-                            gray_tmp_x = gray_tmp_x.astype(np.float32) / 255.
-                            x_batch.append(gray_tmp_x)
-                            y_pred.append(tmp_y)
+                        if randomly_cvt_grayscale: 
+                            rand_num = random.randint(1, 4)
+                            if rand_num == 1: 
+                                gray_tmp_x = cv2.imread(dataset_path + i + "/" + file_list_by_class[i][idx[i]])
+                                gray_tmp_x = cv2.cvtColor(gray_tmp_x, cv2.COLOR_BGR2GRAY)
+                                gray_tmp_x = cv2.cvtColor(gray_tmp_x, cv2.COLOR_GRAY2RGB)
+                                gray_tmp_x = cv2.resize(gray_tmp_x, dsize=(self.input_width, self.input_height), interpolation=cv2.INTER_CUBIC)
+                                gray_tmp_x = gray_tmp_x.astype(np.float32) / 255.
+                                x_batch.append(gray_tmp_x)
+                                y_pred.append(tmp_y)
 
                     except Exception as e:
                         print ("-----------------------------------------------------------------------------")
@@ -311,6 +366,10 @@ class ImageRecognition(object):
                         session, 
                         cost_tensor,
                         out_tensor): 
+        from sklearn.metrics import accuracy_score
+        from sklearn.metrics import recall_score
+        from sklearn.metrics import precision_score
+
         x_val, y_val = next(val_generator)
         iteration_needed = math.ceil(self.file_num / self.tmp_batch_size)
 
@@ -371,6 +430,7 @@ class ImageRecognition(object):
             val_batch_size {int} -- [description] (default: {50})
             path_tosave_model {str} -- [description] (default: {'model/model1'})
         """
+        from sklearn.metrics import accuracy_score
 
         self.train_loss = []
         self.val_loss = []
