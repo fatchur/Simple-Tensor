@@ -39,7 +39,7 @@ class ImageRecognition(object):
 
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, self.input_channel))
         self.output_placeholder = tf.placeholder(tf.float32, shape=(None, len(self.classes)))
-
+        
         if self.classification_by_regression: 
             if json_label_file is None: 
                 print ("You have to provide a json file for regression value, format <filename>.jpg: regression_value, ...")
@@ -47,7 +47,7 @@ class ImageRecognition(object):
             else: 
                 f = open(json_label_file)
                 self.regression_value = json.load(f)
-
+           
 
     def build_resnetv2(self, 
                        input_tensor,
@@ -86,36 +86,27 @@ class ImageRecognition(object):
         
         with tf.variable_scope('resnet_v2_101'):
             depth = out.get_shape().as_list()[-1]
+            out = new_fc_layer(out, 
+                                num_inputs = depth, 
+                                num_outputs = len(self.classes), 
+                                name = 'fc1', 
+                                dropout_val= 1 - dropout_rate, 
+                                activation="NONE",
+                                lrelu_alpha=0.2, 
+                                data_type=tf.float32,
+                                is_training=is_training,
+                                use_bias=False)
 
             if self.classification_by_regression: 
-                out = new_fc_layer(out, 
-                                    num_inputs = depth, 
-                                    num_outputs = 1, 
-                                    name = 'fc1', 
-                                    dropout_val= 1 - dropout_rate, 
-                                    activation="NONE",
-                                    lrelu_alpha=0.2, 
-                                    data_type=tf.float32,
-                                    is_training=is_training,
-                                    use_bias=False)
                 out = 6 /(1 + tf.exp(-0.2 * out)) - 3
-            else: 
-                out = new_fc_layer(out, 
-                                    num_inputs = depth, 
-                                    num_outputs = len(self.classes), 
-                                    name = 'fc1', 
-                                    dropout_val= 1 - dropout_rate, 
-                                    activation="NONE",
-                                    lrelu_alpha=0.2, 
-                                    data_type=tf.float32,
-                                    is_training=is_training,
-                                    use_bias=False)
 
+            else: 
                 if len(self.classes) == 1:
                     out = tf.nn.sigmoid(out)
                 else:
                     out = tf.nn.softmax(out)
 
+        self.out = out
         return out, base_var_list
 
 
@@ -149,7 +140,7 @@ class ImageRecognition(object):
         with slim.arg_scope(arg_scope):
             # get output (logits)
             out, end_points = inception_v4(input_tensor, 
-                                           num_classes=100, 
+                                           num_classes=1001, 
                                            final_endpoint=final_endpoint, 
                                            is_training=is_training)
             # get inception variable name
@@ -158,7 +149,7 @@ class ImageRecognition(object):
         with tf.variable_scope('InceptionV4'):
             size = out.get_shape().as_list()[1]
             while(True):
-                if size == 1:
+                if size <= 8:
                     break
 
                 out = new_conv2d_layer(out, 
@@ -188,10 +179,14 @@ class ImageRecognition(object):
                                 is_training=is_training,
                                 use_bias=False)
 
-            if len(self.classes) == 1:
-                out = tf.nn.sigmoid(out)
-            else:
-                out = tf.nn.softmax(out)
+            if self.classification_by_regression:
+                out = 6 /(1 + tf.exp(-0.2 * out)) - 3
+            
+            else: 
+                if len(self.classes) == 1:
+                    out = tf.nn.sigmoid(out)
+                else:
+                    out = tf.nn.softmax(out)
             
             self.out = out
         return out, base_var_list
@@ -222,7 +217,7 @@ class ImageRecognition(object):
         with tf.variable_scope('densenet121'):
             size = out.get_shape().as_list()[1]
             while(True):
-                if size == 1:
+                if size <= 8:
                     break
 
                 out = new_conv2d_layer(out, 
@@ -239,23 +234,28 @@ class ImageRecognition(object):
                                         use_batchnorm=True) 
                 size = out.get_shape().as_list()[1]
             
-            depth = out.get_shape().as_list()[-1]
+            depth =  out.get_shape().as_list()[1] *  out.get_shape().as_list()[2] * out.get_shape().as_list()[3]
             out = tf.reshape(out, [tf.shape(out)[0], -1])
-            out = new_fc_layer(out, 
-                                num_inputs = depth, 
-                                num_outputs = len(self.classes), 
-                                name = 'fc1', 
-                                dropout_val=1 - dropout_rate, 
-                                activation="NONE",
-                                lrelu_alpha=0.2, 
-                                data_type=tf.float32,
-                                is_training=is_training,
-                                use_bias=False)
 
-            if len(self.classes) == 1:
-                out = tf.nn.sigmoid(out)
-            else:
-                out = tf.nn.softmax(out)
+            out = new_fc_layer(out, 
+                                    num_inputs = depth, 
+                                    num_outputs = len(self.classes), 
+                                    name = 'fc1', 
+                                    dropout_val=1 - dropout_rate, 
+                                    activation="NONE",
+                                    lrelu_alpha=0.2, 
+                                    data_type=tf.float32,
+                                    is_training=is_training,
+                                    use_bias=False)
+
+            if self.classification_by_regression:
+                out = 6 /(1 + tf.exp(-0.2 * out)) - 3
+
+            else: 
+                if len(self.classes) == 1:
+                    out = tf.nn.sigmoid(out)
+                else:
+                    out = tf.nn.softmax(out)
 
             self.out = out
         return out, base_var_list
@@ -263,13 +263,19 @@ class ImageRecognition(object):
 
     def __prepare_output_val(self, index=None, key=None):
         if self.classification_by_regression: 
-            try: 
-                regression_val = [self.regression_value[key]]
+            if key in self.regression_value:
+                regression_val = [1.0-self.regression_value[key], self.regression_value[key]]
                 return regression_val, False
-            except: 
-                print("Key {} not found in json regression label".format(key))
-                regression_val = None 
-                return regression_val, True
+
+            else: 
+                if index == self.classes[1]:
+                    regression_val = [0, 1.0]
+                    return regression_val, False
+
+                else: 
+                    print("Key {} not found in json regression label".format(key))
+                    regression_val = None
+                    return regression_val, True
 
         else: 
             tmp_y = np.zeros((len(self.classes))).astype(np.float32)
@@ -329,8 +335,9 @@ class ImageRecognition(object):
                         tmp_x = tmp_x.astype(np.float32) / 255.
                         tmp_y, err = self.__prepare_output_val(index=i, key=file_list_by_class[i][idx[i]])
                         if err: 
+                            idx[i] += 1
                             continue
-                        
+
                         x_batch.append(tmp_x)
                         y_pred.append(tmp_y)
 
