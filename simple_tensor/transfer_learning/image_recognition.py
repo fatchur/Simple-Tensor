@@ -85,7 +85,7 @@ class ImageRecognition(object):
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
         
         with tf.variable_scope('resnet_v2_101'):
-            depth = out.get_shape().as_list()[-1]
+            depth = out.get_shape().as_list()[1] *  out.get_shape().as_list()[2] * out.get_shape().as_list()[3]
             out = new_fc_layer(out, 
                                 num_inputs = depth, 
                                 num_outputs = len(self.classes), 
@@ -114,7 +114,8 @@ class ImageRecognition(object):
                                   input_tensor, 
                                   is_training = False, 
                                   final_endpoint='Mixed_7d',
-                                  top_layer_depth = 128):
+                                  top_layer_depth = 128,
+                                  dropout_rate=0.2):
         """Fucntion for creating inception v4 base network
         
         Arguments:
@@ -142,7 +143,8 @@ class ImageRecognition(object):
             out, end_points = inception_v4(input_tensor, 
                                            num_classes=1001, 
                                            final_endpoint=final_endpoint, 
-                                           is_training=is_training)
+                                           is_training=is_training,
+                                           dropout_rate=dropout_rate)
             # get inception variable name
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
@@ -166,7 +168,7 @@ class ImageRecognition(object):
                                     use_batchnorm=True) 
                 size = out.get_shape().as_list()[1]
             
-            depth = out.get_shape().as_list()[-1]
+            depth = out.get_shape().as_list()[1] *  out.get_shape().as_list()[2] * out.get_shape().as_list()[3]
             out = tf.reshape(out, [tf.shape(out)[0], -1])
             out = new_fc_layer(out, 
                                 num_inputs = depth, 

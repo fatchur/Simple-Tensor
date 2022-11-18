@@ -40,13 +40,16 @@ def block_inception_a(inputs, scope=None, reuse=None):
       with tf.variable_scope('Branch_1'):
         branch_1 = slim.conv2d(inputs, 64, [1, 1], scope='Conv2d_0a_1x1')
         branch_1 = slim.conv2d(branch_1, 96, [3, 3], scope='Conv2d_0b_3x3')
+        branch_1 = slim.dropout(branch_1, 0.8)
       with tf.variable_scope('Branch_2'):
         branch_2 = slim.conv2d(inputs, 64, [1, 1], scope='Conv2d_0a_1x1')
         branch_2 = slim.conv2d(branch_2, 96, [3, 3], scope='Conv2d_0b_3x3')
         branch_2 = slim.conv2d(branch_2, 96, [3, 3], scope='Conv2d_0c_3x3')
+        branch_2 = slim.dropout(branch_2, 0.8)
       with tf.variable_scope('Branch_3'):
         branch_3 = slim.avg_pool2d(inputs, [3, 3], scope='AvgPool_0a_3x3')
         branch_3 = slim.conv2d(branch_3, 96, [1, 1], scope='Conv2d_0b_1x1')
+        branch_3 = slim.dropout(branch_3, 0.8)
       return tf.concat(axis=3, values=[branch_0, branch_1, branch_2, branch_3])
 
 
@@ -59,11 +62,13 @@ def block_reduction_a(inputs, scope=None, reuse=None):
       with tf.variable_scope('Branch_0'):
         branch_0 = slim.conv2d(inputs, 384, [3, 3], stride=2, padding='VALID',
                                scope='Conv2d_1a_3x3')
+        branch_0 = slim.dropout(branch_0, 0.8)
       with tf.variable_scope('Branch_1'):
         branch_1 = slim.conv2d(inputs, 192, [1, 1], scope='Conv2d_0a_1x1')
         branch_1 = slim.conv2d(branch_1, 224, [3, 3], scope='Conv2d_0b_3x3')
         branch_1 = slim.conv2d(branch_1, 256, [3, 3], stride=2,
                                padding='VALID', scope='Conv2d_1a_3x3')
+        branch_1 = slim.dropout(branch_1, 0.8)
       with tf.variable_scope('Branch_2'):
         branch_2 = slim.max_pool2d(inputs, [3, 3], stride=2, padding='VALID',
                                    scope='MaxPool_1a_3x3')
@@ -82,15 +87,19 @@ def block_inception_b(inputs, scope=None, reuse=None):
         branch_1 = slim.conv2d(inputs, 192, [1, 1], scope='Conv2d_0a_1x1')
         branch_1 = slim.conv2d(branch_1, 224, [1, 7], scope='Conv2d_0b_1x7')
         branch_1 = slim.conv2d(branch_1, 256, [7, 1], scope='Conv2d_0c_7x1')
+        branch_1 = slim.dropout(branch_1, 0.8)
       with tf.variable_scope('Branch_2'):
         branch_2 = slim.conv2d(inputs, 192, [1, 1], scope='Conv2d_0a_1x1')
         branch_2 = slim.conv2d(branch_2, 192, [7, 1], scope='Conv2d_0b_7x1')
         branch_2 = slim.conv2d(branch_2, 224, [1, 7], scope='Conv2d_0c_1x7')
+        branch_2 = slim.dropout(branch_2, 0.8)
         branch_2 = slim.conv2d(branch_2, 224, [7, 1], scope='Conv2d_0d_7x1')
         branch_2 = slim.conv2d(branch_2, 256, [1, 7], scope='Conv2d_0e_1x7')
+        branch_2 = slim.dropout(branch_2, 0.8)
       with tf.variable_scope('Branch_3'):
         branch_3 = slim.avg_pool2d(inputs, [3, 3], scope='AvgPool_0a_3x3')
         branch_3 = slim.conv2d(branch_3, 128, [1, 1], scope='Conv2d_0b_1x1')
+        branch_3 = slim.dropout(branch_3, 0.8)
       return tf.concat(axis=3, values=[branch_0, branch_1, branch_2, branch_3])
 
 
@@ -104,12 +113,15 @@ def block_reduction_b(inputs, scope=None, reuse=None):
         branch_0 = slim.conv2d(inputs, 192, [1, 1], scope='Conv2d_0a_1x1')
         branch_0 = slim.conv2d(branch_0, 192, [3, 3], stride=2,
                                padding='VALID', scope='Conv2d_1a_3x3')
+        branch_0 = slim.dropout(branch_0, 0.8)
       with tf.variable_scope('Branch_1'):
         branch_1 = slim.conv2d(inputs, 256, [1, 1], scope='Conv2d_0a_1x1')
         branch_1 = slim.conv2d(branch_1, 256, [1, 7], scope='Conv2d_0b_1x7')
+        branch_1 = slim.dropout(branch_1, 0.8)
         branch_1 = slim.conv2d(branch_1, 320, [7, 1], scope='Conv2d_0c_7x1')
         branch_1 = slim.conv2d(branch_1, 320, [3, 3], stride=2,
                                padding='VALID', scope='Conv2d_1a_3x3')
+        branch_1 = slim.dropout(branch_1, 0.8)
       with tf.variable_scope('Branch_2'):
         branch_2 = slim.max_pool2d(inputs, [3, 3], stride=2, padding='VALID',
                                    scope='MaxPool_1a_3x3')
@@ -129,20 +141,24 @@ def block_inception_c(inputs, scope=None, reuse=None):
         branch_1 = tf.concat(axis=3, values=[
             slim.conv2d(branch_1, 256, [1, 3], scope='Conv2d_0b_1x3'),
             slim.conv2d(branch_1, 256, [3, 1], scope='Conv2d_0c_3x1')])
+        branch_1 = slim.dropout(branch_1, 0.8)
       with tf.variable_scope('Branch_2'):
         branch_2 = slim.conv2d(inputs, 384, [1, 1], scope='Conv2d_0a_1x1')
         branch_2 = slim.conv2d(branch_2, 448, [3, 1], scope='Conv2d_0b_3x1')
+        branch_2 = slim.dropout(branch_2, 0.8)
         branch_2 = slim.conv2d(branch_2, 512, [1, 3], scope='Conv2d_0c_1x3')
         branch_2 = tf.concat(axis=3, values=[
             slim.conv2d(branch_2, 256, [1, 3], scope='Conv2d_0d_1x3'),
             slim.conv2d(branch_2, 256, [3, 1], scope='Conv2d_0e_3x1')])
+        branch_2 = slim.dropout(branch_2, 0.8)
       with tf.variable_scope('Branch_3'):
         branch_3 = slim.avg_pool2d(inputs, [3, 3], scope='AvgPool_0a_3x3')
         branch_3 = slim.conv2d(branch_3, 256, [1, 1], scope='Conv2d_0b_1x1')
+        branch_3 = slim.dropout(branch_3, 0.8)
       return tf.concat(axis=3, values=[branch_0, branch_1, branch_2, branch_3])
 
 
-def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
+def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None, drop_out_rate= 0.2):
   """Creates the Inception V4 network up to the given final endpoint.
   Args:
     inputs: a 4-D tensor of size [batch_size, height, width, 3].
@@ -178,6 +194,7 @@ def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
       if add_and_check_final('Conv2d_2a_3x3', net): return net, end_points
       # 147 x 147 x 32
       net = slim.conv2d(net, 64, [3, 3], scope='Conv2d_2b_3x3')
+      net = slim.dropout(net, 1.0 - drop_out_rate)
       if add_and_check_final('Conv2d_2b_3x3', net): return net, end_points
       # 147 x 147 x 64
       with tf.variable_scope('Mixed_3a'):
@@ -187,6 +204,7 @@ def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
         with tf.variable_scope('Branch_1'):
           branch_1 = slim.conv2d(net, 96, [3, 3], stride=2, padding='VALID',
                                  scope='Conv2d_0a_3x3')
+          branch_1 = slim.dropout(branch_1, 1.0 - drop_out_rate)
         net = tf.concat(axis=3, values=[branch_0, branch_1])
         if add_and_check_final('Mixed_3a', net): return net, end_points
 
@@ -196,13 +214,17 @@ def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
           branch_0 = slim.conv2d(net, 64, [1, 1], scope='Conv2d_0a_1x1')
           branch_0 = slim.conv2d(branch_0, 96, [3, 3], padding='VALID',
                                  scope='Conv2d_1a_3x3')
+          branch_0 = slim.dropout(branch_0, 1.0 - drop_out_rate)
         with tf.variable_scope('Branch_1'):
           branch_1 = slim.conv2d(net, 64, [1, 1], scope='Conv2d_0a_1x1')
           branch_1 = slim.conv2d(branch_1, 64, [1, 7], scope='Conv2d_0b_1x7')
+          branch_1 = slim.dropout(branch_1, 1.0 - drop_out_rate)
           branch_1 = slim.conv2d(branch_1, 64, [7, 1], scope='Conv2d_0c_7x1')
           branch_1 = slim.conv2d(branch_1, 96, [3, 3], padding='VALID',
                                  scope='Conv2d_1a_3x3')
+          branch_1 = slim.dropout(branch_1, 1.0 - drop_out_rate)
         net = tf.concat(axis=3, values=[branch_0, branch_1])
+        net = slim.dropout(net, 1.0 - drop_out_rate)
         if add_and_check_final('Mixed_4a', net): return net, end_points
 
       # 71 x 71 x 192
@@ -210,6 +232,7 @@ def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
         with tf.variable_scope('Branch_0'):
           branch_0 = slim.conv2d(net, 192, [3, 3], stride=2, padding='VALID',
                                  scope='Conv2d_1a_3x3')
+          branch_0 = slim.dropout(branch_0, 1.0 - drop_out_rate)
         with tf.variable_scope('Branch_1'):
           branch_1 = slim.max_pool2d(net, [3, 3], stride=2, padding='VALID',
                                      scope='MaxPool_1a_3x3')
@@ -252,7 +275,7 @@ def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
 def inception_v4(inputs,  num_classes=1001, 
                  final_endpoint='Mixed_7d',
                  is_training=True,
-                 dropout_keep_prob=0.8,
+                 dropout_rate=0.2,
                  reuse=None,
                  scope='InceptionV4',
                  create_aux_logits=True):
@@ -278,5 +301,5 @@ def inception_v4(inputs,  num_classes=1001,
   with tf.variable_scope(scope, 'InceptionV4', [inputs], reuse=reuse) as scope:
     with slim.arg_scope([slim.batch_norm, slim.dropout],
                         is_training=is_training):
-      net, end_points = inception_v4_base(inputs, final_endpoint=final_endpoint, scope=scope)
+      net, end_points = inception_v4_base(inputs, final_endpoint=final_endpoint, scope=scope, drop_out_rate=dropout_rate)
     return net, end_points
