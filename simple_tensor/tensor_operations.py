@@ -92,7 +92,8 @@ def new_fc_layer(input,
     elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
     
-    layer = tf.nn.dropout(layer, dropout_val)
+    if is_training: 
+        layer = tf.nn.dropout(layer, dropout_val)
     return layer
 
 
@@ -153,7 +154,8 @@ def new_conv1d_layer(input,
     elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
 
-    layer = tf.nn.dropout(layer, dropout_val)
+    if is_training:
+        layer = tf.nn.dropout(layer, dropout_val)
     return layer
 
 
@@ -219,7 +221,8 @@ def new_conv2d_layer(input,
     elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
 
-    layer = tf.nn.dropout(layer, dropout_val)
+    if is_training:
+        layer = tf.nn.dropout(layer, dropout_val)
     return layer
     
 
@@ -283,7 +286,8 @@ def new_conv2d_depthwise_layer(input,
     elif activation in ["SOFTMAX", "softmax", "Softmax"]:
         layer == tf.nn.softmax(layer)
 
-    layer = tf.nn.dropout(layer, dropout_val)
+    if is_training: 
+        layer = tf.nn.dropout(layer, dropout_val)
     return layer
     
 
