@@ -37,13 +37,13 @@ def _global_avg_pool2d(inputs, data_format='NHWC', scope=None, outputs_collectio
 
 @slim.add_arg_scope
 def _conv(inputs, num_filters, kernel_size, stride=1, dropout_rate=None,
-          scope=None, outputs_collections=None):
+          scope=None, outputs_collections=None, is_training=True):
   with tf.variable_scope(scope, 'xx', [inputs]) as sc:
     net = slim.batch_norm(inputs)
     net = tf.nn.relu(net)
     net = slim.conv2d(net, num_filters, kernel_size)
 
-    if dropout_rate:
+    if is_training:
       net = tf.nn.dropout(net)
 
     net = slim.utils.collect_named_outputs(outputs_collections, sc.name, net)
@@ -52,11 +52,11 @@ def _conv(inputs, num_filters, kernel_size, stride=1, dropout_rate=None,
 
 
 @slim.add_arg_scope
-def _conv_block(inputs, num_filters, data_format='NHWC', scope=None, outputs_collections=None):
+def _conv_block(inputs, num_filters, data_format='NHWC', scope=None, outputs_collections=None, is_training=True):
   with tf.variable_scope(scope, 'conv_blockx', [inputs]) as sc:
     net = inputs
-    net = _conv(net, num_filters*4, 1, scope='x1')
-    net = _conv(net, num_filters, 3, scope='x2')
+    net = _conv(net, num_filters*4, 1, scope='x1', is_training=is_training)
+    net = _conv(net, num_filters, 3, scope='x2', is_training=is_training)
     if data_format == 'NHWC':
       net = tf.concat([inputs, net], axis=3)
     else: # "NCHW"
@@ -69,13 +69,13 @@ def _conv_block(inputs, num_filters, data_format='NHWC', scope=None, outputs_col
 
 @slim.add_arg_scope
 def _dense_block(inputs, num_layers, num_filters, growth_rate,
-                 grow_num_filters=True, scope=None, outputs_collections=None):
+                 grow_num_filters=True, scope=None, outputs_collections=None, is_training=True):
 
   with tf.variable_scope(scope, 'dense_blockx', [inputs]) as sc:
     net = inputs
     for i in range(num_layers):
       branch = i + 1
-      net = _conv_block(net, growth_rate, scope='conv_block'+str(branch))
+      net = _conv_block(net, growth_rate, scope='conv_block'+str(branch), is_training=is_training)
 
       if grow_num_filters:
         num_filters += growth_rate
@@ -87,12 +87,13 @@ def _dense_block(inputs, num_layers, num_filters, growth_rate,
 
 @slim.add_arg_scope
 def _transition_block(inputs, num_filters, compression=1.0,
-                      scope=None, outputs_collections=None):
+                      scope=None, outputs_collections=None,
+                      is_training=True):
 
   num_filters = int(num_filters * compression)
   with tf.variable_scope(scope, 'transition_blockx', [inputs]) as sc:
     net = inputs
-    net = _conv(net, num_filters, 1, scope='blk')
+    net = _conv(net, num_filters, 1, scope='blk', is_training=is_training)
 
     net = slim.avg_pool2d(net, 2)
 
@@ -145,17 +146,17 @@ def densenet(inputs,
         # dense blocks
         net, num_filters = _dense_block(net, num_layers[i], num_filters,
                                         growth_rate,
-                                        scope='dense_block' + str(i+1))
+                                        scope='dense_block' + str(i+1), is_training=is_training)
 
         # Add transition_block
         net, num_filters = _transition_block(net, num_filters,
                                              compression=compression,
-                                             scope='transition_block' + str(i+1))
+                                             scope='transition_block' + str(i+1), is_training=is_training)
 
       net, num_filters = _dense_block(
               net, num_layers[-1], num_filters,
               growth_rate,
-              scope='dense_block' + str(num_dense_blocks))
+              scope='dense_block' + str(num_dense_blocks), is_training=is_training)
 
       return net
 
