@@ -50,7 +50,7 @@ resnet_arg_scope = resnet_arg_scope
 
 @slim.add_arg_scope
 def bottleneck(inputs, depth, depth_bottleneck, stride, rate=1,
-               outputs_collections=None, scope=None):
+               outputs_collections=None, scope=None, is_training=False):
   """Bottleneck residual unit variant with BN before convolutions.
   This is the full preactivation residual unit variant proposed in [2]. See
   Fig. 1(b) of [2] for its definition. Note that we use here the bottleneck
@@ -78,14 +78,20 @@ def bottleneck(inputs, depth, depth_bottleneck, stride, rate=1,
       shortcut = slim.conv2d(preact, depth, [1, 1], stride=stride,
                              normalizer_fn=None, activation_fn=None,
                              scope='shortcut')
+      if is_training:
+        shortcut = slim.dropout(shortcut, 0.8)
 
     residual = slim.conv2d(preact, depth_bottleneck, [1, 1], stride=1,
                            scope='conv1')
     residual = conv2d_same(residual, depth_bottleneck, 3, stride,
                                         rate=rate, scope='conv2')
+    if is_training:
+      residual = slim.dropout(residual, 0.8)
     residual = slim.conv2d(residual, depth, [1, 1], stride=1,
                            normalizer_fn=None, activation_fn=None,
                            scope='conv3')
+    if is_training:
+      residual = slim.dropout(residual, 0.8)
 
     output = shortcut + residual
 
@@ -164,7 +170,7 @@ def resnet_v2(inputs,
     with slim.arg_scope([slim.conv2d, bottleneck,
                          stack_blocks_dense],
                         outputs_collections=end_points_collection):
-      with slim.arg_scope([slim.batch_norm], is_training=is_training):
+      with slim.arg_scope([slim.batch_norm]):
         net = inputs
         if include_root_block:
           if output_stride is not None:
@@ -177,6 +183,8 @@ def resnet_v2(inputs,
           with slim.arg_scope([slim.conv2d],
                               activation_fn=None, normalizer_fn=None):
             net = conv2d_same(net, 64, 7, stride=2, scope='conv1')
+            if is_training:
+              net = slim.dropout(net, 0.8)
           net = slim.max_pool2d(net, [3, 3], stride=2, scope='pool1')
         net = stack_blocks_dense(net, blocks, output_stride)
         # This is needed because the pre-activation variant does not have batch
