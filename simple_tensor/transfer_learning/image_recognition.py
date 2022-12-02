@@ -17,6 +17,7 @@ class ImageRecognition(object):
                  input_height = 400,
                  input_width = 400, 
                  input_channel = 3,
+                 is_training = True,
                  classification_by_regression = False,
                  json_label_file=None):
 
@@ -40,18 +41,20 @@ class ImageRecognition(object):
         self.input_placeholder = tf.placeholder(tf.float32, shape=(None, self.input_height, self.input_width, self.input_channel))
         self.output_placeholder = tf.placeholder(tf.float32, shape=(None, len(self.classes)))
         
-        if self.classification_by_regression: 
-            if json_label_file is None: 
-                print ("You have to provide a json file for regression value, format <filename>.jpg: regression_value, ...")
-                self.regression_value = None
-            else: 
-                f = open(json_label_file)
-                self.regression_value = json.load(f)
+        self.is_training = is_training
+        
+        if is_training: 
+            if self.classification_by_regression: 
+                if json_label_file is None: 
+                    print ("You have to provide a json file for regression value, format <filename>.jpg: regression_value, ...")
+                    self.regression_value = None
+                else: 
+                    f = open(json_label_file)
+                    self.regression_value = json.load(f)
            
 
     def build_resnetv2(self, 
                        input_tensor,
-                       is_training,
                        top_layer_depth = 128,
                        dropout_rate=0.2): 
         """[summary]
@@ -74,18 +77,19 @@ class ImageRecognition(object):
         
         out = None
         with slim.arg_scope(resnet_arg_scope()):
-            out, end_points = resnet_v2_101(inputs = input_tensor,
+            out, end_points = resnet_v2_152(inputs = input_tensor,
                                             num_classes=1001,
-                                            is_training=is_training,
+                                            is_training=self.is_training,
                                             global_pool=True,
                                             output_stride=None,
                                             spatial_squeeze=True,
                                             reuse=None,
-                                            scope='resnet_v2_101')
+                                            scope='resnet_v2_152')
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+            print ("----------------------------->>>", out)
         
-        with tf.variable_scope('resnet_v2_101'):
-            depth = out.get_shape().as_list()[1] *  out.get_shape().as_list()[2] * out.get_shape().as_list()[3]
+        with tf.variable_scope('resnet_v2_152'):
+            depth = out.get_shape().as_list()[-1]
             out = new_fc_layer(out, 
                                 num_inputs = depth, 
                                 num_outputs = len(self.classes), 
@@ -94,11 +98,12 @@ class ImageRecognition(object):
                                 activation="NONE",
                                 lrelu_alpha=0.2, 
                                 data_type=tf.float32,
-                                is_training=is_training,
+                                is_training=self.is_training,
                                 use_bias=False)
-
+            
             if self.classification_by_regression: 
-                out = 6 /(1 + tf.exp(-0.2 * out)) - 3
+                out = 1.0 /(1.0 + tf.exp(-0.2 * out)) 
+                #out[:, 1] = 1.0 - out[:, 0]
 
             else: 
                 if len(self.classes) == 1:
@@ -112,7 +117,6 @@ class ImageRecognition(object):
 
     def build_inceptionv4_basenet(self, 
                                   input_tensor, 
-                                  is_training = False, 
                                   final_endpoint='Mixed_7d',
                                   top_layer_depth = 128,
                                   dropout_rate=0.2):
@@ -143,7 +147,7 @@ class ImageRecognition(object):
             out, end_points = inception_v4(input_tensor, 
                                            num_classes=1001, 
                                            final_endpoint=final_endpoint, 
-                                           is_training=is_training,
+                                           is_training=self.is_training,
                                            dropout_rate=dropout_rate)
             # get inception variable name
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
@@ -163,7 +167,7 @@ class ImageRecognition(object):
                                     padding='SAME', 
                                     strides=[1, 2, 2, 1],
                                     data_type=tf.float32,  
-                                    is_training=is_training,
+                                    is_training=self.is_training,
                                     use_bias=True,
                                     use_batchnorm=True) 
                 size = out.get_shape().as_list()[1]
@@ -178,11 +182,13 @@ class ImageRecognition(object):
                                 activation="NONE",
                                 lrelu_alpha=0.2, 
                                 data_type=tf.float32,
-                                is_training=is_training,
+                                is_training=self.is_training,
                                 use_bias=False)
 
+            
             if self.classification_by_regression:
-                out = 6 /(1 + tf.exp(-0.2 * out)) - 3
+                out = 1.0 /(1 + tf.exp(-0.2 * out)) 
+                #out[:, 1] = 1.0 - out[:, 0]
             
             else: 
                 if len(self.classes) == 1:
@@ -196,7 +202,6 @@ class ImageRecognition(object):
 
     def build_densenet_base(self, input_tensor,
                             dropout_rate,
-                            is_training,
                             top_layer_depth = 128):
         """[summary]
         
@@ -213,7 +218,7 @@ class ImageRecognition(object):
         with slim.arg_scope(arg_scoope):
             out = densenet.densenet121(inputs=input_tensor, 
                                        num_classes=1001, 
-                                       is_training=is_training)
+                                       is_training=self.is_training)
             base_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 
         with tf.variable_scope('densenet121'):
@@ -231,14 +236,13 @@ class ImageRecognition(object):
                                         padding='SAME', 
                                         strides=[1, 2, 2, 1],
                                         data_type=tf.float32,  
-                                        is_training=is_training,
+                                        is_training=self.is_training,
                                         use_bias=True,
                                         use_batchnorm=True) 
                 size = out.get_shape().as_list()[1]
             
             depth =  out.get_shape().as_list()[1] *  out.get_shape().as_list()[2] * out.get_shape().as_list()[3]
             out = tf.reshape(out, [tf.shape(out)[0], -1])
-
             out = new_fc_layer(out, 
                                     num_inputs = depth, 
                                     num_outputs = len(self.classes), 
@@ -247,11 +251,12 @@ class ImageRecognition(object):
                                     activation="NONE",
                                     lrelu_alpha=0.2, 
                                     data_type=tf.float32,
-                                    is_training=is_training,
+                                    is_training=self.is_training,
                                     use_bias=False)
 
             if self.classification_by_regression:
-                out = 6 /(1 + tf.exp(-0.2 * out)) - 3
+                out = 1.0 /(1 + tf.exp(-0.2 * out)) 
+                #out[:, 1] = 1.0 - out[:, 0]
 
             else: 
                 if len(self.classes) == 1:
